@@ -1,5 +1,7 @@
 #include <cassert>
 #include <limits>
+#include <map>
+#include <string_view>
 
 #include <fmt/format.h>
 #include <gsl/gsl>
@@ -13,19 +15,31 @@ namespace
   {
     N, A, AB,
   };
-  OpType get_optype(OpCode op)
+
+  const std::map<OpCode, OpType> optype
   {
-    switch (op)
-    {
-    case OpCode::OP_RETURN:
-      return OpType::N;
-    case OpCode::OP_CONSTANT:
-      return OpType::A;
-    default:
-      assert(false);
-      return OpType::N;
-    }
-  }
+    {OpCode::OP_RETURN, OpType::N},
+    {OpCode::OP_NEGATE, OpType::N},
+    {OpCode::OP_ADD, OpType::N},
+    {OpCode::OP_SUBTRACT, OpType::N},
+    {OpCode::OP_MULTIPLY, OpType::N},
+    {OpCode::OP_DIVIDE, OpType::N},
+    {OpCode::OP_INTDIV, OpType::N},
+
+    {OpCode::OP_CONSTANT, OpType::A},
+  };
+  const std::map<OpCode, std::string_view> opname
+  {
+    {OpCode::OP_RETURN, "OP_RETURN"},
+    {OpCode::OP_NEGATE, "OP_NEGATE"},
+    {OpCode::OP_ADD, "OP_ADD"},
+    {OpCode::OP_SUBTRACT, "OP_SUBTRACT"},
+    {OpCode::OP_MULTIPLY, "OP_MULTIPLY"},
+    {OpCode::OP_DIVIDE, "OP_DIVIDE"},
+    {OpCode::OP_INTDIV, "OP_INTDIV"},
+
+    {OpCode::OP_CONSTANT, "OP_CONSTANT"},
+  };
 }
 
 namespace foxlox
@@ -43,12 +57,12 @@ namespace foxlox
     lines.add_line(ssize(code), line_num);
     code.push_back(c);
   }
-  uint8_t Chunk::add_constant(Value v)
+  uint32_t Chunk::add_constant(Value v)
   {
     constants.push_back(v);
     const auto index = constants.size() - 1;
-    assert(constants.size() - 1 <= std::numeric_limits<uint8_t>::max());
-    return gsl::narrow<uint8_t>(index);
+    assert(index <= INST_A_MAX);
+    return gsl::narrow<uint32_t>(index);
   }
   const LineInfo& Chunk::get_lines() const
   {
@@ -61,45 +75,44 @@ namespace foxlox
   }
   int LineInfo::get_line(gsl::index code_index) const
   {
+    auto last_line_num = lines.front().line_num;
     for (auto& line : lines)
     {
-      if (line.code_index >= code_index) { return line.line_num; }
+      if (line.code_index > code_index) { return last_line_num; }
+      last_line_num = line.line_num;
     }
-    return lines.back().line_num;
+    return last_line_num;
   }
-  Inst::Inst(OpCode op)
+  Inst::Inst(OpCode o)
   {
-    assert(get_optype(op) == OpType::N);
-    this->op = op;
+    assert(optype.at(o) == OpType::N);
+    N.op = o;
   }
-  Inst::Inst(OpCode op, uint8_t a)
+  Inst::Inst(OpCode o, uint32_t a)
   {
-    assert(get_optype(op) == OpType::A);
-    this->op = op;
-    this->data.abc.a = a;
+    assert(optype.at(o) == OpType::A);
+    assert(a <= INST_A_MAX);
+    A.op = o;
+    A.a = a;
   }
+
   std::string Inst::to_string(const Chunk& chunk) const
   {
-    switch (op)
+    if (optype.at(N.op) == OpType::N)
     {
-    case OpCode::OP_RETURN:
-      return "OP_RETURN";
+      return std::string(opname.at(N.op));
+    }
+    switch (N.op)
+    {
     case OpCode::OP_CONSTANT:
     {
-      const auto constant = data.abc.a;
+      const auto constant = A.a;
       return fmt::format("{:<16} {:>4} `{}'",
-        "OP_CONSTANT", constant, chunk.get_constants().at(constant).to_string());
+        opname.at(N.op), constant, chunk.get_constants().at(constant).to_string());
     }
     default:
       assert(false);
       return "";
     }
-  }
-  Inst::Inst(OpCode op, uint8_t a, uint8_t b)
-  {
-    assert(get_optype(op) == OpType::AB);
-    this->op = op;
-    this->data.abc.a = a;
-    this->data.abc.b = b;
   }
 }

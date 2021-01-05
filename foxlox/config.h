@@ -1,0 +1,7 @@
+#ifndef FOXLOC_CONFIG_H
+#define FOXLOC_CONFIG_H
+
+#define DEBUG_TRACE_EXECUTION
+constexpr auto STACK_MAX = 256;
+
+#endif // FOXLOC_CONFIG_H

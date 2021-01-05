@@ -8,33 +8,49 @@
 #include <gsl/gsl>
 
 #include "value.h"
-#include "util.h"
 
 namespace foxlox
 {
+  constexpr uint32_t INST_A_MAX = 0xfff;
+  
   class Chunk;
 
-  enum class OpCode : uint8_t
+  enum class OpCode : uint32_t
   {
     // no args
     OP_RETURN,
+    OP_NEGATE,
+    OP_ADD,
+    OP_SUBTRACT,
+    OP_MULTIPLY,
+    OP_DIVIDE,
+    OP_INTDIV,
     // a
     OP_CONSTANT,
   };
-  struct Inst
-  {
-    OpCode op;
-    union
-    {
-      struct
-      {
-        uint8_t a, b, c;
-      } abc;
-    } data;
 
-    Inst(OpCode op);
-    Inst(OpCode op, uint8_t a);
-    Inst(OpCode op, uint8_t a, uint8_t b);
+
+  union Inst
+  {
+    struct
+    {
+      OpCode op : 8;
+      uint32_t : 24;
+    } N;
+    struct
+    {
+      OpCode op : 8;
+      uint32_t a : 24;
+    } A;
+    struct
+    {
+      OpCode op : 8;
+      uint32_t a : 12;
+      uint32_t b : 12;
+    }AB;
+
+    Inst(OpCode o);
+    Inst(OpCode o, uint32_t a);
 
     std::string to_string(const Chunk& chunk) const;
   };
@@ -61,7 +77,7 @@ namespace foxlox
     const ValueArray& get_constants() const;
     const LineInfo& get_lines() const;
     void add_code(Inst c, int line_num);
-    uint8_t add_constant(Value v);
+    uint32_t add_constant(Value v);
   private:
     LineInfo lines;
     Code code;

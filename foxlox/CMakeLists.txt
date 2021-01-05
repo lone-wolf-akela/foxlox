@@ -7,7 +7,7 @@ cmake_minimum_required (VERSION 3.16)
 add_executable (foxlox 
   "foxlox.cpp"
   "mimalloc-new-delete.cpp"
-  )
+  "debug.cpp" "chunk.cpp" "value.cpp" "util.h")
 target_compile_features(foxlox PRIVATE cxx_std_20)
 
 find_package(Microsoft.GSL CONFIG REQUIRED)

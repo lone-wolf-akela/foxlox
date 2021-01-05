@@ -1,5 +1,5 @@
-#ifndef FOXLOC_CHUNK_H
-#define FOXLOC_CHUNK_H
+#ifndef FOXLOX_CHUNK_H
+#define FOXLOX_CHUNK_H
 
 #include <cstdint>
 #include <vector>
@@ -84,4 +84,4 @@ namespace foxlox
     ValueArray constants;
   };
 }
-#endif // FOXLOC_CHUNK_H
+#endif // FOXLOX_CHUNK_H

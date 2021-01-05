@@ -1,5 +1,5 @@
-#ifndef FOXLOC_VALUE_H
-#define FOXLOC_VALUE_H
+#ifndef FOXLOX_VALUE_H
+#define FOXLOX_VALUE_H
 
 #include <cassert>
 #include <cstdint>
@@ -49,4 +49,4 @@ namespace foxlox
   }
 }
 
-#endif // FOXLOC_VALUE_H
+#endif // FOXLOX_VALUE_H

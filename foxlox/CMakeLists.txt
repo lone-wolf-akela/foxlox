@@ -10,8 +10,10 @@ add_executable (foxlox
   "config.h"
   "debug.h" "debug.cpp" 
   "chunk.h" "chunk.cpp" 
-  "VALUE.h" "value.cpp" 
-  "vm.h" "vm.cpp")
+  "value.h" "value.cpp" 
+  "vm.h" "vm.cpp" 
+  "compiler.h" "compiler.cpp" 
+  "scanner.h" "scanner.cpp" "token.h")
 target_compile_features(foxlox PRIVATE cxx_std_20)
 
 find_package(Microsoft.GSL CONFIG REQUIRED)

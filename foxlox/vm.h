@@ -1,5 +1,5 @@
-#ifndef FOXLOC_VM_H
-#define FOXLOC_VM_H
+#ifndef FOXLOX_VM_H
+#define FOXLOX_VM_H
 
 #include <array>
 #include <vector>
@@ -13,7 +13,6 @@ namespace foxlox
   enum class InterpretResult
   {
     OK,
-    COMPILE_ERROR,
     RUNTIME_ERROR
   };
   

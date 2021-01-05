@@ -4,7 +4,10 @@
 cmake_minimum_required (VERSION 3.16)
 
 # 将源代码添加到此项目的可执行文件。
-add_executable (foxlox "foxlox.cpp" )
+add_executable (foxlox 
+  "foxlox.cpp"
+  "mimalloc-new-delete.cpp"
+  )
 target_compile_features(foxlox PRIVATE cxx_std_20)
 
 find_package(Microsoft.GSL CONFIG REQUIRED)

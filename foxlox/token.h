@@ -3,9 +3,8 @@
 
 #include <string>
 #include <string_view>
-#include <fmt/format.h>
 
-#include "value.h"
+#include "compiletime_value.h"
 
 namespace foxlox
 {
@@ -30,28 +29,19 @@ namespace foxlox
     RETURN, SUPER, THIS, TRUE, VAR, WHILE,
     BREAK, CONTINUE,
 
-    EOF
+    TKERROR, TKEOF
   };
 
   struct Token
   {
     const TokenType type;
     const std::string lexeme;
-    const Value literal;
+    const CompiletimeValue literal;
     const int line;
 
-    Token(TokenType type, std::string_view lexeme, Value literal, int line) :
-      type(type),
-      lexeme(lexeme),
-      literal(literal),
-      line(line)
-    {
-    }
+    Token(TokenType type, std::string_view lexeme, CompiletimeValue literal, int line);
 
-    std::string to_string()
-    {
-      return fmt::format("{} {} {}", type, lexeme, literal);
-    }
+    std::string to_string() const;
   };
 }
 

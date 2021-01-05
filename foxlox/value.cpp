@@ -1,6 +1,10 @@
 #include "value.h"
 namespace foxlox
 {
+  Value::Value()
+  {
+    type = NIL;
+  }
   Value::Value(double f64)
   {
     type = F64;

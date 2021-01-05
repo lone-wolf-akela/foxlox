@@ -13,7 +13,10 @@ add_executable (foxlox
   "value.h" "value.cpp" 
   "vm.h" "vm.cpp" 
   "compiler.h" "compiler.cpp" 
-  "scanner.h" "scanner.cpp" "token.h")
+  "scanner.h" "scanner.cpp" 
+  "token.h" "token.cpp"
+  "util.h" "util.cpp" 
+  "compiletime_value.h" "compiletime_value.cpp")
 target_compile_features(foxlox PRIVATE cxx_std_20)
 
 find_package(Microsoft.GSL CONFIG REQUIRED)
@@ -23,10 +26,12 @@ find_package(mimalloc 1.6 CONFIG REQUIRED)
 target_link_libraries(foxlox PRIVATE mimalloc)
 
 find_package(fmt CONFIG REQUIRED)
-target_link_libraries(foxlox PUBLIC fmt::fmt)
+target_link_libraries(foxlox PRIVATE fmt::fmt)
 
 find_package(range-v3 CONFIG REQUIRED)
 target_link_libraries(foxlox PRIVATE range-v3)
+
+find_package(magic_enum CONFIG REQUIRED)
 
 if(MSVC)
   target_compile_options(foxlox PRIVATE /utf-8)

@@ -1,0 +1,23 @@
+#ifndef FOXLOX_COMPILETIME_VALUE_H
+#define FOXLOX_COMPILETIME_VALUE_H
+
+#include <cstdint>
+#include <string>
+#include <string_view>
+#include <variant>
+
+namespace foxlox
+{
+  struct CompiletimeValue
+  {
+    std::variant<std::monostate, double, int64_t, std::string> v;
+    CompiletimeValue();
+    CompiletimeValue(double f64);
+    CompiletimeValue(int64_t i64);
+    CompiletimeValue(std::string_view str);
+
+    std::string to_string() const;
+  };
+}
+
+#endif // FOXLOX_COMPILETIME_VALUE_H

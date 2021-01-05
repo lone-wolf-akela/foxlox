@@ -14,7 +14,7 @@ namespace foxlox
   {
     enum : uint8_t
     {
-      F64, I64, STR
+      NIL, F64, I64, STR,
     } type;
     union 
     {
@@ -22,7 +22,7 @@ namespace foxlox
       int64_t i64;
     } v;
 
-    Value() = default;
+    Value();
     Value(double f64);
     Value(int64_t i64);
 

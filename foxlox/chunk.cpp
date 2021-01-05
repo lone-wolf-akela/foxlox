@@ -3,6 +3,7 @@
 #include <map>
 #include <string_view>
 
+#include <magic_enum.hpp>
 #include <fmt/format.h>
 #include <gsl/gsl>
 
@@ -27,18 +28,6 @@ namespace
     {OpCode::OP_INTDIV, OpType::N},
 
     {OpCode::OP_CONSTANT, OpType::A},
-  };
-  const std::map<OpCode, std::string_view> opname
-  {
-    {OpCode::OP_RETURN, "OP_RETURN"},
-    {OpCode::OP_NEGATE, "OP_NEGATE"},
-    {OpCode::OP_ADD, "OP_ADD"},
-    {OpCode::OP_SUBTRACT, "OP_SUBTRACT"},
-    {OpCode::OP_MULTIPLY, "OP_MULTIPLY"},
-    {OpCode::OP_DIVIDE, "OP_DIVIDE"},
-    {OpCode::OP_INTDIV, "OP_INTDIV"},
-
-    {OpCode::OP_CONSTANT, "OP_CONSTANT"},
   };
 }
 
@@ -100,7 +89,7 @@ namespace foxlox
   {
     if (optype.at(N.op) == OpType::N)
     {
-      return std::string(opname.at(N.op));
+      return std::string(magic_enum::enum_name(N.op));
     }
     switch (N.op)
     {
@@ -108,7 +97,7 @@ namespace foxlox
     {
       const auto constant = A.a;
       return fmt::format("{:<16} {:>4} `{}'",
-        opname.at(N.op), constant, chunk.get_constants().at(constant).to_string());
+        magic_enum::enum_name(N.op), constant, chunk.get_constants().at(constant).to_string());
     }
     default:
       assert(false);

@@ -1,0 +1,10 @@
+{
+  "name": "foxlox",
+  "version-string": "0.0.1",
+  "dependencies": [
+    "fmt",
+    "mimalloc",
+    "ms-gsl",
+    "range-v3"
+  ]
+}

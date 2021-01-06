@@ -65,6 +65,15 @@ int main(int argc, const char* argv[])
 {
   VM vm;
 
+#ifdef _DEBUG
+  std::ignore = argc;
+  std::ignore = argv;
+  const auto code = R"(
+var a = 1;
+)";
+  run(code, vm);
+  return 0;
+#else
   if (argc == 2)
   {
     run_file(argv[1], vm);
@@ -78,6 +87,6 @@ int main(int argc, const char* argv[])
     fmt::print(stderr, "Usage: fox [script]\n");
     std::exit(64);
   }
-
   return 0;
+#endif
 }

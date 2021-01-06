@@ -22,6 +22,10 @@ namespace foxlox
   {
     v = std::string(str);
   }
+  CompiletimeValue::CompiletimeValue(bool b)
+  {
+    v = b;
+  }
   std::string CompiletimeValue::to_string() const
   {
     if (std::holds_alternative<std::monostate>(v))
@@ -39,6 +43,10 @@ namespace foxlox
     else if (std::holds_alternative<std::string>(v))
     {
       return std::get<std::string>(v);
+    }
+    else if (std::holds_alternative<bool>(v))
+    {
+      return std::get<bool>(v) ? "true" : "false";
     }
     assert(false);
     return "";

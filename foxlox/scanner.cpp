@@ -55,7 +55,7 @@ namespace
 
 namespace foxlox
 {
-  Scanner::Scanner(std::u32string_view s) : source(s)
+  Scanner::Scanner(std::u32string&& s) : source(std::move(s))
   {
     start = 0;
     current = 0;
@@ -212,7 +212,7 @@ namespace foxlox
     }
     auto u32substr = source.substr(start, current - start);
     const auto u8substr = u32_to_u8(u32substr);
-    if (u8substr.find(U'.') == decltype(u8substr)::npos)
+    if (u8substr.find(U'.') != decltype(u8substr)::npos)
     {
       double f64;
       const auto r = std::from_chars(u8substr.data(), u8substr.data() + u8substr.size(), f64);

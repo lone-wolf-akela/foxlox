@@ -20,11 +20,11 @@ namespace foxlox
   class Scanner
   {
   public:
-    Scanner(std::u32string_view s);
+    Scanner(std::u32string&& s);
     std::vector<Token> scan_tokens();
 
   private:
-    const std::u32string_view source;
+    const std::u32string source;
     std::vector<Token> tokens;
 
     gsl::index start;

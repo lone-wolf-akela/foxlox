@@ -16,7 +16,7 @@ namespace foxlox
 {
   std::string u32_to_u8(std::u32string_view in)
   {
-    std::u16string buffer(in.size() * 2, u'0');
+    std::u16string buffer(in.size() * 2, u'\0');
     {
       UErrorCode err = U_ZERO_ERROR;
       int32_t u16_len;
@@ -28,10 +28,10 @@ namespace foxlox
         gsl::narrow_cast<int32_t>(ssize(in)),
         &err
       );
-      buffer.resize(u16_len);
       assert(!U_FAILURE(err));
+      buffer.resize(u16_len);
     }
-    std::string result(in.size() * 4, '0');
+    std::string result(in.size() * 4, '\0');
     {
       UErrorCode err = U_ZERO_ERROR;
       int32_t u8_len;
@@ -54,7 +54,7 @@ namespace foxlox
   }
   std::u32string u8_to_u32(std::string_view in)
   {
-    std::u16string buffer(in.size() * 2, u'0');
+    std::u16string buffer(in.size() * 2, u'\0');
     {
       UErrorCode err = U_ZERO_ERROR;
       int32_t u16_len;
@@ -66,10 +66,10 @@ namespace foxlox
         gsl::narrow_cast<int32_t>(ssize(in)),
         &err
       );
-      buffer.resize(u16_len);
       assert(!U_FAILURE(err));
+      buffer.resize(u16_len);
     }
-    std::u32string result(in.size(), U'0');
+    std::u32string result(in.size(), U'\0');
     {
       UErrorCode err = U_ZERO_ERROR;
       int32_t u32_len;

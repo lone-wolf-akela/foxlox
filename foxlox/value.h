@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <compare>
 
 #include <fmt/format.h>
 
@@ -14,15 +15,17 @@ namespace foxlox
   {
     enum : uint8_t
     {
-      NIL, F64, I64, STR,
+      NIL, BOOL, F64, I64, STR,
     } type;
     union 
     {
+      bool b;
       double f64;
       int64_t i64;
     } v;
 
     Value();
+    Value(bool b);
     Value(double f64);
     Value(int64_t i64);
 
@@ -35,6 +38,8 @@ namespace foxlox
     Value mul(Value r);
     Value div(Value r);
     Value intdiv(Value r);
+
+    std::partial_ordering operator<=>(Value& r);
 
     std::string to_string() const;
   };

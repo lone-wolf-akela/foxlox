@@ -93,7 +93,12 @@ namespace foxlox
     case '+': add_token(TokenType::PLUS); break;
     case ';': add_token(TokenType::SEMICOLON); break;
     case '*': add_token(TokenType::STAR); break;
-    case '/': add_token(TokenType::SLASH); break;
+    case '/':  
+    {
+      if (match('/')) { add_token(TokenType::SLASH_SLASH); }
+      else { add_token(TokenType::SLASH); }
+      break;
+    }
     case ':': add_token(TokenType::COLON); break;
     case '!':
     {

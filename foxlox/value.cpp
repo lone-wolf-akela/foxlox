@@ -5,6 +5,11 @@ namespace foxlox
   {
     type = NIL;
   }
+  Value::Value(bool b)
+  {
+    type = BOOL;
+    v.b = b;
+  }
   Value::Value(double f64)
   {
     type = F64;
@@ -98,6 +103,35 @@ namespace foxlox
     r.cast_int64();
     v.i64 /= r.v.i64;
     return *this;
+  }
+  std::partial_ordering Value::operator<=>(Value& r)
+  {
+    if (type == NIL && r.type == NIL)
+    {
+      return std::partial_ordering::equivalent;
+    }
+    if (type == I64 && r.type == I64)
+    {
+      return v.i64 <=> r.v.i64;
+    }
+    if ((type == I64 || type == F64) &&
+      (r.type == I64 || r.type == F64))
+    {
+      cast_double();
+      r.cast_double();
+      return v.f64 <=> r.v.f64;
+    }
+    if (type == BOOL && r.type == BOOL)
+    {
+      return v.b <=> r.v.b;
+    }
+    if (type == STR && r.type == STR)
+    {
+      // TODO
+      assert(false);
+      return std::partial_ordering::unordered;
+    }
+    return std::partial_ordering::unordered;
   }
   std::string Value::to_string() const
   {

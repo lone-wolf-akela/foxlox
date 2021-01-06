@@ -1,35 +1,9 @@
 #include <cassert>
-#include <limits>
-#include <map>
 #include <string_view>
 
-#include <magic_enum.hpp>
-#include <fmt/format.h>
 #include <gsl/gsl>
 
 #include "chunk.h"
-
-namespace
-{
-  using namespace foxlox;
-  enum class OpType
-  {
-    N, A, AB,
-  };
-
-  const std::map<OpCode, OpType> optype
-  {
-    {OpCode::OP_RETURN, OpType::N},
-    {OpCode::OP_NEGATE, OpType::N},
-    {OpCode::OP_ADD, OpType::N},
-    {OpCode::OP_SUBTRACT, OpType::N},
-    {OpCode::OP_MULTIPLY, OpType::N},
-    {OpCode::OP_DIVIDE, OpType::N},
-    {OpCode::OP_INTDIV, OpType::N},
-
-    {OpCode::OP_CONSTANT, OpType::A},
-  };
-}
 
 namespace foxlox
 {
@@ -50,7 +24,7 @@ namespace foxlox
   {
     constants.push_back(v);
     const auto index = constants.size() - 1;
-    assert(index <= INST_A_MAX);
+    assert(index <= INST_UA_MAX);
     return gsl::narrow<uint32_t>(index);
   }
   const LineInfo& Chunk::get_lines() const
@@ -71,37 +45,5 @@ namespace foxlox
       last_line_num = line.line_num;
     }
     return last_line_num;
-  }
-  Inst::Inst(OpCode o)
-  {
-    assert(optype.at(o) == OpType::N);
-    N.op = o;
-  }
-  Inst::Inst(OpCode o, uint32_t a)
-  {
-    assert(optype.at(o) == OpType::A);
-    assert(a <= INST_A_MAX);
-    A.op = o;
-    A.a = a;
-  }
-
-  std::string Inst::to_string(const Chunk& chunk) const
-  {
-    if (optype.at(N.op) == OpType::N)
-    {
-      return std::string(magic_enum::enum_name(N.op));
-    }
-    switch (N.op)
-    {
-    case OpCode::OP_CONSTANT:
-    {
-      const auto constant = A.a;
-      return fmt::format("{:<16} {:>4} `{}'",
-        magic_enum::enum_name(N.op), constant, chunk.get_constants().at(constant).to_string());
-    }
-    default:
-      assert(false);
-      return "";
-    }
   }
 }

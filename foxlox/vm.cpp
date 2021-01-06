@@ -32,12 +32,17 @@ namespace foxlox
       Inst inst = read_inst();
       switch (inst.N.op)
       {
+        // N
       case OpCode::OP_RETURN:
+      {
         fmt::print("{}\n", pop().to_string());
         return InterpretResult::OK;
+      }
       case OpCode::OP_NEGATE:
+      {
         push(pop().neg());
         break;
+      }
       case OpCode::OP_ADD:
       {
         Value v = pop();
@@ -68,9 +73,64 @@ namespace foxlox
         push(pop().intdiv(v));
         break;
       }
-      case OpCode::OP_CONSTANT:
-        push(chunk->get_constants()[inst.A.a]);
+      case OpCode::OP_EQ:
+      {
+        Value v = pop();
+        push(Value(pop() == v));
         break;
+      }
+      case OpCode::OP_NE:
+      {
+        Value v = pop();
+        push(Value(pop() != v));
+        break;
+      }
+      case OpCode::OP_GT:
+      {
+        Value v = pop();
+        push(Value(pop() > v));
+        break;
+      }
+      case OpCode::OP_GE:
+      {
+        Value v = pop();
+        push(Value(pop() >= v));
+        break;
+      }
+      case OpCode::OP_LT:
+      {
+        Value v = pop();
+        push(Value(pop() < v));
+        break;
+      }
+      case OpCode::OP_LE:
+      {
+        Value v = pop();
+        push(Value(pop() <= v));
+        break;
+      }
+      case OpCode::OP_NIL:
+      {
+        push(Value());
+        break;
+      }
+      // uA
+      case OpCode::OP_CONSTANT:
+      {
+        push(chunk->get_constants()[inst.uA.ua]);
+        break;
+      }
+      case OpCode::OP_BOOL:
+      {
+        push(Value(bool(inst.uA.ua)));
+        break;
+      }
+      // iA
+      case OpCode::OP_INT:
+      {
+        push(Value(int64_t(inst.iA.ia)));
+        break;
+      }
       default:
         assert(false);
         break;

@@ -26,7 +26,7 @@ namespace foxlox
     current = 0;
     had_error = false;
   }
-  std::vector<std::unique_ptr<stmt::Stmt>> Parser::parse()
+  AST Parser::parse()
   {
     had_error = false;
 
@@ -274,7 +274,7 @@ namespace foxlox
   std::unique_ptr<expr::Expr> Parser::factor()
   {
     auto expr = unary();
-    while (match(TokenType::SLASH, TokenType::STAR))
+    while (match(TokenType::SLASH, TokenType::STAR, TokenType::SLASH_SLASH))
     {
       Token op = previous();
       auto right = unary();

@@ -19,7 +19,9 @@ add_executable (fox
   "compiletime_value.h" "compiletime_value.cpp"
   "stmt.h" "stmt.cpp" 
   "expr.h" "expr.cpp" 
-  "parser.h" "parser.cpp")
+  "parser.h" "parser.cpp" 
+  "opcode.h" "opcode.cpp" 
+  "codegen.h" "codegen.cpp")
 target_compile_features(fox PRIVATE cxx_std_20)
 
 find_package(Microsoft.GSL CONFIG REQUIRED)

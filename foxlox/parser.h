@@ -10,11 +10,12 @@
 
 namespace foxlox
 {
+  using AST = std::vector<std::unique_ptr<stmt::Stmt>>;
   class Parser
   {
   public:
     Parser(std::vector<Token>&& tokens);
-    std::vector<std::unique_ptr<stmt::Stmt>> parse();
+    AST parse();
     bool get_had_error();
   private:
     const std::vector<Token> tokens;

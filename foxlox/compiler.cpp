@@ -1,5 +1,6 @@
 #include "scanner.h"
 #include "parser.h"
+#include "codegen.h"
 
 #include "compiler.h"
 
@@ -14,7 +15,8 @@ namespace foxlox
     {
       return std::make_tuple(CompilerResult::COMPILE_ERROR, Chunk());
     }
-    std::ignore = ast;
-    return std::make_tuple(CompilerResult::COMPILE_ERROR, Chunk());
+    CodeGen codegen(std::move(ast));
+    auto chunk = codegen.gen();
+    return std::make_tuple(CompilerResult::OK, std::move(chunk));
   }
 }

@@ -1,4 +1,5 @@
 #include <gsl/gsl>
+#include <fmt/format.h>
 
 #include "value.h"
 namespace foxlox

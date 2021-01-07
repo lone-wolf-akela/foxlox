@@ -8,10 +8,10 @@
 
 #include <fmt/format.h>
 
-#include "debug.h"
-#include "chunk.h"
-#include "vm.h"
-#include "compiler.h"
+#include <debug.h>
+#include <chunk.h>
+#include <vm.h>
+#include <compiler.h>
 
 using namespace foxlox;
 

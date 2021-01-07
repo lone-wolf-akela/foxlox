@@ -9,8 +9,6 @@
 #include <string_view>
 #include <version>
 
-#include <fmt/format.h>
-
 namespace foxlox
 {
   struct String

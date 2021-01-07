@@ -7,8 +7,8 @@
 
 #include <gsl/gsl>
 
-#include "value.h"
-#include "opcode.h"
+#include "../src/value.h"
+#include "../src/opcode.h"
 
 namespace foxlox
 {

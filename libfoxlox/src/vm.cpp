@@ -1,5 +1,7 @@
 #include <span>
 
+#include <fmt/format.h>
+
 #include "debug.h"
 #include "vm.h"
 

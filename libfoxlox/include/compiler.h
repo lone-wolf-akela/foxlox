@@ -4,7 +4,7 @@
 #include <tuple>
 #include <string_view>
 
-#include "chunk.h"
+#include <chunk.h>
 
 namespace foxlox
 {

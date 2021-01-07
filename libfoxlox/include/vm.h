@@ -4,9 +4,9 @@
 #include <array>
 #include <vector>
 
-#include "config.h"
-#include "chunk.h"
-#include "value.h"
+#include <chunk.h>
+#include "../src/config.h"
+#include "../src/value.h"
 
 namespace foxlox
 {

@@ -8,7 +8,6 @@ project(libfoxlox)
 # 将源代码添加到此项目的可执行文件。
 add_library(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PRIVATE
-  "src/mimalloc-new-delete.cpp"
   "src/config.cpp"
   "src/debug.cpp" 
   "src/chunk.cpp" 
@@ -42,13 +41,8 @@ install(EXPORT ${PROJECT_NAME}-config
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
-
 find_package(Microsoft.GSL CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft.GSL::GSL)
-
-find_package(mimalloc 1.6 CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc)
 
 find_package(fmt CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
@@ -58,6 +52,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE range-v3)
 
 find_package(magic_enum CONFIG REQUIRED)
 
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 if(MSVC)
   target_compile_options(${PROJECT_NAME} PRIVATE /utf-8)
   target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)

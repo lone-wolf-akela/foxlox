@@ -6,6 +6,7 @@
     "mimalloc",
     "ms-gsl",
     "range-v3",
-    "magic-enum"
+    "magic-enum",
+    "gtest"
   ]
 }

@@ -25,6 +25,14 @@ namespace foxlox
     ip = c.get_code().begin();
     return run();
   }
+  size_t VM::get_stack_size()
+  {
+    return std::distance(stack.begin(), stack_top);
+  }
+  size_t VM::get_stack_capacity()
+  {
+    return std::tuple_size_v<decltype(VM::stack)>;
+  }
   InterpretResult VM::run()
   {
     while (true)
@@ -42,10 +50,13 @@ namespace foxlox
       switch (inst.N.op)
       {
       // N
+      case OpCode::OP_NOP:
+      {
+        /* do nothing */
+        break;
+      }
       case OpCode::OP_RETURN:
       {
-        fmt::print("{}\n", top()->to_string());
-        pop();
         return InterpretResult::OK;
       }
       case OpCode::OP_NEGATE:
@@ -195,11 +206,7 @@ namespace foxlox
   }
   VM::Stack::iterator VM::top(int from_top)
   {
-    return stack_top - from_top;
-  }
-  VM::Stack::iterator VM::top()
-  {
-    return stack_top;
+    return stack_top - from_top - 1;
   }
   void VM::push()
   {

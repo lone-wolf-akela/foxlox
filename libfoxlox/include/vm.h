@@ -23,6 +23,14 @@ namespace foxlox
     ~VM();
 
     InterpretResult interpret(const Chunk& c);
+
+    // stack ops
+    using Stack = std::array<Value, STACK_MAX>;
+    size_t get_stack_size();
+    static size_t get_stack_capacity();
+    Stack::iterator top(int from_top = 0);
+    void push();
+    void pop();
   private:
     InterpretResult run();
     Inst read_inst();
@@ -30,14 +38,9 @@ namespace foxlox
 
     Chunk::Code::const_iterator ip;
     const Chunk* chunk;
-
-    using Stack = std::array<Value, STACK_MAX>;
+    
     Stack stack;
     Stack::iterator stack_top;
-    Stack::iterator top(int from_top);
-    Stack::iterator top();
-    void push();
-    void pop();
 
     // data pool
     std::vector<String*> string_pool;

@@ -3,7 +3,9 @@
 #
 cmake_minimum_required (VERSION 3.16)
 
-project(fox)
+project(tests)
+
+enable_testing()
 
 # 将源代码添加到此项目的可执行文件。
 add_executable(${PROJECT_NAME})
@@ -11,13 +13,17 @@ add_executable(${PROJECT_NAME})
 add_dependencies(${PROJECT_NAME} libfoxlox)
 
 target_sources(${PROJECT_NAME} PRIVATE
-  "src/mimalloc-new-delete.cpp"
-  "src/foxlox.cpp")
-
-find_package(mimalloc 1.6 CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC mimalloc)
+  "src/basic_tests.cpp" "src/vm_single_inst.cpp")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE libfoxlox)
+
+find_package(magic_enum CONFIG REQUIRED)
+
+find_package(GTest CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE GTest::gtest GTest::gtest_main)
+
+find_package(fmt CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 if(MSVC)
@@ -26,3 +32,5 @@ if(MSVC)
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic -Werror)
 endif()
+
+add_test(NAME run_test COMMAND ${PROJECT_NAME})

@@ -1,5 +1,8 @@
 #include <gsl/gsl>
 #include <fmt/format.h>
+#include <magic_enum.hpp>
+
+#include <foxexcept.h>
 
 #include "value.h"
 namespace foxlox
@@ -118,6 +121,15 @@ namespace foxlox
     {
       return Value(l.get_double() + r.get_double());
     }
+    if (l.type == Value::STR && r.type == Value::STR)
+    {
+      const auto s1 = l.v.str->get_view();
+      const auto s2 = r.v.str->get_view();
+      String* p = String::alloc(s1.size() + s2.size());
+      const auto it = std::copy(s1.begin(), s1.end(), p->str);
+      std::copy(s2.begin(), s2.end(), it);
+      return Value(p);
+    }
     assert(false);
     return {};
   }
@@ -143,9 +155,11 @@ namespace foxlox
   }
   int64_t intdiv(const Value& l, const Value& r)
   {
-    auto il = l.get_int64();
-    auto ir = r.get_int64();
-    return il / ir;
+    if (l.type == Value::I64 && r.type == Value::I64)
+    {
+      return l.v.i64 / r.v.i64;
+    }
+    return static_cast<int64_t>(l.get_double() / r.get_double());
   }
   bool operator==(const Value& l, const Value& r)
   {
@@ -158,15 +172,21 @@ namespace foxlox
 
   std::string Value::to_string() const
   {
+    
     switch (type)
     {
+    case NIL:
+      return "nil";
+    case BOOL:
+      return v.b ? "true" : "false";
     case F64:
       return fmt::format("{}", v.f64);
     case I64:
       return fmt::format("{}", v.i64);
+    case STR:
+      return std::string(v.str->get_view());
     default:
-      assert(false);
-      return "";
+      throw FatalError(fmt::format("Unknown ValueType: {}", magic_enum::enum_name(type)).c_str());
     }
   }
   std::string_view String::get_view() const

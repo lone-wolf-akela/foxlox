@@ -20,7 +20,9 @@ namespace foxlox
     {
       char* data = new char[sizeof(String) + (l - sizeof(String::str))];
       assert(data != nullptr);
-      return reinterpret_cast<String*>(data);
+      String* str = reinterpret_cast<String*>(data);
+      str->length = l;
+      return str;
     }
     static void free(String* p)
     {

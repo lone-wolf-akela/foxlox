@@ -8,3 +8,4 @@ project(foxlox)
 # 包含子项目。
 add_subdirectory("libfoxlox")
 add_subdirectory("fox")
+add_subdirectory("tests")

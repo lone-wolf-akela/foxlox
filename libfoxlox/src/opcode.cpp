@@ -3,13 +3,16 @@
 #include <magic_enum.hpp>
 #include <fmt/format.h>
 
-#include "chunk.h"
+
+#include <chunk.h>
+#include <foxexcept.h>
 #include "opcode.h"
 
 namespace foxlox
 {
   const std::map<OpCode, OpType> optype
   {
+    {OpCode::OP_NOP, OpType::N},
     {OpCode::OP_RETURN, OpType::N},
     {OpCode::OP_NEGATE, OpType::N},
     {OpCode::OP_ADD, OpType::N},
@@ -18,6 +21,12 @@ namespace foxlox
     {OpCode::OP_DIVIDE, OpType::N},
     {OpCode::OP_INTDIV, OpType::N},
     {OpCode::OP_NIL, OpType::N},
+    {OpCode::OP_EQ, OpType::N},
+    {OpCode::OP_NE, OpType::N},
+    {OpCode::OP_GT, OpType::N},
+    {OpCode::OP_GE, OpType::N},
+    {OpCode::OP_LT, OpType::N},
+    {OpCode::OP_LE, OpType::N},
 
     {OpCode::OP_CONSTANT, OpType::uA},
     {OpCode::OP_STRING, OpType::uA},
@@ -31,12 +40,21 @@ namespace foxlox
     assert(optype.at(o) == OpType::N);
     N.op = o;
   }
-  Inst::Inst(OpCode o, uint32_t a)
+  Inst::Inst(OpCode o, uint32_t ua)
   {
     assert(optype.at(o) == OpType::uA);
-    assert(a <= INST_UA_MAX);
+    assert(ua <= INST_UA_MAX);
     uA.op = o;
-    uA.ua = a;
+    uA.ua = ua;
+  }
+  Inst::Inst(OpCode o, uint32_t ua, uint32_t ub)
+  {
+    assert(optype.at(o) == OpType::uAB);
+    assert(ua <= INST_UAB_MAX);
+    assert(ub <= INST_UAB_MAX);
+    uAB.op = o;
+    uAB.ua = ua;
+    uAB.ub = ub;
   }
   Inst::Inst(OpCode o, int32_t ia)
   {
@@ -80,8 +98,7 @@ namespace foxlox
         magic_enum::enum_name(iA.op), "", iA.ia);
     }
     default:
-      assert(false);
-      return "";
+      throw FatalError(fmt::format("Unknown OpCode: {}", magic_enum::enum_name(N.op)).c_str());
     }
   }
 }

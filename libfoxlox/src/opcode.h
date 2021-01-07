@@ -5,15 +5,17 @@
 
 namespace foxlox
 {
-  constexpr uint32_t INST_UA_MAX = 0xfff;
-  constexpr int32_t INST_IA_MIN = 0xfff;
-  constexpr int32_t INST_IA_MAX = -0x800;
+  constexpr uint32_t INST_UA_MAX = 0xffffff;
+  constexpr int32_t INST_IA_MAX = 0x7fffff;
+  constexpr int32_t INST_IA_MIN = -0x800000;
+  constexpr uint32_t INST_UAB_MAX = 0xfff;
 
   class Chunk;
 
   enum class OpCode : uint32_t
   {
     // no args
+    OP_NOP,
     OP_NIL,
     OP_RETURN,
 
@@ -70,7 +72,8 @@ namespace foxlox
     }uAB;
 
     Inst(OpCode o);
-    Inst(OpCode o, uint32_t a);
+    Inst(OpCode o, uint32_t ua);
+    Inst(OpCode o, uint32_t ua, uint32_t ub);
     Inst(OpCode o, int32_t ia);
 
     std::string to_string(const Chunk& chunk) const;

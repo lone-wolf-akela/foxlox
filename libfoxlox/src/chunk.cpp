@@ -2,6 +2,7 @@
 #include <string_view>
 
 #include <gsl/gsl>
+#include <algorithm>
 
 #include "chunk.h"
 
@@ -34,6 +35,7 @@ namespace foxlox
   uint32_t Chunk::add_string(std::string_view str)
   {
     String* p = String::alloc(str.size());
+    std::copy(str.begin(), str.end(), p->str);
     strings.push_back(p);
     const auto index = strings.size() - 1;
     assert(index <= INST_UA_MAX);

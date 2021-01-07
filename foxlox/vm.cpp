@@ -69,66 +69,90 @@ namespace foxlox
       }
       case OpCode::OP_INTDIV:
       {
-        Value v = pop();
-        push(pop().intdiv(v));
+        auto l = top(1);
+        auto r = top(0);
+        *l = intdiv(*l, *r);
+        pop();
         break;
       }
       case OpCode::OP_EQ:
       {
-        Value v = pop();
-        push(Value(pop() == v));
+        auto l = top(1);
+        auto r = top(0);
+        *l = *l == *r;
+        pop();
         break;
       }
       case OpCode::OP_NE:
       {
-        Value v = pop();
-        push(Value(pop() != v));
+        auto l = top(1);
+        auto r = top(0);
+        *l = *l != *r;
+        pop();
         break;
       }
       case OpCode::OP_GT:
       {
-        Value v = pop();
-        push(Value(pop() > v));
+        auto l = top(1);
+        auto r = top(0);
+        *l = *l > *r;
+        pop();
         break;
       }
       case OpCode::OP_GE:
       {
-        Value v = pop();
-        push(Value(pop() >= v));
+        auto l = top(1);
+        auto r = top(0);
+        *l = *l >= *r;
+        pop();
         break;
       }
       case OpCode::OP_LT:
       {
-        Value v = pop();
-        push(Value(pop() < v));
+        auto l = top(1);
+        auto r = top(0);
+        *l = *l < *r;
+        pop();
         break;
       }
       case OpCode::OP_LE:
       {
-        Value v = pop();
-        push(Value(pop() <= v));
+        auto l = top(1);
+        auto r = top(0);
+        *l = *l <= *r;
+        pop();
         break;
       }
       case OpCode::OP_NIL:
       {
-        push(Value());
+        push();
+        *top() = Value();
         break;
       }
       // uA
       case OpCode::OP_CONSTANT:
       {
-        push(chunk->get_constants()[inst.uA.ua]);
+        push();
+        *top() = chunk->get_constants()[inst.uA.ua];
+        break;
+      }
+      case OpCode::OP_STRING:
+      {
+        push();
+        *top() = chunk->get_strings()[inst.uA.ua];
         break;
       }
       case OpCode::OP_BOOL:
       {
-        push(Value(bool(inst.uA.ua)));
+        push();
+        *top() = Value(bool(inst.uA.ua));
         break;
       }
       // iA
       case OpCode::OP_INT:
       {
-        push(Value(int64_t(inst.iA.ia)));
+        push();
+        *top() = Value(int64_t(inst.iA.ia));
         break;
       }
       default:
@@ -147,14 +171,20 @@ namespace foxlox
   {
     stack_top = stack.begin();
   }
-  void VM::push(Value value)
+  VM::Stack::iterator VM::top(int from_top)
   {
-    *stack_top = value;
+    return stack_top - from_top;
+  }
+  VM::Stack::iterator VM::top()
+  {
+    return stack_top;
+  }
+  void VM::push()
+  {
     stack_top++;
   }
-  Value VM::pop()
+  void VM::pop()
   {
     stack_top--;
-    return *stack_top;
   }
 }

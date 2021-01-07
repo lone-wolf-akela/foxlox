@@ -5,6 +5,11 @@ namespace foxlox
   {
     type = NIL;
   }
+  Value::Value(String* str)
+  {
+    type = STR;
+    v.str = str;
+  }
   Value::Value(bool b)
   {
     type = BOOL;
@@ -33,6 +38,18 @@ namespace foxlox
     assert(type == F64);
     type = I64;
     v.i64 = static_cast<int64_t>(v.f64);
+  }
+  double Value::get_double() const
+  {
+    if (type == F64) { return v.f64; }
+    assert(type == I64);
+    return static_cast<double>(v.i64);
+  }
+  int64_t Value::get_int64() const
+  {
+    if (type == I64) { return v.i64; }
+    assert(type == F64);
+    return static_cast<int64_t>(v.f64);
   }
   Value Value::neg()
   {
@@ -96,36 +113,26 @@ namespace foxlox
     v.f64 /= r.v.f64;
     return *this;
   }
-  Value Value::intdiv(Value r)
+  std::partial_ordering operator<=>(const Value& l, const Value& r)
   {
-    num_have_double(*this, r);
-    cast_int64();
-    r.cast_int64();
-    v.i64 /= r.v.i64;
-    return *this;
-  }
-  std::partial_ordering Value::operator<=>(Value& r)
-  {
-    if (type == NIL && r.type == NIL)
+    if (l.type == Value::NIL && r.type == Value::NIL)
     {
       return std::partial_ordering::equivalent;
     }
-    if (type == I64 && r.type == I64)
+    if (l.type == Value::I64 && r.type == Value::I64)
     {
-      return v.i64 <=> r.v.i64;
+      return l.v.i64 <=> r.v.i64;
     }
-    if ((type == I64 || type == F64) &&
-      (r.type == I64 || r.type == F64))
+    if ((l.type == Value::I64 || l.type == Value::F64) &&
+      (r.type == Value::I64 || r.type == Value::F64))
     {
-      cast_double();
-      r.cast_double();
-      return v.f64 <=> r.v.f64;
+      return l.get_double() <=> r.get_double();
     }
-    if (type == BOOL && r.type == BOOL)
+    if (l.type == Value::BOOL && r.type == Value::BOOL)
     {
-      return v.b <=> r.v.b;
+      return l.v.b <=> r.v.b;
     }
-    if (type == STR && r.type == STR)
+    if (l.type == Value::STR && r.type == Value::STR)
     {
       // TODO
       assert(false);
@@ -133,6 +140,17 @@ namespace foxlox
     }
     return std::partial_ordering::unordered;
   }
+  int64_t intdiv(const Value& l, const Value& r)
+  {
+    auto il = l.get_int64();
+    auto ir = r.get_int64();
+    return il / ir;
+  }
+  bool operator==(const Value& l, const Value& r)
+  {
+    return (l <=> r) == std::partial_ordering::equivalent;
+  }
+
   std::string Value::to_string() const
   {
     switch (type)

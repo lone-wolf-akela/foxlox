@@ -100,8 +100,8 @@ namespace foxlox
     }
     if (std::holds_alternative<std::string>(v))
     {
-      // TODO
-      assert(false);
+      const auto str_index = chunk.add_string(std::get<std::string>(v));
+      emit(OpCode::OP_STRING, str_index);
       return;
     }
     if (std::holds_alternative<bool>(v))

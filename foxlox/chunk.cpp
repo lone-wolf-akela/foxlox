@@ -15,6 +15,10 @@ namespace foxlox
   {
     return constants;
   }
+  const Chunk::ConstStringPool& Chunk::get_strings() const
+  {
+    return strings;
+  }
   void Chunk::add_code(Inst c, int line_num)
   {
     lines.add_line(ssize(code), line_num);
@@ -25,7 +29,22 @@ namespace foxlox
     constants.push_back(v);
     const auto index = constants.size() - 1;
     assert(index <= INST_UA_MAX);
-    return gsl::narrow<uint32_t>(index);
+    return gsl::narrow_cast<uint32_t>(index);
+  }
+  uint32_t Chunk::add_string(std::string_view str)
+  {
+    String* p = String::alloc(str.size());
+    strings.push_back(p);
+    const auto index = strings.size() - 1;
+    assert(index <= INST_UA_MAX);
+    return gsl::narrow_cast<uint32_t>(index);
+  }
+  Chunk::~Chunk()
+  {
+    for (String* p : strings)
+    {
+      String::free(p);
+    }
   }
   const LineInfo& Chunk::get_lines() const
   {

@@ -32,8 +32,10 @@ namespace foxlox
     using Stack = std::array<Value, STACK_MAX>;
     Stack stack;
     Stack::iterator stack_top;
-    void push(Value value);
-    Value pop();
+    Stack::iterator top(int from_top);
+    Stack::iterator top();
+    void push();
+    void pop();
   };
 }
 #endif 

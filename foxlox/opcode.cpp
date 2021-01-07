@@ -1,3 +1,5 @@
+#include <string_view>
+
 #include <magic_enum.hpp>
 #include <fmt/format.h>
 
@@ -18,6 +20,7 @@ namespace foxlox
     {OpCode::OP_NIL, OpType::N},
 
     {OpCode::OP_CONSTANT, OpType::uA},
+    {OpCode::OP_STRING, OpType::uA},
     {OpCode::OP_BOOL, OpType::uA},
 
     {OpCode::OP_INT, OpType::iA},
@@ -57,6 +60,13 @@ namespace foxlox
       const auto constant = uA.ua;
       return fmt::format("{:<16} {:>4} `{}'",
         magic_enum::enum_name(uA.op), constant, chunk.get_constants().at(constant).to_string());
+    }
+    case OpCode::OP_STRING:
+    {
+      const auto str_idx = uA.ua;
+      const String* str = chunk.get_strings().at(str_idx);
+      return fmt::format("{:<16} {:>4} `{}'",
+        magic_enum::enum_name(uA.op), str_idx, std::string_view(str->str, str->length));
     }
     case OpCode::OP_BOOL:
     {

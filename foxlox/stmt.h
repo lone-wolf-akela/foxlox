@@ -184,7 +184,7 @@ namespace foxlox::stmt
         return visit_for_stmt(p);
       }
       assert(false);
-      return {};
+      return R();
     }
   };
 }

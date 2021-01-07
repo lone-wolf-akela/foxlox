@@ -33,6 +33,7 @@ namespace foxlox
     OP_LE,
     // a
     OP_CONSTANT,
+    OP_STRING,
     OP_BOOL,
     // iA
     OP_INT,

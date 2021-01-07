@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 #include <compare>
+#include <string_view>
+#include <version>
 
 #include <fmt/format.h>
 
@@ -18,7 +20,7 @@ namespace foxlox
 
     static String* alloc(size_t l)
     {
-      std::byte* data = new std::byte[sizeof(String) + (l - sizeof(String::str))];
+      char* data = new char[sizeof(String) + (l - sizeof(String::str))];
       assert(data != nullptr);
       return reinterpret_cast<String*>(data);
     }
@@ -26,6 +28,16 @@ namespace foxlox
     {
       delete[] reinterpret_cast<std::byte*>(p);
     }
+
+    std::string_view get_view() const;
+
+#if __cpp_lib_three_way_comparison >= 201907L
+    using TStrViewComp = decltype(std::string_view{} <=> std::string_view{});
+#else
+    using TStrViewComp = std::weak_ordering;
+#endif
+    friend TStrViewComp operator<=>(const String& l, const String& r);
+    friend bool operator==(const String& l, const String& r);
   };
 
   struct Value
@@ -48,17 +60,14 @@ namespace foxlox
     Value(double f64);
     Value(int64_t i64);
 
-    void cast_double();
-    void cast_int64();
     double get_double() const;
     int64_t get_int64() const;
 
-    Value neg();
-    Value add(Value r);
-    Value sub(Value r);
-    Value mul(Value r);
-    Value div(Value r);
-
+    friend double operator/(const Value& l, const Value& r);
+    friend Value operator*(const Value& l, const Value& r);
+    friend Value operator+(const Value& l, const Value& r);
+    friend Value operator-(const Value& l, const Value& r);
+    friend Value operator-(const Value& val);
     friend int64_t intdiv(const Value& l, const Value& r);
     friend std::partial_ordering operator<=>(const Value& l, const Value& r);
     friend bool operator==(const Value& l, const Value& r);
@@ -66,14 +75,6 @@ namespace foxlox
     std::string to_string() const;
   };
   using ValueArray = std::vector<Value>;
-
-  bool num_is_double(Value v);
-
-  template<typename ... Args>
-  bool num_have_double(Args ... args)
-  {
-    return (num_is_double(args) || ...);
-  }
 }
 
 #endif // FOXLOX_VALUE_H

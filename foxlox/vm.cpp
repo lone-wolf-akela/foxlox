@@ -10,6 +10,13 @@ namespace foxlox
     chunk = nullptr;
     reset_stack();
   }
+  VM::~VM()
+  {
+    for (String* p : string_pool)
+    {
+      String::free(p);
+    }
+  }
   InterpretResult VM::interpret(const Chunk& c)
   {
     chunk = &c;
@@ -32,39 +39,52 @@ namespace foxlox
       Inst inst = read_inst();
       switch (inst.N.op)
       {
-        // N
+      // N
       case OpCode::OP_RETURN:
       {
-        fmt::print("{}\n", pop().to_string());
+        fmt::print("{}\n", top()->to_string());
+        pop();
         return InterpretResult::OK;
       }
       case OpCode::OP_NEGATE:
       {
-        push(pop().neg());
+        *top() = -*top();
         break;
       }
       case OpCode::OP_ADD:
       {
-        Value v = pop();
-        push(pop().add(v));
+        auto l = top(1);
+        auto r = top(0);
+        *l = *l + *r;
+        if (l->type == Value::STR)
+        {
+          string_pool.push_back(l->v.str);
+        }
+        pop();
         break;
       }
       case OpCode::OP_SUBTRACT:
       {
-        Value v = pop();
-        push(pop().sub(v));
+        auto l = top(1);
+        auto r = top(0);
+        *l = *l - *r;
+        pop();
         break;
       }
       case OpCode::OP_MULTIPLY:
       {
-        Value v = pop();
-        push(pop().mul(v));
+        auto l = top(1);
+        auto r = top(0);
+        *l = *l * *r;
+        pop();
         break;
       }
       case OpCode::OP_DIVIDE:
       {
-        Value v = pop();
-        push(pop().div(v));
+        auto l = top(1);
+        auto r = top(0);
+        *l = *l / *r;
+        pop();
         break;
       }
       case OpCode::OP_INTDIV:

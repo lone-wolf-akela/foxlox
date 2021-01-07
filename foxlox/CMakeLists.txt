@@ -7,21 +7,21 @@ cmake_minimum_required (VERSION 3.16)
 add_executable (fox
   "foxlox.cpp"
   "mimalloc-new-delete.cpp"
-  "config.h" "config.cpp"
-  "debug.h" "debug.cpp" 
-  "chunk.h" "chunk.cpp" 
-  "value.h" "value.cpp" 
-  "vm.h" "vm.cpp" 
-  "compiler.h" "compiler.cpp" 
-  "scanner.h" "scanner.cpp" 
-  "token.h" "token.cpp"
-  "util.h" "util.cpp" 
-  "compiletime_value.h" "compiletime_value.cpp"
-  "stmt.h" "stmt.cpp" 
-  "expr.h" "expr.cpp" 
-  "parser.h" "parser.cpp" 
-  "opcode.h" "opcode.cpp" 
-  "codegen.h" "codegen.cpp")
+  "config.cpp"
+  "debug.cpp" 
+  "chunk.cpp" 
+  "value.cpp" 
+  "vm.cpp" 
+  "compiler.cpp" 
+  "scanner.cpp" 
+  "token.cpp"
+  "util.cpp" 
+  "compiletime_value.cpp"
+  "stmt.cpp" 
+  "expr.cpp" 
+  "parser.cpp" 
+  "opcode.cpp" 
+  "codegen.cpp")
 target_compile_features(fox PRIVATE cxx_std_20)
 
 find_package(Microsoft.GSL CONFIG REQUIRED)

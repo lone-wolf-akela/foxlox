@@ -1,3 +1,5 @@
+#include <gsl/gsl>
+
 #include "value.h"
 namespace foxlox
 {
@@ -25,20 +27,6 @@ namespace foxlox
     type = I64;
     v.i64 = i64;
   }
-  void Value::cast_double()
-  {
-    if (type == F64) { return; }
-    assert(type == I64);
-    type = F64;
-    v.f64 = static_cast<double>(v.i64);
-  }
-  void Value::cast_int64()
-  {
-    if (type == I64) { return; }
-    assert(type == F64);
-    type = I64;
-    v.i64 = static_cast<int64_t>(v.f64);
-  }
   double Value::get_double() const
   {
     if (type == F64) { return v.f64; }
@@ -51,68 +39,7 @@ namespace foxlox
     assert(type == F64);
     return static_cast<int64_t>(v.f64);
   }
-  Value Value::neg()
-  {
-    if (num_is_double(*this))
-    {
-      v.f64 = -v.f64;
-    }
-    else
-    {
-      v.i64 = -v.i64;
-    }
-    return *this;
-  }
-  Value Value::add(Value r)
-  {
-    if (num_have_double(*this, r))
-    {
-      cast_double();
-      r.cast_double();
-      v.f64 += r.v.f64;
-    }
-    else
-    {
-      v.i64 += r.v.i64;
-    }
-    return *this;
-  }
-  Value Value::sub(Value r)
-  {
-    if (num_have_double(*this, r))
-    {
-      cast_double();
-      r.cast_double();
-      v.f64 -= r.v.f64;
-    }
-    else
-    {
-      v.i64 -= r.v.i64;
-    }
-    return *this;
-  }
-  Value Value::mul(Value r)
-  {
-    if (num_have_double(*this, r))
-    {
-      cast_double();
-      r.cast_double();
-      v.f64 *= r.v.f64;
-    }
-    else
-    {
-      v.i64 *= r.v.i64;
-    }
-    return *this;
-  }
-  Value Value::div(Value r)
-  {
-    num_have_double(*this, r);
-    cast_double();
-    r.cast_double();
-    v.f64 /= r.v.f64;
-    return *this;
-  }
+
   std::partial_ordering operator<=>(const Value& l, const Value& r)
   {
     if (l.type == Value::NIL && r.type == Value::NIL)
@@ -134,11 +61,84 @@ namespace foxlox
     }
     if (l.type == Value::STR && r.type == Value::STR)
     {
-      // TODO
-      assert(false);
-      return std::partial_ordering::unordered;
+      return *l.v.str <=> *r.v.str;
     }
     return std::partial_ordering::unordered;
+  }
+  String::TStrViewComp operator<=>(const String& l, const String& r)
+  {
+#if __cpp_lib_three_way_comparison >= 201907L
+#pragma message("We get __cpp_lib_three_way_comparison support!")
+    return l.get_view() <=> r.get_view();
+#else
+#pragma message("No __cpp_lib_three_way_comparison support!")
+    const auto res = l.get_view().compare(r.get_view());
+    if (res < 0) { return std::weak_ordering::less; }
+    if (res == 0) { return std::weak_ordering::equivalent; }
+    return std::weak_ordering::greater;
+#endif
+  }
+  bool operator==(const String& l, const String& r)
+  {
+    return l.get_view() == r.get_view();
+  }
+  double operator/(const Value& l, const Value& r)
+  {
+    if ((l.type == Value::I64 || l.type == Value::F64) &&
+      (r.type == Value::I64 || r.type == Value::F64))
+    {
+      return l.get_double() / r.get_double();
+    }
+    assert(false);
+    return {};
+  }
+  Value operator*(const Value& l, const Value& r)
+  {
+    if (l.type == Value::I64 && r.type == Value::I64)
+    {
+      return Value(l.v.i64 * r.v.i64);
+    }
+    if ((l.type == Value::I64 || l.type == Value::F64) &&
+      (r.type == Value::I64 || r.type == Value::F64))
+    {
+      return Value(l.get_double() * r.get_double());
+    }
+    assert(false);
+    return {};
+  }
+  Value operator+(const Value& l, const Value& r)
+  {
+    if (l.type == Value::I64 && r.type == Value::I64)
+    {
+      return Value(l.v.i64 + r.v.i64);
+    }
+    if ((l.type == Value::I64 || l.type == Value::F64) &&
+      (r.type == Value::I64 || r.type == Value::F64))
+    {
+      return Value(l.get_double() + r.get_double());
+    }
+    assert(false);
+    return {};
+  }
+  Value operator-(const Value& l, const Value& r)
+  {
+    if (l.type == Value::I64 && r.type == Value::I64)
+    {
+      return Value(l.v.i64 - r.v.i64);
+    }
+    if ((l.type == Value::I64 || l.type == Value::F64) &&
+      (r.type == Value::I64 || r.type == Value::F64))
+    {
+      return Value(l.get_double() - r.get_double());
+    }
+    assert(false);
+    return {};
+  }
+  Value operator-(const Value& val)
+  {
+    if (val.type == Value::F64) { return Value(-val.v.f64); }
+    assert(val.type == Value::I64);
+    return Value(-val.v.i64);
   }
   int64_t intdiv(const Value& l, const Value& r)
   {
@@ -148,6 +148,10 @@ namespace foxlox
   }
   bool operator==(const Value& l, const Value& r)
   {
+    if (l.type == Value::STR && r.type == Value::STR)
+    {
+      return *l.v.str == *r.v.str;
+    }
     return (l <=> r) == std::partial_ordering::equivalent;
   }
 
@@ -164,13 +168,8 @@ namespace foxlox
       return "";
     }
   }
-  bool num_is_double(Value v)
+  std::string_view String::get_view() const
   {
-    if (v.type == Value::F64)
-    {
-      return true;
-    }
-    assert(v.type == Value::I64);
-    return false;
+    return std::string_view(str, length);
   }
 }

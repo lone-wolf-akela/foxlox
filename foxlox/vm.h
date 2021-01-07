@@ -20,6 +20,8 @@ namespace foxlox
   {
   public:
     VM();
+    ~VM();
+
     InterpretResult interpret(const Chunk& c);
   private:
     InterpretResult run();
@@ -36,6 +38,9 @@ namespace foxlox
     Stack::iterator top();
     void push();
     void pop();
+
+    // data pool
+    std::vector<String*> string_pool;
   };
 }
 #endif 

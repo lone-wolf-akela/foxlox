@@ -1,37 +1,28 @@
-#ifndef FOXLOX_CODEGEN_H
-#define FOXLOX_CODEGEN_H
+#ifndef FOXLOX_RESOLVER_H
+#define FOXLOX_RESOLVER_H
 
-#include "stmt.h"
-#include "expr.h"
-#include "chunk.h"
 #include "parser.h"
 
 namespace foxlox
 {
-  class CodeGen : public expr::IVisitor<void>, public stmt::IVisitor<void>
+  class Resolver : public expr::IVisitor<void>, public stmt::IVisitor<void>
   {
   public:
-    CodeGen(AST&& a);
-    Chunk gen();
+    Resolver(AST&& a);
+    AST resolve();
   private:
     AST ast;
-    Chunk chunk;
-    int current_line;
-    std::vector<uint32_t> closure_stack;
-    Closure& current_closure();
 
-    void compile_expr(const expr::Expr* expr);
-    void compile_stmt(const stmt::Stmt* stmt);
+    enum class LoopType { NONE, WHILE, FOR } current_loop;
+    enum class FunctionType { NONE, FUNCTION, METHOD, INITIALIZER } current_function;
+    enum class ClassType { NONE, CLASS } current_class;
 
-    template<typename ... Args>
-    void emit(Args ... args)
-    {
-      current_closure().add_code(Inst(std::forward<Args>(args) ...), current_line);
-    }
+    void resolve_expr(const expr::Expr* expr);
+    void resolve_stmt(const stmt::Stmt* stmt);
 
-    void visit_binary_expr(const expr::Binary* expr) override;
+    void visit_binary_expr(const expr::Binary* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
     void visit_grouping_expr(const expr::Grouping* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    void visit_literal_expr(const expr::Literal* expr) override;
+    void visit_literal_expr(const expr::Literal* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
     void visit_unary_expr(const expr::Unary* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
     void visit_variable_expr(const expr::Variable* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
     void visit_assign_expr(const expr::Assign* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
@@ -56,4 +47,4 @@ namespace foxlox
   };
 }
 
-#endif // FOXLOX_CODEGEN_H
+#endif // RESOLVER

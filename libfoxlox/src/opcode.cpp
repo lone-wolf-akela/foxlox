@@ -82,7 +82,7 @@ namespace foxlox
     case OpCode::OP_STRING:
     {
       const auto str_idx = uA.ua;
-      const String* str = chunk.get_strings().at(str_idx);
+      const String* str = chunk.get_const_strings().at(str_idx);
       return fmt::format("{:<16} {:>4} `{}'",
         magic_enum::enum_name(uA.op), str_idx, std::string_view(str->str, str->length));
     }

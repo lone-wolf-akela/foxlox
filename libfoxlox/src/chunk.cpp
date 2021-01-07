@@ -8,19 +8,27 @@
 
 namespace foxlox
 {
-  const Chunk::Code& Chunk::get_code() const
+  const std::vector<Inst>& Closure::get_code() const
   {
     return code;
   }
-  const ValueArray& Chunk::get_constants() const
+  std::vector<Closure>& Chunk::get_closures()
+  {
+    return closures;
+  }
+  const std::vector<Closure>& Chunk::get_closures() const
+  {
+    return closures;
+  }
+  const std::vector<Value>& Chunk::get_constants() const
   {
     return constants;
   }
-  const Chunk::ConstStringPool& Chunk::get_strings() const
+  const std::vector<String*>& Chunk::get_const_strings() const
   {
-    return strings;
+    return const_strings;
   }
-  void Chunk::add_code(Inst c, int line_num)
+  void Closure::add_code(Inst c, int line_num)
   {
     lines.add_line(ssize(code), line_num);
     code.push_back(c);
@@ -32,23 +40,30 @@ namespace foxlox
     assert(index <= INST_UA_MAX);
     return gsl::narrow_cast<uint32_t>(index);
   }
+  uint32_t Chunk::add_closure()
+  {
+    closures.emplace_back();
+    const auto index = closures.size() - 1;
+    assert(index <= INST_UA_MAX);
+    return gsl::narrow_cast<uint32_t>(index);
+  }
   uint32_t Chunk::add_string(std::string_view str)
   {
     String* p = String::alloc(str.size());
     std::copy(str.begin(), str.end(), p->str);
-    strings.push_back(p);
-    const auto index = strings.size() - 1;
+    const_strings.push_back(p);
+    const auto index = const_strings.size() - 1;
     assert(index <= INST_UA_MAX);
     return gsl::narrow_cast<uint32_t>(index);
   }
   Chunk::~Chunk()
   {
-    for (String* p : strings)
+    for (String* p : const_strings)
     {
       String::free(p);
     }
   }
-  const LineInfo& Chunk::get_lines() const
+  const LineInfo& Closure::get_lines() const
   {
     return lines;
   }

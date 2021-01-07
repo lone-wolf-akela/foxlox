@@ -7,7 +7,7 @@
 
 namespace foxlox 
 {
-  void disassemble_inst(const Chunk& chunk, Inst inst, gsl::index index);
-  void disassemble_chunk(const Chunk& chunk, std::string_view name);
+  void disassemble_inst(const Chunk& chunk, const Closure& closure, Inst inst, gsl::index index);
+  void disassemble_chunk(const Chunk& chunk, const Closure& closure, std::string_view name);
 }
 #endif // FOXLOX_DEBUG_H

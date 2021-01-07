@@ -25,26 +25,36 @@ namespace foxlox
     };
     std::vector<LineNum> lines;
   };
+
+  class Closure
+  {
+  public:
+    const std::vector<Inst>& get_code() const;
+    void add_code(Inst c, int line_num);
+    const LineInfo& get_lines() const;
+  private:
+    std::vector<Inst> code;
+    LineInfo lines;
+  };
+
   class Chunk
   {
   public:
-    using Code = std::vector<Inst>;
-    using ConstStringPool = std::vector<String*>;
-
-    const Code& get_code() const;
-    const ValueArray& get_constants() const;
-    const ConstStringPool& get_strings() const;
-    const LineInfo& get_lines() const;
-    void add_code(Inst c, int line_num);
+    std::vector<Closure>& get_closures();
+    const std::vector<Closure>& get_closures() const;
+    const std::vector<Value>& get_constants() const;
+    const std::vector<String*>& get_const_strings() const;
+    
     uint32_t add_constant(Value v);
+    uint32_t add_closure();
     uint32_t add_string(std::string_view str);
 
     ~Chunk();
   private:
-    LineInfo lines;
-    Code code;
-    ValueArray constants;
-    ConstStringPool strings;
+    std::vector<Closure> closures;
+
+    std::vector<Value> constants;
+    std::vector<String*> const_strings;
   };
 }
 #endif // FOXLOX_CHUNK_H

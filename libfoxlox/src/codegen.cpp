@@ -8,6 +8,7 @@ namespace foxlox
     ast(std::move(a))
   {
     current_line = 0;
+    closure_stack.push_back(chunk.add_closure());
   }
   Chunk CodeGen::gen()
   {
@@ -16,6 +17,10 @@ namespace foxlox
       compile_stmt(stmt.get());
     }
     return std::move(chunk);
+  }
+  Closure& CodeGen::current_closure()
+  {
+    return chunk.get_closures()[closure_stack.back()];
   }
   void CodeGen::compile_expr(const expr::Expr* expr)
   {

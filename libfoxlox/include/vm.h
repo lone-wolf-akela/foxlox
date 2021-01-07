@@ -36,7 +36,8 @@ namespace foxlox
     Inst read_inst();
     void reset_stack();
 
-    Chunk::Code::const_iterator ip;
+    std::vector<Closure>::const_iterator current_closure;
+    std::vector<Inst>::const_iterator ip;
     const Chunk* chunk;
     
     Stack stack;

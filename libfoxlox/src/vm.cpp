@@ -22,7 +22,8 @@ namespace foxlox
   InterpretResult VM::interpret(const Chunk& c)
   {
     chunk = &c;
-    ip = c.get_code().begin();
+    current_closure = chunk->get_closures().begin();
+    ip = current_closure->get_code().begin();
     return run();
   }
   size_t VM::get_stack_size()
@@ -44,7 +45,7 @@ namespace foxlox
         fmt::print("[ {} ]", v.to_string());
       }
       fmt::print("\n");
-      disassemble_inst(*chunk, *ip, std::distance(chunk->get_code().begin(), ip));
+      disassemble_inst(*chunk, *current_closure, *ip, std::distance(current_closure->get_code().begin(), ip));
 #endif
       Inst inst = read_inst();
       switch (inst.N.op)
@@ -172,7 +173,7 @@ namespace foxlox
       case OpCode::OP_STRING:
       {
         push();
-        *top() = chunk->get_strings()[inst.uA.ua];
+        *top() = chunk->get_const_strings()[inst.uA.ua];
         break;
       }
       case OpCode::OP_BOOL:
@@ -197,7 +198,7 @@ namespace foxlox
   Inst VM::read_inst()
   {
     const auto inst = *(ip++);
-    assert(ip <= chunk->get_code().end());
+    assert(ip <= current_closure->get_code().end());
     return inst;
   }
   void VM::reset_stack()

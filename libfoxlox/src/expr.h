@@ -125,53 +125,53 @@ namespace foxlox::expr
 
     virtual ~IVisitor() = default;
 
-    R visit(const Expr* stmt)
+    R visit(const Expr* expr)
     {
-      if (auto p = dynamic_cast<const Binary*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<const Binary*>(expr); p != nullptr)
       {
         return visit_binary_expr(p);
       }
-      if (auto p = dynamic_cast<const Grouping*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<const Grouping*>(expr); p != nullptr)
       {
         return visit_grouping_expr(p);
       }
-      if (auto p = dynamic_cast<const Literal*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<const Literal*>(expr); p != nullptr)
       {
         return visit_literal_expr(p);
       }
-      if (auto p = dynamic_cast<const Unary*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<const Unary*>(expr); p != nullptr)
       {
         return visit_unary_expr(p);
       }
-      if (auto p = dynamic_cast<const Variable*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<const Variable*>(expr); p != nullptr)
       {
         return visit_variable_expr(p);
       }
-      if (auto p = dynamic_cast<const Assign*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<const Assign*>(expr); p != nullptr)
       {
         return visit_assign_expr(p);
       }
-      if (auto p = dynamic_cast<const Logical*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<const Logical*>(expr); p != nullptr)
       {
         return visit_logical_expr(p);
       }
-      if (auto p = dynamic_cast<const Call*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<const Call*>(expr); p != nullptr)
       {
         return visit_call_expr(p);
       }
-      if (auto p = dynamic_cast<const Get*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<const Get*>(expr); p != nullptr)
       {
         return visit_get_expr(p);
       }
-      if (auto p = dynamic_cast<const Set*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<const Set*>(expr); p != nullptr)
       {
         return visit_set_expr(p);
       }
-      if (auto p = dynamic_cast<const This*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<const This*>(expr); p != nullptr)
       {
         return visit_this_expr(p);
       }
-      if (auto p = dynamic_cast<const Super*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<const Super*>(expr); p != nullptr)
       {
         return visit_super_expr(p);
       }

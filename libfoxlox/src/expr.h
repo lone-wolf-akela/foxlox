@@ -3,9 +3,27 @@
 
 #include <memory>
 #include <vector>
+#include <variant>
 
 #include "token.h"
 #include "compiletime_value.h"
+
+namespace foxlox::stmt
+{
+  class Var;
+  class Function;
+  class Class;
+}
+
+namespace foxlox
+{
+  struct VarDeclareAtFunc
+  {
+    stmt::Function* func;
+    int param_index;
+  };
+  using VarDeclareAt = std::variant<stmt::Var*, stmt::Class*, VarDeclareAtFunc>;
+}
 
 namespace foxlox::expr
 {
@@ -76,6 +94,10 @@ namespace foxlox::expr
   public:
     Variable(Token&& tk);
     Token name;
+
+    // to be filled by resolver 
+    // pointed to where the value is declared
+    VarDeclareAt declare;
   };
   class Get : public Expr
   {

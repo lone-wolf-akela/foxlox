@@ -1,10 +1,28 @@
 #ifndef FOXLOX_RESOLVER_H
 #define FOXLOX_RESOLVER_H
 
+#include <map>
+#include <vector>
+#include <string>
+
+#include "expr.h"
+#include "stmt.h"
 #include "parser.h"
 
 namespace foxlox
 {
+  struct ValueInfo
+  {
+    bool is_ready;
+    VarDeclareAt declare;
+  };
+
+  struct Scope
+  {
+    int function_level; // how many layer of nested function are we in?
+    std::map<std::string, ValueInfo> vars; // name : info
+  };
+
   class Resolver : public expr::IVisitor<void>, public stmt::IVisitor<void>
   {
   public:
@@ -12,13 +30,27 @@ namespace foxlox
     AST resolve();
   private:
     AST ast;
-
+    bool had_error;
+    std::vector<Scope> scopes;
+    
     enum class LoopType { NONE, WHILE, FOR } current_loop;
     enum class FunctionType { NONE, FUNCTION, METHOD, INITIALIZER } current_function;
     enum class ClassType { NONE, CLASS } current_class;
 
+    void error(Token token, std::string_view message);
+
     void resolve_expr(const expr::Expr* expr);
     void resolve_stmt(const stmt::Stmt* stmt);
+
+    void begin_scope(bool is_new_function);
+    void end_scope();
+    
+    [[nodiscard]] ValueInfo* declare(Token name);
+    void declare_from_varstmt(stmt::Var* stmt);
+    void declare_from_functionparam(stmt::Function* stmt, int param_index);
+    void declare_from_class(stmt::Class* stmt);
+    void define(Token name);
+    VarDeclareAt resolve_local(Token name);
 
     void visit_binary_expr(const expr::Binary* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
     void visit_grouping_expr(const expr::Grouping* expr) override { /*TODO*/ std::ignore = expr; assert(false); }

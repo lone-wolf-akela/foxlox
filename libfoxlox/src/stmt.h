@@ -11,6 +11,12 @@
 
 namespace foxlox::stmt
 {
+  enum class VarStoreType
+  {
+    Stack, // to be stored on stack, and destroyed when function returns 
+    Closure, // to be stored in the value pool of the closure, and still exists after function exits
+  };
+
   class Stmt
   {
   public:
@@ -30,6 +36,9 @@ namespace foxlox::stmt
     Var(Token&& tk, std::unique_ptr<expr::Expr>&& init);
     Token name;
     std::unique_ptr<expr::Expr> initializer;
+
+    // to be filled by resolver
+    VarStoreType store_type;
   };
 
   class While : public Stmt
@@ -67,6 +76,9 @@ namespace foxlox::stmt
     Token name;
     std::vector<Token> param;
     std::vector<std::unique_ptr<Stmt>> body;
+
+    // to be filled by resolver
+    std::vector<VarStoreType> param_store_types;
   };
 
   class Return : public Stmt
@@ -86,6 +98,9 @@ namespace foxlox::stmt
     Token name;
     expr::Variable superclass;
     std::vector<std::unique_ptr<Function>> methods;
+
+    // to be filled by resolver, this is refer to the `this' variable
+    VarStoreType store_type;
   };
 
   class Break : public Stmt

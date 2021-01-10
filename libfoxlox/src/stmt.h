@@ -78,6 +78,7 @@ namespace foxlox::stmt
     std::vector<std::unique_ptr<Stmt>> body;
 
     // to be filled by resolver
+    VarStoreType name_store_type;
     std::vector<VarStoreType> param_store_types;
   };
 
@@ -93,10 +94,10 @@ namespace foxlox::stmt
   class Class : public Stmt
   {
   public:
-    Class(Token&& tk, expr::Variable&& super, std::vector<std::unique_ptr<Function>>&& ms);
+    Class(Token&& tk, std::unique_ptr<expr::Variable>&& super, std::vector<std::unique_ptr<Function>>&& ms);
     // for error reporting
     Token name;
-    expr::Variable superclass;
+    std::unique_ptr<expr::Variable> superclass;
     std::vector<std::unique_ptr<Function>> methods;
 
     // to be filled by resolver, this is refer to the `this' variable
@@ -138,63 +139,63 @@ namespace foxlox::stmt
   class IVisitor
   {
   public:
-    virtual R visit_expression_stmt(const Expression* stmt) = 0;
-    virtual R visit_var_stmt(const Var* stmt) = 0;
-    virtual R visit_block_stmt(const Block* stmt) = 0;
-    virtual R visit_if_stmt(const If* stmt) = 0;
-    virtual R visit_while_stmt(const While* stmt) = 0;
-    virtual R visit_function_stmt(const Function* stmt) = 0;
-    virtual R visit_return_stmt(const Return* stmt) = 0;
-    virtual R visit_break_stmt(const Break* stmt) = 0;
-    virtual R visit_continue_stmt(const Continue* stmt) = 0;
-    virtual R visit_class_stmt(const Class* stmt) = 0;
-    virtual R visit_for_stmt(const For* stmt) = 0;
+    virtual R visit_expression_stmt(Expression* stmt) = 0;
+    virtual R visit_var_stmt(Var* stmt) = 0;
+    virtual R visit_block_stmt(Block* stmt) = 0;
+    virtual R visit_if_stmt(If* stmt) = 0;
+    virtual R visit_while_stmt(While* stmt) = 0;
+    virtual R visit_function_stmt(Function* stmt) = 0;
+    virtual R visit_return_stmt(Return* stmt) = 0;
+    virtual R visit_break_stmt(Break* stmt) = 0;
+    virtual R visit_continue_stmt(Continue* stmt) = 0;
+    virtual R visit_class_stmt(Class* stmt) = 0;
+    virtual R visit_for_stmt(For* stmt) = 0;
 
     virtual ~IVisitor() = default;
 
-    R visit(const Stmt* stmt)
+    R visit(Stmt* stmt)
     {
-      if (auto p = dynamic_cast<const Expression*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<Expression*>(stmt); p != nullptr)
       {
         return visit_expression_stmt(p);
       }
-      if (auto p = dynamic_cast<const Var*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<Var*>(stmt); p != nullptr)
       {
         return visit_var_stmt(p);
       }
-      if (auto p = dynamic_cast<const Block*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<Block*>(stmt); p != nullptr)
       {
         return visit_block_stmt(p);
       }
-      if (auto p = dynamic_cast<const If*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<If*>(stmt); p != nullptr)
       {
         return visit_if_stmt(p);
       }
-      if (auto p = dynamic_cast<const While*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<While*>(stmt); p != nullptr)
       {
         return visit_while_stmt(p);
       }
-      if (auto p = dynamic_cast<const Function*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<Function*>(stmt); p != nullptr)
       {
         return visit_function_stmt(p);
       }
-      if (auto p = dynamic_cast<const Return*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<Return*>(stmt); p != nullptr)
       {
         return visit_return_stmt(p);
       }
-      if (auto p = dynamic_cast<const Break*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<Break*>(stmt); p != nullptr)
       {
         return visit_break_stmt(p);
       }
-      if (auto p = dynamic_cast<const Continue*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<Continue*>(stmt); p != nullptr)
       {
         return visit_continue_stmt(p);
       }
-      if (auto p = dynamic_cast<const Class*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<Class*>(stmt); p != nullptr)
       {
         return visit_class_stmt(p);
       }
-      if (auto p = dynamic_cast<const For*>(stmt); p != nullptr)
+      if (auto p = dynamic_cast<For*>(stmt); p != nullptr)
       {
         return visit_for_stmt(p);
       }

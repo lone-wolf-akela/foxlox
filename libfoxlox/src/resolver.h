@@ -28,6 +28,7 @@ namespace foxlox
   public:
     Resolver(AST&& a);
     AST resolve();
+    bool get_had_error();
   private:
     AST ast;
     bool had_error;
@@ -35,12 +36,13 @@ namespace foxlox
     
     enum class LoopType { NONE, WHILE, FOR } current_loop;
     enum class FunctionType { NONE, FUNCTION, METHOD, INITIALIZER } current_function;
-    enum class ClassType { NONE, CLASS } current_class;
+    enum class ClassType { NONE, CLASS, SUBCLASS } current_class;
 
     void error(Token token, std::string_view message);
 
-    void resolve_expr(const expr::Expr* expr);
-    void resolve_stmt(const stmt::Stmt* stmt);
+    void resolve(expr::Expr* expr);
+    void resolve(stmt::Stmt* stmt);
+    void resolve(std::vector<std::unique_ptr<stmt::Stmt>>& stmts);
 
     void begin_scope(bool is_new_function);
     void end_scope();
@@ -49,33 +51,35 @@ namespace foxlox
     void declare_from_varstmt(stmt::Var* stmt);
     void declare_from_functionparam(stmt::Function* stmt, int param_index);
     void declare_from_class(stmt::Class* stmt);
+    void declare_from_functionname(stmt::Function* stmt);
     void define(Token name);
-    VarDeclareAt resolve_local(Token name);
+    [[nodiscard]] VarDeclareAt resolve_local(Token name);
+    void resolve_function(stmt::Function* function, FunctionType type);
 
-    void visit_binary_expr(const expr::Binary* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    void visit_grouping_expr(const expr::Grouping* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    void visit_literal_expr(const expr::Literal* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    void visit_unary_expr(const expr::Unary* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    void visit_variable_expr(const expr::Variable* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    void visit_assign_expr(const expr::Assign* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    void visit_logical_expr(const expr::Logical* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    void visit_call_expr(const expr::Call* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    void visit_get_expr(const expr::Get* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    void visit_set_expr(const expr::Set* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    void visit_this_expr(const expr::This* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    void visit_super_expr(const expr::Super* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
+    void visit_binary_expr(expr::Binary* expr) override;
+    void visit_grouping_expr(expr::Grouping* expr) override;
+    void visit_literal_expr(expr::Literal* expr) override;
+    void visit_unary_expr(expr::Unary* expr) override;
+    void visit_variable_expr(expr::Variable* expr) override;
+    void visit_assign_expr(expr::Assign* expr) override;
+    void visit_logical_expr(expr::Logical* expr) override;
+    void visit_call_expr(expr::Call* expr) override;
+    void visit_get_expr(expr::Get* expr) override;
+    void visit_set_expr(expr::Set* expr) override;
+    void visit_this_expr(expr::This* expr) override;
+    void visit_super_expr(expr::Super* expr) override;
 
-    void visit_expression_stmt(const stmt::Expression* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
-    void visit_var_stmt(const stmt::Var* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
-    void visit_block_stmt(const stmt::Block* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
-    void visit_if_stmt(const stmt::If* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
-    void visit_while_stmt(const stmt::While* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
-    void visit_function_stmt(const stmt::Function* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
-    void visit_return_stmt(const stmt::Return* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
-    void visit_break_stmt(const stmt::Break* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
-    void visit_continue_stmt(const stmt::Continue* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
-    void visit_class_stmt(const stmt::Class* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
-    void visit_for_stmt(const stmt::For* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
+    void visit_expression_stmt(stmt::Expression* stmt) override;
+    void visit_var_stmt(stmt::Var* stmt) override;
+    void visit_block_stmt(stmt::Block* stmt) override;
+    void visit_if_stmt(stmt::If* stmt) override;
+    void visit_while_stmt(stmt::While* stmt) override;
+    void visit_function_stmt(stmt::Function* stmt) override;
+    void visit_return_stmt(stmt::Return* stmt) override;
+    void visit_break_stmt(stmt::Break* stmt) override;
+    void visit_continue_stmt(stmt::Continue* stmt) override;
+    void visit_class_stmt(stmt::Class* stmt) override;
+    void visit_for_stmt(stmt::For* stmt) override;
   };
 }
 

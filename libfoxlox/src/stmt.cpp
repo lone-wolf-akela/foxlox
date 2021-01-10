@@ -41,7 +41,7 @@ namespace foxlox::stmt
     value(std::move(v)) 
   {
   }
-  Class::Class(Token&& tk, expr::Variable&& super, std::vector<std::unique_ptr<Function>>&& ms) :
+  Class::Class(Token&& tk, std::unique_ptr<expr::Variable>&& super, std::vector<std::unique_ptr<Function>>&& ms) :
     name(std::move(tk)), 
     superclass(std::move(super)), 
     methods(std::move(ms))

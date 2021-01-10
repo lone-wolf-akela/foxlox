@@ -75,7 +75,7 @@ namespace foxlox
 
     consume(TokenType::RIGHT_BRACE, "Expect `}' after class body.");
 
-    return std::make_unique<stmt::Class>(std::move(name), std::move(*superclass), std::move(methods));
+    return std::make_unique<stmt::Class>(std::move(name), std::move(superclass), std::move(methods));
   }
   std::unique_ptr<stmt::Function> Parser::function(std::string_view kind)
   {

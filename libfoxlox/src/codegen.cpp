@@ -22,17 +22,17 @@ namespace foxlox
   {
     return chunk.get_closures()[closure_stack.back()];
   }
-  void CodeGen::compile_expr(const expr::Expr* expr)
+  void CodeGen::compile_expr(expr::Expr* expr)
   {
     if (expr == nullptr) { return; }
     expr::IVisitor<void>::visit(expr);
   }
-  void CodeGen::compile_stmt(const stmt::Stmt* stmt)
+  void CodeGen::compile_stmt(stmt::Stmt* stmt)
   {
     if (stmt == nullptr) { return; }
     stmt::IVisitor<void>::visit(stmt);
   }
-  void CodeGen::visit_binary_expr(const expr::Binary* expr)
+  void CodeGen::visit_binary_expr(expr::Binary* expr)
   {
     compile_expr(expr->left.get());
     compile_expr(expr->right.get());
@@ -75,7 +75,7 @@ namespace foxlox
       assert(false);
     }
   }
-  void CodeGen::visit_literal_expr(const expr::Literal* expr)
+  void CodeGen::visit_literal_expr(expr::Literal* expr)
   {
     auto& v = expr->value.v;
     if (std::holds_alternative<std::monostate>(v))

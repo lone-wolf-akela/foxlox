@@ -24,7 +24,7 @@ target_sources(${PROJECT_NAME} PRIVATE
   "src/opcode.cpp" 
   "src/codegen.cpp"
   "src/resolver.cpp"
-  )
+  "src/common.cpp")
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>

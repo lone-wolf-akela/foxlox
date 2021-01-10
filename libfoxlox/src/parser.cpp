@@ -1,5 +1,6 @@
 #include <fmt/format.h>
 
+#include "common.h"
 #include "parser.h"
 
 namespace
@@ -427,13 +428,7 @@ namespace foxlox
 
   void Parser::error(Token token, std::string_view message)
   {
-    fmt::print(stderr, "[line {}] Error{}: {}\n",
-      token.line,
-      token.type == TokenType::TKEOF ? " at end" :
-      token.type == TokenType::TKERROR ? "" :
-      token.lexeme,
-      message
-    );
+    format_error(token, message);
     had_error = true;
   }
 

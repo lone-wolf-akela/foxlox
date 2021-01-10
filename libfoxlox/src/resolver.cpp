@@ -2,6 +2,8 @@
 #include <fmt/format.h>
 #include <range/v3/all.hpp>
 
+#include "common.h"
+
 #include "resolver.h"
 
 namespace foxlox
@@ -28,13 +30,7 @@ namespace foxlox
   }
   void Resolver::error(Token token, std::string_view message)
   {
-    fmt::print(stderr, "[line {}] Error{}: {}\n",
-      token.line,
-      token.type == TokenType::TKEOF ? " at end" :
-      token.type == TokenType::TKERROR ? "" :
-      token.lexeme,
-      message
-    );
+    format_error(token, message);
     had_error = true;
   }
   void Resolver::resolve(expr::Expr* expr)

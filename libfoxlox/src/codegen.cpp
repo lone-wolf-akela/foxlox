@@ -31,9 +31,9 @@ namespace foxlox
   {
     current_stack_size--;
   }
-  int16_t CodeGen::idx_cast(int16_t idx)
+  uint16_t CodeGen::idx_cast(uint16_t idx)
   {
-    return idx < 0 ? idx : current_stack_size - idx - 1;
+    return current_stack_size - idx - 1;
   }
   void CodeGen::compile(expr::Expr* expr)
   {
@@ -147,8 +147,15 @@ namespace foxlox
   {
     current_line = expr->name.line;
 
-    const int16_t idx = idx_cast(value_idxs.at(expr->declare));
-    emit(OP_LOAD, idx);
+    const auto info = value_idxs.at(expr->declare);
+    if (info.type == stmt::VarStoreType::Stack)
+    {
+      emit(OP_LOAD_STACK, idx_cast(info.idx));
+    }
+    else
+    {
+      emit(OP_LOAD_STATIC, info.idx);
+    }
     push_stack();
   }
   void CodeGen::visit_assign_expr(expr::Assign* expr)
@@ -156,7 +163,28 @@ namespace foxlox
     current_line = expr->name.line;
 
     compile(expr->value.get());
-    const int16_t idx = idx_cast(value_idxs.at(expr->declare));
-    emit(OP_STORE, idx);
+    const auto info = value_idxs.at(expr->declare);
+    if (info.type == stmt::VarStoreType::Stack)
+    {
+      emit(OP_STORE_STACK, idx_cast(info.idx));
+    }
+    else
+    {
+      emit(OP_STORE_STATIC, info.idx);
+    }
+  }
+  void CodeGen::visit_return_stmt(stmt::Return* stmt)
+  {
+    current_line = stmt->keyword.line;
+    if (stmt->value.get() != nullptr)
+    {
+      compile(stmt->value.get());
+      emit(OP_RETURN_V);
+      pop_stack();
+    }
+    else
+    {
+      emit(OP_RETURN);
+    }
   }
 }

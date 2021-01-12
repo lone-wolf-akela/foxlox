@@ -79,16 +79,54 @@ namespace foxlox
     assert(index <= std::numeric_limits<uint16_t>::max());
     return gsl::narrow_cast<uint16_t>(index);
   }
-  int16_t Chunk::add_static_value(Value v)
+  uint16_t Chunk::add_static_value()
   {
-    static_value_pool.push_back(v);
-    return gsl::narrow_cast<int16_t>(-ssize(static_value_pool));
+    const uint32_t index = static_value_num + 1;
+    assert(index <= std::numeric_limits<uint16_t>::max());
+    return gsl::narrow_cast<uint16_t>(index);
+  }
+  uint16_t Chunk::get_static_value_num()
+  {
+    return static_value_num;
+  }
+  Chunk::Chunk()
+  {
+    static_value_num = 0;
+    is_moved = false;
   }
   Chunk::~Chunk()
   {
-    for (String* p : const_strings)
+    clean();
+  }
+  Chunk::Chunk(Chunk&& r) noexcept
+  {
+    is_moved = r.is_moved;
+    closures = std::move(r.closures);
+    constants = std::move(r.constants);
+    const_strings = std::move(r.const_strings);
+    static_value_num = r.static_value_num;
+    r.is_moved = true;
+  }
+  Chunk& Chunk::operator=(Chunk&& r) noexcept
+  {
+    if (this == &r) { return *this; }
+    clean();
+    is_moved = r.is_moved;
+    closures = std::move(r.closures);
+    constants = std::move(r.constants);
+    const_strings = std::move(r.const_strings);
+    static_value_num = r.static_value_num;
+    r.is_moved = true;
+    return *this;
+  }
+  void Chunk::clean()
+  {
+    if (!is_moved)
     {
-      String::free(p);
+      for (String* p : const_strings)
+      {
+        String::free(p);
+      }
     }
   }
   const LineInfo& Closure::get_lines() const

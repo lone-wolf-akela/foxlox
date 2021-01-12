@@ -41,6 +41,7 @@ namespace foxlox
     case OP_NOP:
     case OP_NIL:
     case OP_RETURN:
+    case OP_RETURN_V:
     case OP_NEGATE:
     case OP_NOT:
     case OP_ADD:
@@ -76,14 +77,12 @@ namespace foxlox
       fmt::print("{:<16} {:>4}, {}\n", "OP_BOOL", "", b ? "true" : "false");
       return 2;
     }
-    case OP_LOAD:
+    case OP_LOAD_STACK:
+    case OP_STORE_STACK:
+    case OP_LOAD_STATIC:
+    case OP_STORE_STATIC:
     {
-      fmt::print("{:<16} {:>4}\n", "OP_LOAD", get_int16());
-      return 3;
-    }
-    case OP_STORE:
-    {
-      fmt::print("{:<16} {:>4}\n", "OP_STORE", get_int16());
+      fmt::print("{:<16} {:>4}\n", magic_enum::enum_name(op), get_uint16());
       return 3;
     }
     default:

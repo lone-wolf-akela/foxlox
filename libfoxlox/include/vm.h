@@ -10,19 +10,13 @@
 
 namespace foxlox
 {
-  enum class InterpretResult
-  {
-    OK,
-    RUNTIME_ERROR
-  };
-  
   class VM
   {
   public:
     VM();
     ~VM();
 
-    InterpretResult interpret(const Chunk& c);
+    Value interpret(Chunk& c);
 
     // stack ops
     using Stack = std::array<Value, STACK_MAX>;
@@ -32,7 +26,7 @@ namespace foxlox
     void push();
     void pop();
   private:
-    InterpretResult run();
+    Value run();
     OpCode read_inst();
     int16_t read_int16();
     bool read_bool();
@@ -40,15 +34,16 @@ namespace foxlox
     uint16_t read_uint16();
     void reset_stack();
 
-    std::vector<Closure>::const_iterator current_closure;
+    std::vector<Closure>::iterator current_closure;
     std::vector<uint8_t>::const_iterator ip;
-    const Chunk* chunk;
+    Chunk* chunk;
     
     Stack stack;
     Stack::iterator stack_top;
 
     // data pool
     std::vector<String*> string_pool;
+    std::vector<Value> static_value_pool;
   };
 }
 #endif 

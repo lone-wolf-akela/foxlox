@@ -12,19 +12,24 @@
 #include <chunk.h>
 #include <vm.h>
 #include <compiler.h>
+#include <foxexcept.h>
 
 using namespace foxlox;
 
 void run(std::string_view source, VM& vm)
 {
-  const auto [compile_result, chunk] = compile(source);
+  auto [compile_result, chunk] = compile(source);
   if (compile_result != CompilerResult::OK)
   {
     std::exit(65);
   }
-  const auto interpret_result = vm.interpret(chunk);
-  if (interpret_result != InterpretResult::OK)
+  try
   {
+    vm.interpret(chunk);
+  }
+  catch (RuntimeError& e)
+  {
+    fmt::print(stderr, "{}\n", e.what());
     std::exit(70);
   }
 }

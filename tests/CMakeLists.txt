@@ -13,7 +13,7 @@ add_executable(${PROJECT_NAME})
 add_dependencies(${PROJECT_NAME} libfoxlox)
 
 target_sources(${PROJECT_NAME} PRIVATE
-  "src/basic_tests.cpp" "src/vm_single_inst.cpp")
+  "src/single_expr.cpp")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE libfoxlox)
 

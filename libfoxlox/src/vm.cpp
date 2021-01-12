@@ -2,6 +2,7 @@
 
 #include <fmt/format.h>
 
+#include <foxexcept.h>
 #include "debug.h"
 #include "vm.h"
 
@@ -19,11 +20,13 @@ namespace foxlox
       String::free(p);
     }
   }
-  InterpretResult VM::interpret(const Chunk& c)
+  Value VM::interpret(Chunk& c)
   {
     chunk = &c;
     current_closure = chunk->get_closures().begin();
     ip = current_closure->get_code().begin();
+    static_value_pool.resize(chunk->get_static_value_num());
+    static_value_pool.shrink_to_fit();
     return run();
   }
   size_t VM::get_stack_size()
@@ -34,7 +37,7 @@ namespace foxlox
   {
     return std::tuple_size_v<decltype(VM::stack)>;
   }
-  InterpretResult VM::run()
+  Value VM::run()
   {
     while (true)
     {
@@ -58,7 +61,13 @@ namespace foxlox
       }
       case OP_RETURN:
       {
-        return InterpretResult::OK;
+        return Value();
+      }
+      case OP_RETURN_V:
+      {
+        const auto v = *top();
+        pop();
+        return v;
       }
       case OP_NEGATE:
       {
@@ -179,6 +188,34 @@ namespace foxlox
       {
         push();
         *top() = Value(read_bool());
+        break;
+      }
+      case OP_LOAD_STACK:
+      {
+        const auto idx = read_uint16();
+        push();
+        *top() = *top(idx);
+        break;
+      }
+      case OP_STORE_STACK:
+      {
+        const auto idx = read_uint16();
+        const auto r = top();
+        *top(idx) = *r;
+        break;
+      }
+      case OP_LOAD_STATIC:
+      {
+        const auto idx = read_uint16();
+        push();
+        *top() = static_value_pool[idx];
+        break;
+      }
+      case OP_STORE_STATIC:
+      {
+        const auto idx = read_uint16();
+        const auto r = top();
+        static_value_pool[idx] = *r;
         break;
       }
       default:

@@ -133,20 +133,20 @@ namespace foxlox
           // move the var from stack to closure value pool
           if (std::holds_alternative<stmt::Var*>(found->second.declare))
           {
-            std::get<stmt::Var*>(found->second.declare)->store_type = stmt::VarStoreType::Closure;
+            std::get<stmt::Var*>(found->second.declare)->store_type = stmt::VarStoreType::Static;
           }
           else if (std::holds_alternative<stmt::Class*>(found->second.declare))
           {
-            std::get<stmt::Class*>(found->second.declare)->store_type = stmt::VarStoreType::Closure;
+            std::get<stmt::Class*>(found->second.declare)->store_type = stmt::VarStoreType::Static;
           }
           else if (std::holds_alternative<stmt::Function*>(found->second.declare))
           {
-            std::get<stmt::Function*>(found->second.declare)->name_store_type = stmt::VarStoreType::Closure;
+            std::get<stmt::Function*>(found->second.declare)->name_store_type = stmt::VarStoreType::Static;
           }
           else if (std::holds_alternative<VarDeclareAtFunc>(found->second.declare))
           {
             auto at = std::get<VarDeclareAtFunc>(found->second.declare);
-            at.func->param_store_types[at.param_index] = stmt::VarStoreType::Closure;
+            at.func->param_store_types[at.param_index] = stmt::VarStoreType::Static;
           }
           assert(false);
         }

@@ -43,6 +43,13 @@ namespace foxlox
   class Chunk
   {
   public:
+    Chunk();
+    ~Chunk();
+    Chunk(const Chunk&) = delete;
+    Chunk& operator=(const Chunk&) = delete;
+    Chunk(Chunk&& r) noexcept;
+    Chunk& operator=(Chunk&& r) noexcept;
+
     std::vector<Closure>& get_closures();
     const std::vector<Closure>& get_closures() const;
     const std::vector<Value>& get_constants() const;
@@ -51,16 +58,18 @@ namespace foxlox
     uint16_t add_constant(Value v);
     uint16_t add_closure();
     uint16_t add_string(std::string_view str);
-    int16_t add_static_value(Value v);
-
-    ~Chunk();
+    uint16_t add_static_value();
+    uint16_t get_static_value_num();
   private:
+    void clean();
+    bool is_moved;
+
     std::vector<Closure> closures;
 
     std::vector<Value> constants;
     std::vector<String*> const_strings;
-    
-    std::vector<Value> static_value_pool;
+
+    uint16_t static_value_num;
   };
 }
 #endif // FOXLOX_CHUNK_H

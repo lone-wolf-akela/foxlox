@@ -14,7 +14,7 @@ namespace foxlox::stmt
   enum class VarStoreType
   {
     Stack, // to be stored on stack, and destroyed when function returns 
-    Closure, // to be stored in the value pool of the closure, and still exists after function exits
+    Static, // to be stored in the value pool of the closure, and still exists after function exits
   };
 
   class Stmt

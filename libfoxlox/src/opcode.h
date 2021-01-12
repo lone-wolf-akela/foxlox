@@ -10,6 +10,7 @@ namespace foxlox
     OP_NOP,
     OP_NIL,
     OP_RETURN,
+    OP_RETURN_V,
 
     OP_NEGATE,
     OP_NOT,
@@ -31,8 +32,10 @@ namespace foxlox
     OP_STRING,
     OP_BOOL,
 
-    OP_LOAD,
-    OP_STORE,
+    OP_LOAD_STACK,
+    OP_STORE_STACK,
+    OP_LOAD_STATIC,
+    OP_STORE_STATIC,
   };
 }
 

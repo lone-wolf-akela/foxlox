@@ -26,7 +26,7 @@ namespace foxlox
       return std::make_tuple(CompilerResult::COMPILE_ERROR, Chunk());
     }
 
-    CodeGen codegen(std::move(ast));
+    CodeGen codegen(std::move(resolved_ast));
     auto chunk = codegen.gen();
     return std::make_tuple(CompilerResult::OK, std::move(chunk));
   }

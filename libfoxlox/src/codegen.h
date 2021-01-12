@@ -22,13 +22,17 @@ namespace foxlox
     std::vector<uint32_t> closure_stack;
     Closure& current_closure();
 
-    // store the idx from the stack bottom, or neg value for value from chunk static value pool
-    std::map<VarDeclareAt, int16_t> value_idxs;
-    int16_t current_stack_size;
+    struct ValueIdx
+    {
+      stmt::VarStoreType type;
+      uint16_t idx;
+    };
+    std::map<VarDeclareAt, ValueIdx> value_idxs;
+    uint16_t current_stack_size;
     void push_stack();
     void pop_stack();
     // convert a stack idx between "idx from the stack bottom" and "idx from the stack top"
-    int16_t idx_cast(int16_t idx);
+    uint16_t idx_cast(uint16_t idx);
 
     void compile(expr::Expr* expr);
     void compile(stmt::Stmt* stmt);
@@ -62,7 +66,7 @@ namespace foxlox
     void visit_if_stmt(stmt::If* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
     void visit_while_stmt(stmt::While* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
     void visit_function_stmt(stmt::Function* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
-    void visit_return_stmt(stmt::Return* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
+    void visit_return_stmt(stmt::Return* stmt) override;
     void visit_break_stmt(stmt::Break* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
     void visit_continue_stmt(stmt::Continue* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
     void visit_class_stmt(stmt::Class* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }

@@ -120,7 +120,7 @@ namespace foxlox
   std::unique_ptr<stmt::Stmt> Parser::return_statement()
   {
     auto keyword = previous();
-    std::unique_ptr<expr::Expr> value;
+    std::unique_ptr<expr::Expr> value = nullptr;
     if (!check(TokenType::SEMICOLON))
     {
       value = expression();

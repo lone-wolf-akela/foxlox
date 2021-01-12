@@ -44,6 +44,12 @@ namespace foxlox
     return static_cast<int64_t>(v.f64);
   }
 
+  std::string_view Value::get_strview() const
+  {
+    assert(type == STR);
+    return v.str->get_view();
+  }
+
   std::partial_ordering operator<=>(const Value& l, const Value& r)
   {
     if (l.type == Value::NIL && r.type == Value::NIL)

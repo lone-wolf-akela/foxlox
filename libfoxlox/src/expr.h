@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <variant>
+#include <compare>
 
 #include "token.h"
 #include "compiletime_value.h"
@@ -21,6 +22,7 @@ namespace foxlox
   {
     stmt::Function* func;
     int param_index;
+    friend auto operator<=>(const VarDeclareAtFunc& l, const VarDeclareAtFunc& r) = default;
   };
   using VarDeclareAt = std::variant<stmt::Var*, stmt::Class*, stmt::Function*, VarDeclareAtFunc>;
 }

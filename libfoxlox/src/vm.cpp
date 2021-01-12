@@ -45,27 +45,27 @@ namespace foxlox
         fmt::print("[ {} ]", v.to_string());
       }
       fmt::print("\n");
-      disassemble_inst(*chunk, *current_closure, *ip, std::distance(current_closure->get_code().begin(), ip));
+      disassemble_inst(*chunk, *current_closure, std::distance(current_closure->get_code().begin(), ip));
 #endif
-      Inst inst = read_inst();
-      switch (inst.N.op)
+      const OpCode inst = read_inst();
+      switch (inst)
       {
       // N
-      case OpCode::OP_NOP:
+      case OP_NOP:
       {
         /* do nothing */
         break;
       }
-      case OpCode::OP_RETURN:
+      case OP_RETURN:
       {
         return InterpretResult::OK;
       }
-      case OpCode::OP_NEGATE:
+      case OP_NEGATE:
       {
         *top() = -*top();
         break;
       }
-      case OpCode::OP_ADD:
+      case OP_ADD:
       {
         auto l = top(1);
         auto r = top(0);
@@ -77,7 +77,7 @@ namespace foxlox
         pop();
         break;
       }
-      case OpCode::OP_SUBTRACT:
+      case OP_SUBTRACT:
       {
         auto l = top(1);
         auto r = top(0);
@@ -85,7 +85,7 @@ namespace foxlox
         pop();
         break;
       }
-      case OpCode::OP_MULTIPLY:
+      case OP_MULTIPLY:
       {
         auto l = top(1);
         auto r = top(0);
@@ -93,7 +93,7 @@ namespace foxlox
         pop();
         break;
       }
-      case OpCode::OP_DIVIDE:
+      case OP_DIVIDE:
       {
         auto l = top(1);
         auto r = top(0);
@@ -101,7 +101,7 @@ namespace foxlox
         pop();
         break;
       }
-      case OpCode::OP_INTDIV:
+      case OP_INTDIV:
       {
         auto l = top(1);
         auto r = top(0);
@@ -109,7 +109,7 @@ namespace foxlox
         pop();
         break;
       }
-      case OpCode::OP_EQ:
+      case OP_EQ:
       {
         auto l = top(1);
         auto r = top(0);
@@ -117,7 +117,7 @@ namespace foxlox
         pop();
         break;
       }
-      case OpCode::OP_NE:
+      case OP_NE:
       {
         auto l = top(1);
         auto r = top(0);
@@ -125,7 +125,7 @@ namespace foxlox
         pop();
         break;
       }
-      case OpCode::OP_GT:
+      case OP_GT:
       {
         auto l = top(1);
         auto r = top(0);
@@ -133,7 +133,7 @@ namespace foxlox
         pop();
         break;
       }
-      case OpCode::OP_GE:
+      case OP_GE:
       {
         auto l = top(1);
         auto r = top(0);
@@ -141,7 +141,7 @@ namespace foxlox
         pop();
         break;
       }
-      case OpCode::OP_LT:
+      case OP_LT:
       {
         auto l = top(1);
         auto r = top(0);
@@ -149,7 +149,7 @@ namespace foxlox
         pop();
         break;
       }
-      case OpCode::OP_LE:
+      case OP_LE:
       {
         auto l = top(1);
         auto r = top(0);
@@ -157,36 +157,28 @@ namespace foxlox
         pop();
         break;
       }
-      case OpCode::OP_NIL:
+      case OP_NIL:
       {
         push();
         *top() = Value();
         break;
       }
-      // uA
-      case OpCode::OP_CONSTANT:
+      case OP_CONSTANT:
       {
         push();
-        *top() = chunk->get_constants()[inst.uA.ua];
+        *top() = chunk->get_constants()[read_uint16()];
         break;
       }
-      case OpCode::OP_STRING:
+      case OP_STRING:
       {
         push();
-        *top() = chunk->get_const_strings()[inst.uA.ua];
+        *top() = chunk->get_const_strings()[read_uint16()];
         break;
       }
-      case OpCode::OP_BOOL:
+      case OP_BOOL:
       {
         push();
-        *top() = Value(bool(inst.uA.ua));
-        break;
-      }
-      // iA
-      case OpCode::OP_INT:
-      {
-        push();
-        *top() = Value(int64_t(inst.iA.ia));
+        *top() = Value(read_bool());
         break;
       }
       default:
@@ -195,11 +187,29 @@ namespace foxlox
       }
     }
   }
-  Inst VM::read_inst()
+  OpCode VM::read_inst()
   {
-    const auto inst = *(ip++);
+    return static_cast<OpCode>(read_uint8());
+  }
+  int16_t VM::read_int16()
+  {
+    const struct { uint8_t a, b; } tmp{ read_uint8(), read_uint8() };
+    return std::bit_cast<int16_t>(tmp);
+  }
+  bool VM::read_bool()
+  {
+    return static_cast<bool>(read_uint8());
+  }
+  uint8_t VM::read_uint8()
+  {
+    const auto v = *(ip++);
     assert(ip <= current_closure->get_code().end());
-    return inst;
+    return v;
+  }
+  uint16_t VM::read_uint16()
+  {
+    const struct { uint8_t a, b; } tmp{ read_uint8(), read_uint8() };
+    return std::bit_cast<uint16_t>(tmp);
   }
   void VM::reset_stack()
   {

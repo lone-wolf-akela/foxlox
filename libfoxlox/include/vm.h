@@ -33,11 +33,15 @@ namespace foxlox
     void pop();
   private:
     InterpretResult run();
-    Inst read_inst();
+    OpCode read_inst();
+    int16_t read_int16();
+    bool read_bool();
+    uint8_t read_uint8();
+    uint16_t read_uint16();
     void reset_stack();
 
     std::vector<Closure>::const_iterator current_closure;
-    std::vector<Inst>::const_iterator ip;
+    std::vector<uint8_t>::const_iterator ip;
     const Chunk* chunk;
     
     Stack stack;

@@ -9,12 +9,13 @@ namespace foxlox
   {
     current_line = 0;
     closure_stack.push_back(chunk.add_closure());
+    current_stack_size = 0;
   }
   Chunk CodeGen::gen()
   {
     for (auto& stmt : ast)
     {
-      compile_stmt(stmt.get());
+      compile(stmt.get());
     }
     return std::move(chunk);
   }
@@ -22,98 +23,140 @@ namespace foxlox
   {
     return chunk.get_closures()[closure_stack.back()];
   }
-  void CodeGen::compile_expr(expr::Expr* expr)
+  void CodeGen::push_stack()
+  {
+    current_stack_size++;
+  }
+  void CodeGen::pop_stack()
+  {
+    current_stack_size--;
+  }
+  int16_t CodeGen::idx_cast(int16_t idx)
+  {
+    return idx < 0 ? idx : current_stack_size - idx - 1;
+  }
+  void CodeGen::compile(expr::Expr* expr)
   {
     if (expr == nullptr) { return; }
     expr::IVisitor<void>::visit(expr);
   }
-  void CodeGen::compile_stmt(stmt::Stmt* stmt)
+  void CodeGen::compile(stmt::Stmt* stmt)
   {
     if (stmt == nullptr) { return; }
     stmt::IVisitor<void>::visit(stmt);
   }
   void CodeGen::visit_binary_expr(expr::Binary* expr)
   {
-    compile_expr(expr->left.get());
-    compile_expr(expr->right.get());
+    current_line = expr->op.line;
+
+    compile(expr->left.get());
+    compile(expr->right.get());
     switch (expr->op.type)
     {
     case TokenType::MINUS:
-      emit(OpCode::OP_SUBTRACT);
+      emit(OP_SUBTRACT);
       break;
     case TokenType::SLASH:
-      emit(OpCode::OP_DIVIDE);
+      emit(OP_DIVIDE);
       break;
     case TokenType::STAR:
-      emit(OpCode::OP_MULTIPLY);
+      emit(OP_MULTIPLY);
       break;
     case TokenType::PLUS:
-      emit(OpCode::OP_ADD);
+      emit(OP_ADD);
       break;
     case TokenType::SLASH_SLASH:
-      emit(OpCode::OP_INTDIV);
+      emit(OP_INTDIV);
       break;
     case TokenType::GREATER:
-      emit(OpCode::OP_GT);
+      emit(OP_GT);
       break;
     case TokenType::GREATER_EQUAL:
-      emit(OpCode::OP_GE);
+      emit(OP_GE);
       break;
     case TokenType::LESS:
-      emit(OpCode::OP_LT);
+      emit(OP_LT);
       break;
     case TokenType::LESS_EQUAL:
-      emit(OpCode::OP_LE);
+      emit(OP_LE);
       break;
     case TokenType::BANG_EQUAL:
-      emit(OpCode::OP_NE);
+      emit(OP_NE);
       break;
     case TokenType::EQUAL_EQUAL: 
-      emit(OpCode::OP_EQ);
+      emit(OP_EQ);
       break;
     default:
       assert(false);
     }
+    pop_stack();
+  }
+  void CodeGen::visit_grouping_expr(expr::Grouping* expr)
+  {
+    compile(expr->expression.get());
   }
   void CodeGen::visit_literal_expr(expr::Literal* expr)
   {
     auto& v = expr->value.v;
     if (std::holds_alternative<std::monostate>(v))
     {
-      emit(OpCode::OP_NIL);
-      return;
+      emit(OP_NIL);
     }
-    if (std::holds_alternative<double>(v))
+    else if (std::holds_alternative<double>(v))
     {
-      const auto constant = chunk.add_constant(Value(std::get<double>(v)));
-      emit(OpCode::OP_CONSTANT, constant);
-      return;
+      const uint16_t constant = chunk.add_constant(Value(std::get<double>(v)));
+      emit(OP_CONSTANT, constant);
     }
-    if (std::holds_alternative<int64_t>(v))
+    else if (std::holds_alternative<int64_t>(v))
     {
-      const auto i64 = std::get<int64_t>(v);
-      if (INST_IA_MIN <= i64 && i64 <= INST_IA_MAX)
-      {
-        emit(OpCode::OP_INT, gsl::narrow_cast<int32_t>(i64));
-      }
-      else
-      {
-        const auto constant = chunk.add_constant(Value(i64));
-        emit(OpCode::OP_CONSTANT, constant);
-      }
-      return;
+      const int64_t i64 = std::get<int64_t>(v);
+      const uint16_t constant = chunk.add_constant(Value(i64));
+      emit(OP_CONSTANT, constant);
     }
-    if (std::holds_alternative<std::string>(v))
+    else if (std::holds_alternative<std::string>(v))
     {
-      const auto str_index = chunk.add_string(std::get<std::string>(v));
-      emit(OpCode::OP_STRING, str_index);
-      return;
+      const uint16_t str_index = chunk.add_string(std::get<std::string>(v));
+      emit(OP_STRING, str_index);
     }
-    if (std::holds_alternative<bool>(v))
+    else if (std::holds_alternative<bool>(v))
     {
-      emit(OpCode::OP_BOOL, static_cast<int32_t>(std::get<bool>(v)));
-      return;
+      emit(OP_BOOL, std::get<bool>(v));
     }
-    assert(false);
+    else
+    {
+      assert(false);
+    }
+    push_stack();
+  }
+  void CodeGen::visit_unary_expr(expr::Unary* expr)
+  {
+    current_line = expr->op.line;
+
+    compile(expr->right.get());
+    switch (expr->op.type)
+    {
+    case TokenType::MINUS:
+      emit(OP_NEGATE);
+    case TokenType::BANG:
+      emit(OP_NOT);
+    default:
+      assert(false);
+    }
+  }
+  void CodeGen::visit_variable_expr(expr::Variable* expr)
+  {
+    current_line = expr->name.line;
+
+    const int16_t idx = idx_cast(value_idxs.at(expr->declare));
+    emit(OP_LOAD, idx);
+    push_stack();
+  }
+  void CodeGen::visit_assign_expr(expr::Assign* expr)
+  {
+    current_line = expr->name.line;
+
+    compile(expr->value.get());
+    const int16_t idx = idx_cast(value_idxs.at(expr->declare));
+    emit(OP_STORE, idx);
   }
 }

@@ -29,11 +29,14 @@ namespace foxlox
   class Closure
   {
   public:
-    const std::vector<Inst>& get_code() const;
-    void add_code(Inst c, int line_num);
+    const std::vector<uint8_t>& get_code() const;
+    void add_code(bool c, int line_num);
+    void add_code(uint8_t c, int line_num);
+    void add_code(int16_t c, int line_num);
+    void add_code(uint16_t c, int line_num);
     const LineInfo& get_lines() const;
   private:
-    std::vector<Inst> code;
+    std::vector<uint8_t> code;
     LineInfo lines;
   };
 
@@ -45,9 +48,10 @@ namespace foxlox
     const std::vector<Value>& get_constants() const;
     const std::vector<String*>& get_const_strings() const;
     
-    uint32_t add_constant(Value v);
-    uint32_t add_closure();
-    uint32_t add_string(std::string_view str);
+    uint16_t add_constant(Value v);
+    uint16_t add_closure();
+    uint16_t add_string(std::string_view str);
+    int16_t add_static_value(Value v);
 
     ~Chunk();
   private:
@@ -55,6 +59,8 @@ namespace foxlox
 
     std::vector<Value> constants;
     std::vector<String*> const_strings;
+    
+    std::vector<Value> static_value_pool;
   };
 }
 #endif // FOXLOX_CHUNK_H

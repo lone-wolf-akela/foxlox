@@ -1,14 +1,16 @@
 #include <cassert>
 #include <string_view>
+#include <algorithm>
+#include <limits>
+#include <bit>
 
 #include <gsl/gsl>
-#include <algorithm>
 
 #include "chunk.h"
 
 namespace foxlox
 {
-  const std::vector<Inst>& Closure::get_code() const
+  const std::vector<uint8_t>& Closure::get_code() const
   {
     return code;
   }
@@ -28,33 +30,59 @@ namespace foxlox
   {
     return const_strings;
   }
-  void Closure::add_code(Inst c, int line_num)
+  void Closure::add_code(bool c, int line_num)
+  {
+    lines.add_line(ssize(code), line_num);
+    code.push_back(c ? uint8_t(1) : uint8_t(0));
+  }
+  void Closure::add_code(uint8_t c, int line_num)
   {
     lines.add_line(ssize(code), line_num);
     code.push_back(c);
   }
-  uint32_t Chunk::add_constant(Value v)
+  void Closure::add_code(int16_t c, int line_num)
+  {
+    lines.add_line(ssize(code), line_num);
+    struct Tmp { uint8_t a, b; };
+    const auto tmp = std::bit_cast<Tmp>(c);
+    code.push_back(tmp.a);
+    code.push_back(tmp.b);
+  }
+  void Closure::add_code(uint16_t c, int line_num)
+  {
+    lines.add_line(ssize(code), line_num);
+    struct Tmp { uint8_t a, b; };
+    const auto tmp = std::bit_cast<Tmp>(c);
+    code.push_back(tmp.a);
+    code.push_back(tmp.b);
+  }
+  uint16_t Chunk::add_constant(Value v)
   {
     constants.push_back(v);
     const auto index = constants.size() - 1;
-    assert(index <= INST_UA_MAX);
-    return gsl::narrow_cast<uint32_t>(index);
+    assert(index <= std::numeric_limits<uint16_t>::max());
+    return gsl::narrow_cast<uint16_t>(index);
   }
-  uint32_t Chunk::add_closure()
+  uint16_t Chunk::add_closure()
   {
     closures.emplace_back();
     const auto index = closures.size() - 1;
-    assert(index <= INST_UA_MAX);
-    return gsl::narrow_cast<uint32_t>(index);
+    assert(index <= std::numeric_limits<uint16_t>::max());
+    return gsl::narrow_cast<uint16_t>(index);
   }
-  uint32_t Chunk::add_string(std::string_view str)
+  uint16_t Chunk::add_string(std::string_view str)
   {
     String* p = String::alloc(str.size());
     std::copy(str.begin(), str.end(), p->str);
     const_strings.push_back(p);
     const auto index = const_strings.size() - 1;
-    assert(index <= INST_UA_MAX);
-    return gsl::narrow_cast<uint32_t>(index);
+    assert(index <= std::numeric_limits<uint16_t>::max());
+    return gsl::narrow_cast<uint16_t>(index);
+  }
+  int16_t Chunk::add_static_value(Value v)
+  {
+    static_value_pool.push_back(v);
+    return gsl::narrow_cast<int16_t>(-ssize(static_value_pool));
   }
   Chunk::~Chunk()
   {

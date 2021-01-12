@@ -34,6 +34,8 @@ namespace foxlox
     void add_code(uint8_t c, int line_num);
     void add_code(int16_t c, int line_num);
     void add_code(uint16_t c, int line_num);
+    void edit_code(gsl::index idx, int16_t c);
+    gsl::index get_code_num();
     const LineInfo& get_lines() const;
   private:
     std::vector<uint8_t> code;

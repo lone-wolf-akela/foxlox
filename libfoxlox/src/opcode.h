@@ -11,6 +11,8 @@ namespace foxlox
     OP_NIL,
     OP_RETURN,
     OP_RETURN_V,
+    OP_POP,
+    OP_POP_N,
 
     OP_NEGATE,
     OP_NOT,
@@ -36,6 +38,12 @@ namespace foxlox
     OP_STORE_STACK,
     OP_LOAD_STATIC,
     OP_STORE_STATIC,
+
+    OP_JUMP,
+    OP_JUMP_IF_TRUE,
+    OP_JUMP_IF_FALSE,
+    OP_JUMP_IF_TRUE_NO_POP,
+    OP_JUMP_IF_FALSE_NO_POP,
   };
 }
 

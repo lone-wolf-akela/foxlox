@@ -69,6 +69,16 @@ namespace foxlox
         pop();
         return v;
       }
+      case OP_POP:
+      {
+        pop();
+        break;
+      }
+      case OP_POP_N:
+      {
+        pop(read_uint16());
+        break;
+      }
       case OP_NEGATE:
       {
         *top() = -*top();
@@ -193,8 +203,9 @@ namespace foxlox
       case OP_LOAD_STACK:
       {
         const auto idx = read_uint16();
+        const auto v = *top(idx);
         push();
-        *top() = *top(idx);
+        *top() = v;
         break;
       }
       case OP_STORE_STACK:
@@ -216,6 +227,50 @@ namespace foxlox
         const auto idx = read_uint16();
         const auto r = top();
         static_value_pool[idx] = *r;
+        break;
+      }
+      case OP_JUMP:
+      {
+        const int16_t offset = read_int16();
+        ip += offset;
+        break;
+      }
+      case OP_JUMP_IF_TRUE:
+      {
+        const int16_t offset = read_int16();
+        if (top()->get_bool() == true)
+        {
+          ip += offset;
+        }
+        pop();
+        break;
+      }
+      case OP_JUMP_IF_FALSE:
+      {
+        const int16_t offset = read_int16();
+        if (top()->get_bool() == false)
+        {
+          ip += offset;
+        }
+        pop();
+        break;
+      }
+      case OP_JUMP_IF_TRUE_NO_POP:
+      {
+        const int16_t offset = read_int16();
+        if (top()->get_bool() == true)
+        {
+          ip += offset;
+        }
+        break;
+      }
+      case OP_JUMP_IF_FALSE_NO_POP:
+      {
+        const int16_t offset = read_int16();
+        if (top()->get_bool() == false)
+        {
+          ip += offset;
+        }
         break;
       }
       default:
@@ -263,5 +318,9 @@ namespace foxlox
   void VM::pop()
   {
     stack_top--;
+  }
+  void VM::pop(uint16_t n)
+  {
+    stack_top -= n;
   }
 }

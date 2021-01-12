@@ -56,6 +56,17 @@ namespace foxlox
     code.push_back(tmp.a);
     code.push_back(tmp.b);
   }
+  void Closure::edit_code(gsl::index idx, int16_t c)
+  {
+    struct Tmp { uint8_t a, b; };
+    const auto tmp = std::bit_cast<Tmp>(c);
+    code.at(idx) = tmp.a;
+    code.at(idx + 1) = tmp.b;
+  }
+  gsl::index Closure::get_code_num()
+  {
+    return code.size();
+  }
   uint16_t Chunk::add_constant(Value v)
   {
     constants.push_back(v);
@@ -81,9 +92,8 @@ namespace foxlox
   }
   uint16_t Chunk::add_static_value()
   {
-    const uint32_t index = static_value_num + 1;
-    assert(index <= std::numeric_limits<uint16_t>::max());
-    return gsl::narrow_cast<uint16_t>(index);
+    assert(uint32_t(static_value_num) + 1 <= std::numeric_limits<uint16_t>::max());
+    return static_value_num++;
   }
   uint16_t Chunk::get_static_value_num()
   {

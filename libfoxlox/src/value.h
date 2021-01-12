@@ -62,6 +62,7 @@ namespace foxlox
 
     double get_double() const;
     int64_t get_int64() const;
+    bool get_bool() const;
     std::string_view get_strview() const;
 
     friend double operator/(const Value& l, const Value& r);

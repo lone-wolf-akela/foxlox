@@ -290,9 +290,17 @@ namespace foxlox
   void Resolver::visit_if_stmt(stmt::If* stmt)
   {
     resolve(stmt->condition.get());
+    if (const auto p = dynamic_cast<stmt::Var*>(stmt->then_branch.get()); p != nullptr)
+    {
+      error(p->name, "Conditioned variable declaration is not allowed.");
+    }
     resolve(stmt->then_branch.get());
     if (stmt->else_branch.get() != nullptr)
     {
+      if (const auto p = dynamic_cast<stmt::Var*>(stmt->then_branch.get()); p != nullptr)
+      {
+        error(p->name, "Conditioned variable declaration is not allowed.");
+      }
       resolve(stmt->else_branch.get());
     }
   }
@@ -302,6 +310,10 @@ namespace foxlox
 
     const auto enclosing_loop = current_loop;
     current_loop = LoopType::WHILE;
+    if (const auto p = dynamic_cast<stmt::Var*>(stmt->body.get()); p != nullptr)
+    {
+      error(p->name, "Conditioned variable declaration is not allowed.");
+    }
     resolve(stmt->body.get());
     current_loop = enclosing_loop;
   }
@@ -370,13 +382,21 @@ namespace foxlox
   }
   void Resolver::visit_for_stmt(stmt::For* stmt)
   {
+    begin_scope(false);
+
     resolve(stmt->initializer.get());
     resolve(stmt->condition.get());
     resolve(stmt->increment.get());
 
     LoopType enclosingt_loop = current_loop;
     current_loop = LoopType::FOR;
+    if (const auto p = dynamic_cast<stmt::Var*>(stmt->body.get()); p != nullptr)
+    {
+      error(p->name, "Conditioned variable declaration is not allowed.");
+    }
     resolve(stmt->body.get());
     current_loop = enclosingt_loop;
+
+    end_scope();
   }
 }

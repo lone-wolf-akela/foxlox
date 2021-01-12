@@ -25,6 +25,7 @@ namespace foxlox
     Stack::iterator top(int from_top = 0);
     void push();
     void pop();
+    void pop(uint16_t n);
   private:
     Value run();
     OpCode read_inst();

@@ -5,7 +5,7 @@
 
 using namespace foxlox;
 
-TEST(Single_Expr, IntAdd)
+TEST(single_expr, int_add)
 {
   auto [res, chunk] = compile(R"(
 return 123 + 234;
@@ -17,7 +17,7 @@ return 123 + 234;
   ASSERT_EQ(v.get_int64(), 123 + 234);
 }
 
-TEST(Single_Expr, Int_Double_Add)
+TEST(single_expr, int_double_add)
 {
   auto [res, chunk] = compile(R"(
 return 123 + 234.5;
@@ -29,7 +29,7 @@ return 123 + 234.5;
   ASSERT_EQ(v.get_double(), 123 + 234.5);
 }
 
-TEST(Single_Expr, Double_Int_Add)
+TEST(single_expr, double_int_add)
 {
   auto [res, chunk] = compile(R"(
 return 234.5 + 123;
@@ -41,7 +41,7 @@ return 234.5 + 123;
   ASSERT_EQ(v.get_double(), 234.5 + 123);
 }
 
-TEST(Single_Expr, Double_Double_Add)
+TEST(single_expr, double_double_add)
 {
   auto [res, chunk] = compile(R"(
 return 123.3 + 234.5;
@@ -53,7 +53,7 @@ return 123.3 + 234.5;
   ASSERT_EQ(v.get_double(), 123.3 + 234.5);
 }
 
-TEST(Single_Expr, Str_Str_Add)
+TEST(single_expr, str_str_add)
 {
   auto [res, chunk] = compile(R"(
 return "Hello, " + "World!";
@@ -65,7 +65,7 @@ return "Hello, " + "World!";
   ASSERT_EQ(v.get_strview(), "Hello, World!");
 }
 
-TEST(Single_Expr, Double_Double_IntDiv)
+TEST(single_expr, double_double_intdiv)
 {
   auto [res, chunk] = compile(R"(
 return 200.5 // 100.3;
@@ -77,7 +77,7 @@ return 200.5 // 100.3;
   ASSERT_EQ(v.get_int64(), int64_t(200.5 / 100.3));
 }
 
-TEST(Single_Expr, Double_Double_Div)
+TEST(single_expr, double_double_div)
 {
   auto [res, chunk] = compile(R"(
 return 200.5 / 100.3;

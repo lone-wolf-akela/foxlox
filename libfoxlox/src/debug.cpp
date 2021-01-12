@@ -42,6 +42,7 @@ namespace foxlox
     case OP_NIL:
     case OP_RETURN:
     case OP_RETURN_V:
+    case OP_POP:
     case OP_NEGATE:
     case OP_NOT:
     case OP_ADD:
@@ -81,8 +82,16 @@ namespace foxlox
     case OP_STORE_STACK:
     case OP_LOAD_STATIC:
     case OP_STORE_STATIC:
+    case OP_POP_N:
     {
       fmt::print("{:<16} {:>4}\n", magic_enum::enum_name(op), get_uint16());
+      return 3;
+    }
+    case OP_JUMP:
+    case OP_JUMP_IF_TRUE:
+    case OP_JUMP_IF_FALSE:
+    {
+      fmt::print("{:<16} {:>4}\n", magic_enum::enum_name(op), get_int16());
       return 3;
     }
     default:

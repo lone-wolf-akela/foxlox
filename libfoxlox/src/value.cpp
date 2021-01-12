@@ -44,6 +44,16 @@ namespace foxlox
     return static_cast<int64_t>(v.f64);
   }
 
+  bool Value::get_bool() const
+  {
+    if (type == NIL ||
+      (type == BOOL && v.b == false))
+    {
+      return false;
+    }
+    return true;
+  }
+
   std::string_view Value::get_strview() const
   {
     assert(type == STR);

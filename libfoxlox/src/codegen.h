@@ -33,6 +33,8 @@ namespace foxlox
     // convert a stack idx between "idx from the stack bottom" and "idx from the stack top"
     uint16_t idx_cast(uint16_t idx);
 
+    uint16_t loop_start_stack_size;
+
     void compile(expr::Expr* expr);
     void compile(stmt::Stmt* stmt);
 
@@ -47,8 +49,12 @@ namespace foxlox
     }
     gsl::index emit_jump(OpCode c);
     void patch_jump(gsl::index ip);
+    void patch_jumps(std::vector<gsl::index>& ips);
     gsl::index prepare_loop();
-    void emit_loop(gsl::index ip, OpCode c);
+    void emit_loop(gsl::index ip, OpCode c);    
+    void emit_pop_stack(uint16_t stack_size_before);
+    std::vector<gsl::index> break_stmts;
+    std::vector<gsl::index> continue_stmts;
 
     void visit_binary_expr(expr::Binary* expr) override;
     void visit_grouping_expr(expr::Grouping* expr) override;
@@ -70,8 +76,8 @@ namespace foxlox
     void visit_while_stmt(stmt::While* stmt) override;
     void visit_function_stmt(stmt::Function* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
     void visit_return_stmt(stmt::Return* stmt) override;
-    void visit_break_stmt(stmt::Break* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
-    void visit_continue_stmt(stmt::Continue* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
+    void visit_break_stmt(stmt::Break* stmt) override;
+    void visit_continue_stmt(stmt::Continue* stmt) override;
     void visit_class_stmt(stmt::Class* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
     void visit_for_stmt(stmt::For* stmt) override;
   };

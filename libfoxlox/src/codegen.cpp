@@ -10,6 +10,7 @@ namespace foxlox
     current_line = 0;
     closure_stack.push_back(chunk.add_closure());
     current_stack_size = 0;
+    loop_start_stack_size = 0;
   }
   Chunk CodeGen::gen()
   {
@@ -59,6 +60,14 @@ namespace foxlox
     assert(jump_length <= std::numeric_limits<int16_t>::max());
     current_closure().edit_code(ip, gsl::narrow_cast<int16_t>(jump_length));
   }
+  void CodeGen::patch_jumps(std::vector<gsl::index>& ips)
+  {
+    for (auto ip : ips)
+    {
+      patch_jump(ip);
+    }
+    ips.clear();
+  }
   gsl::index CodeGen::prepare_loop()
   {
     return current_closure().get_code_num();
@@ -69,6 +78,20 @@ namespace foxlox
     const auto jump_length = ip - current_closure().get_code_num() - 2;
     assert(jump_length >= std::numeric_limits<int16_t>::min());
     emit(gsl::narrow_cast<int16_t>(jump_length));
+  }
+  void CodeGen::emit_pop_stack(uint16_t stack_size_before)
+  {
+    const uint16_t new_stack_elem_num = current_stack_size - stack_size_before;
+    if (new_stack_elem_num > 1)
+    {
+      pop_stack(new_stack_elem_num);
+      emit(OP_POP_N, new_stack_elem_num);
+    }
+    else if (new_stack_elem_num == 1)
+    {
+      pop_stack();
+      emit(OP_POP);
+    }
   }
   void CodeGen::visit_binary_expr(expr::Binary* expr)
   {
@@ -261,21 +284,7 @@ namespace foxlox
     {
       compile(s.get());
     }
-    const uint16_t new_stack_elem_num = current_stack_size - stack_size_before;
-    if (new_stack_elem_num > 1)
-    {
-      pop_stack(new_stack_elem_num);
-      emit(OP_POP_N, new_stack_elem_num);
-    }
-    else if (new_stack_elem_num == 1)
-    {
-      pop_stack();
-      emit(OP_POP);
-    }
-    else
-    {
-      // do nothing
-    }
+    emit_pop_stack(stack_size_before);
   }
   void CodeGen::visit_if_stmt(stmt::If* stmt)
   {
@@ -303,7 +312,6 @@ namespace foxlox
   }
   void CodeGen::visit_while_stmt(stmt::While* stmt)
   {
-    // TODO: handle break and continue
     const auto start = prepare_loop();
 
     compile(stmt->condition.get());
@@ -311,10 +319,16 @@ namespace foxlox
     const auto jump_to_end = emit_jump(OP_JUMP_IF_FALSE);
     pop_stack();
 
-    compile(stmt->body.get());
-    emit_loop(start, OP_JUMP);
+    const auto enclosing_loop_start_stack_size = loop_start_stack_size;
+    loop_start_stack_size = current_stack_size;
 
+    compile(stmt->body.get());
+    patch_jumps(continue_stmts);
+    emit_loop(start, OP_JUMP);
+    patch_jumps(break_stmts);
     patch_jump(jump_to_end);
+
+    loop_start_stack_size = enclosing_loop_start_stack_size;
   }
   void CodeGen::visit_return_stmt(stmt::Return* stmt)
   {
@@ -330,9 +344,20 @@ namespace foxlox
       emit(OP_RETURN);
     }
   }
+  void CodeGen::visit_break_stmt(stmt::Break* /*stmt*/)
+  {
+    emit_pop_stack(loop_start_stack_size);
+    break_stmts.push_back(emit_jump(OP_JUMP));
+  }
+  void CodeGen::visit_continue_stmt(stmt::Continue* /*stmt*/)
+  {
+    emit_pop_stack(loop_start_stack_size);
+    continue_stmts.push_back(emit_jump(OP_JUMP));
+  }
   void CodeGen::visit_for_stmt(stmt::For* stmt)
   {
-    // TODO: handle break and continue
+    const auto stack_size_before_initializer = current_stack_size;
+
     compile(stmt->initializer.get());
 
     const auto start = prepare_loop();
@@ -345,13 +370,21 @@ namespace foxlox
       pop_stack();
     }    
 
+    const auto enclosing_loop_start_stack_size = loop_start_stack_size;
+    loop_start_stack_size = current_stack_size;
+
     compile(stmt->body.get());
+    patch_jumps(continue_stmts);
     compile(stmt->increment.get());
     emit_loop(start, OP_JUMP);
-
+    patch_jumps(break_stmts);
     if (stmt->condition.get() != nullptr)
     {
       patch_jump(jump_to_end);
     }
+
+    loop_start_stack_size = enclosing_loop_start_stack_size;
+
+    emit_pop_stack(stack_size_before_initializer);
   }
 }

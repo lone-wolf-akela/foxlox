@@ -1,5 +1,4 @@
-#ifndef FOXLOX_CODEGEN_H
-#define FOXLOX_CODEGEN_H
+#pragma once
 
 #include <map>
 
@@ -77,5 +76,3 @@ namespace foxlox
     void visit_for_stmt(stmt::For* stmt) override;
   };
 }
-
-#endif // FOXLOX_CODEGEN_H

@@ -1,5 +1,4 @@
-#ifndef FOXLOX_VM_H
-#define FOXLOX_VM_H
+#pragma once
 
 #include <array>
 #include <vector>
@@ -47,4 +46,3 @@ namespace foxlox
     std::vector<Value> static_value_pool;
   };
 }
-#endif 

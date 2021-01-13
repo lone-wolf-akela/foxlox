@@ -1,5 +1,4 @@
-#ifndef FOXLOX_UTIL_H
-#define FOXLOX_UTIL_H
+#pragma once
 
 #include <string>
 #include <string_view>
@@ -20,5 +19,3 @@ namespace foxlox
     return strm.str();
   }
 }
-
-#endif // FOXLOX_UTIL_H

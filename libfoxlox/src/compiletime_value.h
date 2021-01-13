@@ -1,5 +1,4 @@
-#ifndef FOXLOX_COMPILETIME_VALUE_H
-#define FOXLOX_COMPILETIME_VALUE_H
+#pragma once
 
 #include <cstdint>
 #include <string>
@@ -20,5 +19,3 @@ namespace foxlox
     std::string to_string() const;
   };
 }
-
-#endif // FOXLOX_COMPILETIME_VALUE_H

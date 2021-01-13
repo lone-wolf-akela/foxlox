@@ -1,5 +1,4 @@
-#ifndef FOXLOX_PARSER_H
-#define FOXLOX_PARSER_H
+#pragma once
 
 #include <vector>
 #include <memory>
@@ -60,5 +59,3 @@ namespace foxlox
     void synchronize();
   };
 }
-
-#endif // FOXLOX_PARSER_H

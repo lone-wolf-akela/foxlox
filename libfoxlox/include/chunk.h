@@ -1,5 +1,4 @@
-#ifndef FOXLOX_CHUNK_H
-#define FOXLOX_CHUNK_H
+#pragma once
 
 #include <cstdint>
 #include <vector>
@@ -74,4 +73,4 @@ namespace foxlox
     uint16_t static_value_num;
   };
 }
-#endif // FOXLOX_CHUNK_H
+

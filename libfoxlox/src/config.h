@@ -1,7 +1,4 @@
-#ifndef FOXLOX_CONFIG_H
-#define FOXLOX_CONFIG_H
+#pragma once
 
 #define DEBUG_TRACE_EXECUTION
 constexpr auto STACK_MAX = 256;
-
-#endif // FOXLOX_CONFIG_H

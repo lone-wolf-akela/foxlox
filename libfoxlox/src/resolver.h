@@ -1,5 +1,4 @@
-#ifndef FOXLOX_RESOLVER_H
-#define FOXLOX_RESOLVER_H
+#pragma once
 
 #include <map>
 #include <vector>
@@ -82,5 +81,3 @@ namespace foxlox
     void visit_for_stmt(stmt::For* stmt) override;
   };
 }
-
-#endif // RESOLVER

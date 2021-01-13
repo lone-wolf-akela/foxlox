@@ -1,5 +1,4 @@
-#ifndef FOXLOX_VALUE_H
-#define FOXLOX_VALUE_H
+#pragma once
 
 #include <cassert>
 #include <cstdint>
@@ -78,5 +77,3 @@ namespace foxlox
   };
   using ValueArray = std::vector<Value>;
 }
-
-#endif // FOXLOX_VALUE_H

@@ -1,5 +1,4 @@
-#ifndef FOXLOX_STMT_H
-#define FOXLOX_STMT_H
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -204,5 +203,3 @@ namespace foxlox::stmt
     }
   };
 }
-
-#endif

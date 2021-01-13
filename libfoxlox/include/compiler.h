@@ -1,5 +1,4 @@
-#ifndef FOXLOX_COMPILER_H
-#define FOXLOX_COMPILER_H
+#pragma once
 
 #include <tuple>
 #include <string_view>
@@ -16,4 +15,3 @@ namespace foxlox
   std::tuple<CompilerResult, Chunk> compile(std::string_view source);
 }
 
-#endif // FOXLOX_COMPILER_H

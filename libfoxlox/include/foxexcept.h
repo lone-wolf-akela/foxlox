@@ -1,5 +1,4 @@
-#ifndef FOXLOX_EXCEPTION_H
-#define FOXLOX_EXCEPTION_H
+#pragma once
 
 #include <stdexcept>
 
@@ -18,4 +17,3 @@ namespace foxlox
     using std::exception::exception;
   };
 }
-#endif

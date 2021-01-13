@@ -1,5 +1,4 @@
-#ifndef FOXLOX_SCANNER_H
-#define FOXLOX_SCANNER_H
+#pragma once
 
 #include <cassert>
 #include <cstdint>
@@ -46,5 +45,3 @@ namespace foxlox
     void identifier();
   };
 }
-
-#endif // FOXLOX_SCANNER_H

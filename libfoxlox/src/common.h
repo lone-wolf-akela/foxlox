@@ -1,5 +1,4 @@
-#ifndef FOXLOX_COMMON_H
-#define FOXLOX_COMMON_H
+#pragma once
 
 #include <string_view>
 
@@ -9,5 +8,3 @@ namespace foxlox
 {
   void format_error(Token token, std::string_view message);
 }
-
-#endif

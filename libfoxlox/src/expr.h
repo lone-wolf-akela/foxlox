@@ -1,5 +1,4 @@
-#ifndef FOXLOX_EXPR_H
-#define FOXLOX_EXPR_H
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -214,5 +213,3 @@ namespace foxlox::expr
     }
   };
 }
-
-#endif // FOXLOX_EXPR_H

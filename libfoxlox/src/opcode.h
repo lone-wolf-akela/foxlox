@@ -1,5 +1,4 @@
-#ifndef FOXLOX_OPCODE_H
-#define FOXLOX_OPCODE_H
+#pragma once
 
 #include <cstdint>
 
@@ -46,5 +45,3 @@ namespace foxlox
     OP_JUMP_IF_FALSE_NO_POP,
   };
 }
-
-#endif // FOXLOX_OPCODE_H

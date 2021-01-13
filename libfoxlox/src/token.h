@@ -1,5 +1,4 @@
-#ifndef FOXLOX_TOKEN_H
-#define FOXLOX_TOKEN_H
+#pragma once
 
 #include <string>
 #include <string_view>
@@ -45,5 +44,3 @@ namespace foxlox
     std::string to_string() const;
   };
 }
-
-#endif // FOXLOX_TOKEN_H

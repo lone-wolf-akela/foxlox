@@ -77,19 +77,24 @@ namespace foxlox
     assert(jump_length >= std::numeric_limits<int16_t>::min());
     emit(gsl::narrow_cast<int16_t>(jump_length));
   }
-  void CodeGen::emit_pop_stack(uint16_t stack_size_before)
+  void CodeGen::emit_pop_to(uint16_t stack_size_before)
   {
+    assert(current_stack_size >= stack_size_before);
     const uint16_t new_stack_elem_num = current_stack_size - stack_size_before;
     if (new_stack_elem_num > 1)
     {
-      pop_stack(new_stack_elem_num);
       emit(OP_POP_N, new_stack_elem_num);
     }
     else if (new_stack_elem_num == 1)
     {
-      pop_stack();
       emit(OP_POP);
     }
+  }
+  void CodeGen::pop_stack_to(uint16_t stack_size_before)
+  {
+    assert(current_stack_size >= stack_size_before);
+    const uint16_t new_stack_elem_num = current_stack_size - stack_size_before;
+    pop_stack(new_stack_elem_num);
   }
   void CodeGen::visit_binary_expr(expr::Binary* expr)
   {
@@ -293,7 +298,8 @@ namespace foxlox
     {
       compile(s.get());
     }
-    emit_pop_stack(stack_size_before);
+    emit_pop_to(stack_size_before);
+    pop_stack_to(stack_size_before);
   }
   void CodeGen::visit_if_stmt(stmt::If* stmt)
   {
@@ -332,7 +338,7 @@ namespace foxlox
     loop_start_stack_size = current_stack_size;
 
     compile(stmt->body.get());
-    emit_pop_stack(loop_start_stack_size);
+
     patch_jumps(continue_stmts);
     emit_loop(start, OP_JUMP);
     patch_jumps(break_stmts);
@@ -356,12 +362,16 @@ namespace foxlox
   }
   void CodeGen::visit_break_stmt(stmt::Break* /*stmt*/)
   {
-    emit_pop_stack(loop_start_stack_size);
+    // do not call pop_stack_to() here
+    // as that should be done at the end of the block
+    emit_pop_to(loop_start_stack_size);
     break_stmts.push_back(emit_jump(OP_JUMP));
   }
   void CodeGen::visit_continue_stmt(stmt::Continue* /*stmt*/)
   {
-    emit_pop_stack(loop_start_stack_size);
+    // do not call pop_stack_to() here
+    // as that should be done at the end of the block
+    emit_pop_to(loop_start_stack_size);
     continue_stmts.push_back(emit_jump(OP_JUMP));
   }
   void CodeGen::visit_for_stmt(stmt::For* stmt)
@@ -384,7 +394,7 @@ namespace foxlox
     loop_start_stack_size = current_stack_size;
 
     compile(stmt->body.get());
-    emit_pop_stack(loop_start_stack_size);
+
     patch_jumps(continue_stmts);
     if (stmt->increment.get() != nullptr)
     {
@@ -400,6 +410,7 @@ namespace foxlox
     }
     loop_start_stack_size = enclosing_loop_start_stack_size;
 
-    emit_pop_stack(stack_size_before_initializer);
+    emit_pop_to(stack_size_before_initializer);
+    pop_stack_to(stack_size_before_initializer);
   }
 }

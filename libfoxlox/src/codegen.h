@@ -52,7 +52,8 @@ namespace foxlox
     void patch_jumps(std::vector<gsl::index>& ips);
     gsl::index prepare_loop();
     void emit_loop(gsl::index ip, OpCode c);    
-    void emit_pop_stack(uint16_t stack_size_before);
+    void emit_pop_to(uint16_t stack_size_before);
+    void pop_stack_to(uint16_t stack_size_before);
     std::vector<gsl::index> break_stmts;
     std::vector<gsl::index> continue_stmts;
 

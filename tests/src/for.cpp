@@ -389,7 +389,7 @@ TEST(for_, nested_continue)
 var outer_sum = 0;
 for(var i = 11; i <= 13; i = i + 1) { 
   var inner_sum = 0;
-  for(var j = 1; j <= 3; j = i + 1) {
+  for(var j = 1; j <= 3; j = j + 1) {
     if (j == 2) continue;
     inner_sum = inner_sum + j;
   }
@@ -408,7 +408,7 @@ var outer_sum = 0;
 var i = 11;
 while(i <= 13) { 
   var inner_sum = 0;
-  for(var j = 1; j <= 3; j = i + 1) {
+  for(var j = 1; j <= 3; j = j + 1) {
     if (j == 2) continue;
     inner_sum = inner_sum + j;
   }

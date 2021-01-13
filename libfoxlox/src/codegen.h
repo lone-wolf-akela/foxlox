@@ -58,6 +58,7 @@ namespace foxlox
 
     void visit_binary_expr(expr::Binary* expr) override;
     void visit_grouping_expr(expr::Grouping* expr) override;
+    void visit_tuple_expr(expr::Tuple* expr) override;
     void visit_literal_expr(expr::Literal* expr) override;
     void visit_unary_expr(expr::Unary* expr) override;
     void visit_variable_expr(expr::Variable* expr) override;

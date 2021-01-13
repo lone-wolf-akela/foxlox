@@ -154,6 +154,10 @@ namespace foxlox::stmt
 
     R visit(Stmt* stmt)
     {
+      if (stmt == nullptr) 
+      {
+        return R(); 
+      }
       if (auto p = dynamic_cast<Expression*>(stmt); p != nullptr)
       {
         return visit_expression_stmt(p);

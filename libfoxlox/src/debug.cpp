@@ -83,6 +83,7 @@ namespace foxlox
     case OP_LOAD_STATIC:
     case OP_STORE_STATIC:
     case OP_POP_N:
+    case OP_TUPLE:
     {
       fmt::print("{:<16} {:>4}\n", magic_enum::enum_name(op), get_uint16());
       return 3;

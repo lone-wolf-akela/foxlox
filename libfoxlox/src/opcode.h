@@ -32,6 +32,7 @@ namespace foxlox
     OP_CONSTANT,
     OP_STRING,
     OP_BOOL,
+    OP_TUPLE,
 
     OP_LOAD_STACK,
     OP_STORE_STACK,

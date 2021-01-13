@@ -16,6 +16,11 @@ namespace foxlox
     type = STR;
     v.str = str;
   }
+  Value::Value(Tuple* tuple)
+  {
+    type = TUPLE;
+    v.tuple = tuple;
+  }
   Value::Value(bool b)
   {
     type = BOOL;
@@ -60,6 +65,12 @@ namespace foxlox
     return v.str->get_view();
   }
 
+  std::span<const Value> Value::get_tuplespan() const
+  {
+    assert(type == TUPLE);
+    return v.tuple->get_span();
+  }
+
   std::partial_ordering operator<=>(const Value& l, const Value& r)
   {
     if (l.type == Value::NIL && r.type == Value::NIL)
@@ -82,6 +93,10 @@ namespace foxlox
     if (l.type == Value::STR && r.type == Value::STR)
     {
       return *l.v.str <=> *r.v.str;
+    }
+    if (l.type == Value::TUPLE && r.type == Value::TUPLE)
+    {
+      return l.v.tuple <=> r.v.tuple;
     }
     return std::partial_ordering::unordered;
   }
@@ -146,6 +161,31 @@ namespace foxlox
       std::copy(s2.begin(), s2.end(), it);
       return Value(p);
     }
+    if (l.type == Value::TUPLE && r.type == Value::TUPLE)
+    {
+      const auto s1 = l.v.tuple->get_span();
+      const auto s2 = r.v.tuple->get_span();
+      Tuple* p = Tuple::alloc(s1.size() + s2.size());
+      const auto it = std::copy(s1.begin(), s1.end(), p->elems);
+      std::copy(s2.begin(), s2.end(), it);
+      return Value(p);
+    }
+    if (l.type == Value::TUPLE)
+    {
+      const auto s1 = l.v.tuple->get_span();
+      Tuple* p = Tuple::alloc(s1.size() + 1);
+      const auto it = std::copy(s1.begin(), s1.end(), p->elems);
+      *it = r;
+      return Value(p);
+    }
+    if (r.type == Value::TUPLE)
+    {
+      const auto s2 = r.v.tuple->get_span();
+      Tuple* p = Tuple::alloc(1 + s2.size());
+      p->elems[0] = r;
+      std::copy(s2.begin(), s2.end(), p->elems + 1);
+      return Value(p);
+    }
     assert(false);
     return {};
   }
@@ -168,6 +208,11 @@ namespace foxlox
     if (val.type == Value::F64) { return Value(-val.v.f64); }
     assert(val.type == Value::I64);
     return Value(-val.v.i64);
+  }
+  bool operator!(const Value& val)
+  {
+    assert(val.type == Value::BOOL);
+    return !val.v.b;
   }
   int64_t intdiv(const Value& l, const Value& r)
   {
@@ -200,7 +245,18 @@ namespace foxlox
     case I64:
       return fmt::format("{}", v.i64);
     case STR:
-      return std::string(v.str->get_view());
+      return fmt::format("\"{}\"", v.str->get_view());
+    case TUPLE:
+    {
+      std::string str = "(";
+      auto s = v.tuple->get_span();
+      for (auto& elem : s)
+      {
+        str += elem.to_string() + ", ";
+      }
+      str += ")";
+      return str;
+    }
     default:
       throw FatalError(fmt::format("Unknown ValueType: {}", magic_enum::enum_name(type)).c_str());
     }
@@ -208,5 +264,9 @@ namespace foxlox
   std::string_view String::get_view() const
   {
     return std::string_view(str, length);
+  }
+  std::span<const Value> Tuple::get_span() const
+  {
+    return std::span{ elems, length };
   }
 }

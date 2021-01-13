@@ -13,7 +13,7 @@ add_executable(${PROJECT_NAME})
 add_dependencies(${PROJECT_NAME} libfoxlox)
 
 target_sources(${PROJECT_NAME} PRIVATE
-  "src/single_expr.cpp" "src/temp.cpp" "src/variable.cpp" "src/if.cpp")
+   "src/temp.cpp" "src/variable.cpp" "src/if.cpp" "src/block.cpp" "src/bool.cpp" "src/nil.cpp" "src/while.cpp" "src/for.cpp")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE libfoxlox)
 

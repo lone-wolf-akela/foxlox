@@ -350,7 +350,16 @@ namespace foxlox
     }
     if (match(TokenType::LEFT_PAREN))
     {
+      if (match(TokenType::RIGHT_PAREN))
+      {
+        // empty tuple
+        return std::make_unique<expr::Tuple>(std::vector<std::unique_ptr<expr::Expr>>{});
+      }
       auto expr = expression();
+      if (check(TokenType::COMMA))
+      {
+        return tuple(std::move(expr));
+      }
       consume(TokenType::RIGHT_PAREN, "Expect `)' after expression.");
       return std::make_unique<expr::Grouping>(std::move(expr));
     }
@@ -372,6 +381,25 @@ namespace foxlox
 
     error(peek(), "Expect expression.");
     throw ParseError();
+  }
+
+  std::unique_ptr<expr::Expr> Parser::tuple(std::unique_ptr<expr::Expr>&& first)
+  {
+    std::vector<std::unique_ptr<expr::Expr>> exprs;
+    exprs.emplace_back(std::move(first));
+    while (!match(TokenType::RIGHT_PAREN))
+    {
+      consume(TokenType::COMMA, "Expect `,' after expression.");
+      if (!match(TokenType::RIGHT_PAREN))
+      {
+        exprs.emplace_back(expression());
+      }
+      else
+      {
+        break;
+      }
+    }
+    return std::make_unique<expr::Tuple>(std::move(exprs));
   }
 
   bool Parser::check(TokenType type)

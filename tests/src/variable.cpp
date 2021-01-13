@@ -25,21 +25,145 @@ TEST(variable, in_nested_block)
 TEST(variable, in_middle_of_block)
 {
   auto [res, chunk] = compile(R"(
+var r = ();
 {
   var a = "a";
-  # print a; // expect: a
+  r = r + a; # expect: "a"
   var b = a + " b";
-  # print b; // expect: a b
+  r = r + b; # expect: "a b"
   var c = a + " c";
-  # print c; // expect: a c
+  r = r + c; # expect: "a c"
   var d = b + " d";
-  # print d; // expect: a b d
-  return d;
+  r = r + d; # expect: "a b d"
 }
+return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
   auto v = vm.interpret(chunk);
-  ASSERT_EQ(v.type, Value::STR);
-  ASSERT_EQ(v.get_strview(), "a b d");
+  ASSERT_EQ(v.type, Value::TUPLE);
+  auto s = v.get_tuplespan();
+  ASSERT_EQ(s.size(), 4);
+  ASSERT_EQ(s[0].type, Value::STR);
+  ASSERT_EQ(s[0].get_strview(), "a");
+  ASSERT_EQ(s[1].type, Value::STR);
+  ASSERT_EQ(s[1].get_strview(), "a b");
+  ASSERT_EQ(s[2].type, Value::STR);
+  ASSERT_EQ(s[2].get_strview(), "a c");
+  ASSERT_EQ(s[3].type, Value::STR);
+  ASSERT_EQ(s[3].get_strview(), "a b d");
+}
+
+TEST(variable, scope_reuse_in_different_blocks)
+{
+  auto [res, chunk] = compile(R"(
+var r = ();
+{
+  var a = "first";
+  r = r + a; # expect: first
+}
+{
+  var a = "second";
+  r = r + a; # expect: second
+}
+return r;
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  VM vm;
+  auto v = vm.interpret(chunk);
+  ASSERT_EQ(v.type, Value::TUPLE);
+  auto s = v.get_tuplespan();
+  ASSERT_EQ(s.size(), 2);
+  ASSERT_EQ(s[0].type, Value::STR);
+  ASSERT_EQ(s[0].get_strview(), "first");
+  ASSERT_EQ(s[1].type, Value::STR);
+  ASSERT_EQ(s[1].get_strview(), "second");
+}
+
+TEST(variable, shadow_and_local)
+{
+  auto [res, chunk] = compile(R"(
+var r = ();
+{
+  var a = "outer";
+  {
+    r = r + a; # expect: outer
+    var a = "inner";
+    r = r + a; # expect: inner
+  }
+}
+return r;
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  VM vm;
+  auto v = vm.interpret(chunk);
+  ASSERT_EQ(v.type, Value::TUPLE);
+  auto s = v.get_tuplespan();
+  ASSERT_EQ(s.size(), 2);
+  ASSERT_EQ(s[0].type, Value::STR);
+  ASSERT_EQ(s[0].get_strview(), "outer");
+  ASSERT_EQ(s[1].type, Value::STR);
+  ASSERT_EQ(s[1].get_strview(), "inner");
+}
+
+TEST(variable, shadow_global)
+{
+  auto [res, chunk] = compile(R"(
+var r = ();
+var a = "global";
+{
+  var a = "shadow";
+  r = r + a; # expect: shadow
+}
+r = r + a; # expect: global
+return r;
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  VM vm;
+  auto v = vm.interpret(chunk);
+  ASSERT_EQ(v.type, Value::TUPLE);
+  auto s = v.get_tuplespan();
+  ASSERT_EQ(s.size(), 2);
+  ASSERT_EQ(s[0].type, Value::STR);
+  ASSERT_EQ(s[0].get_strview(), "shadow");
+  ASSERT_EQ(s[1].type, Value::STR);
+  ASSERT_EQ(s[1].get_strview(), "global");
+}
+
+TEST(variable, shadow_local)
+{
+  auto [res, chunk] = compile(R"(
+var r = ();
+{
+  var a = "local";
+  {
+    var a = "shadow";
+    r = r + a; # expect: shadow
+  }
+  r = r + a; # expect: local
+}
+return r;
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  VM vm;
+  auto v = vm.interpret(chunk);
+  ASSERT_EQ(v.type, Value::TUPLE);
+  auto s = v.get_tuplespan();
+  ASSERT_EQ(s.size(), 2);
+  ASSERT_EQ(s[0].type, Value::STR);
+  ASSERT_EQ(s[0].get_strview(), "shadow");
+  ASSERT_EQ(s[1].type, Value::STR);
+  ASSERT_EQ(s[1].get_strview(), "local");
+}
+
+TEST(variable, uninitialized)
+{
+  auto [res, chunk] = compile(R"(
+var a;
+return a;
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  VM vm;
+  auto v = vm.interpret(chunk);
+  ASSERT_EQ(v.type, Value::NIL);
 }

@@ -46,6 +46,7 @@ namespace foxlox
     std::unique_ptr<expr::Expr> call();
     std::unique_ptr<expr::Expr> finish_call(std::unique_ptr<expr::Expr>&& callee);
     std::unique_ptr<expr::Expr> primary();
+    std::unique_ptr<expr::Expr> tuple(std::unique_ptr<expr::Expr>&& first);
 
     template<typename ... TokenTypes>
     bool match(TokenTypes ... types);

@@ -34,10 +34,10 @@ namespace foxlox
 
   struct Token
   {
-    const TokenType type;
-    const std::string lexeme;
-    const CompiletimeValue literal;
-    const int line;
+    TokenType type;
+    std::string lexeme;
+    CompiletimeValue literal;
+    int line;
 
     Token(TokenType type, std::string_view lexeme, CompiletimeValue literal, int line);
 

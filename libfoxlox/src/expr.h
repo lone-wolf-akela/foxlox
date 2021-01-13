@@ -63,7 +63,12 @@ namespace foxlox::expr
     Token op;
     std::unique_ptr<Expr> right;
   };
-
+  class Tuple : public Expr
+  {
+  public:
+    Tuple(std::vector<std::unique_ptr<Expr>>&& es);
+    std::vector<std::unique_ptr<Expr>> exprs;
+  };
   class Grouping : public Expr
   {
   public:
@@ -147,6 +152,7 @@ namespace foxlox::expr
   public:
     virtual R visit_binary_expr(Binary* expr) = 0;
     virtual R visit_grouping_expr(Grouping* expr) = 0;
+    virtual R visit_tuple_expr(Tuple* expr) = 0;
     virtual R visit_literal_expr(Literal* expr) = 0;
     virtual R visit_unary_expr(Unary* expr) = 0;
     virtual R visit_variable_expr(Variable* expr) = 0;
@@ -162,6 +168,10 @@ namespace foxlox::expr
 
     R visit(Expr* expr)
     {
+      if (expr == nullptr)
+      {
+        return R();
+      }
       if (auto p = dynamic_cast<Binary*>(expr); p != nullptr)
       {
         return visit_binary_expr(p);
@@ -169,6 +179,10 @@ namespace foxlox::expr
       if (auto p = dynamic_cast<Grouping*>(expr); p != nullptr)
       {
         return visit_grouping_expr(p);
+      }
+      if (auto p = dynamic_cast<Tuple*>(expr); p != nullptr)
+      {
+        return visit_tuple_expr(p);
       }
       if (auto p = dynamic_cast<Literal*>(expr); p != nullptr)
       {

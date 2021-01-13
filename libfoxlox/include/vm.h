@@ -14,6 +14,10 @@ namespace foxlox
   public:
     VM();
     ~VM();
+    VM(const VM&) = delete;
+    VM& operator=(const VM&) = delete;
+    VM(VM&& r) noexcept;
+    VM& operator=(VM&& r) noexcept;
 
     Value interpret(Chunk& c);
 
@@ -34,15 +38,20 @@ namespace foxlox
     uint16_t read_uint16();
     void reset_stack();
 
+    void clean();
+
     std::vector<Closure>::iterator current_closure;
     std::vector<uint8_t>::const_iterator ip;
     Chunk* chunk;
     
+    bool is_moved;
+
     Stack stack;
     Stack::iterator stack_top;
 
     // data pool
     std::vector<String*> string_pool;
+    std::vector<Tuple*> tuple_pool;
     std::vector<Value> static_value_pool;
   };
 }

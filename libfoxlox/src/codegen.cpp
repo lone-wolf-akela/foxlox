@@ -39,12 +39,10 @@ namespace foxlox
   }
   void CodeGen::compile(expr::Expr* expr)
   {
-    if (expr == nullptr) { return; }
     expr::IVisitor<void>::visit(expr);
   }
   void CodeGen::compile(stmt::Stmt* stmt)
   {
-    if (stmt == nullptr) { return; }
     stmt::IVisitor<void>::visit(stmt);
   }
   gsl::index CodeGen::emit_jump(OpCode c)
@@ -142,6 +140,17 @@ namespace foxlox
   void CodeGen::visit_grouping_expr(expr::Grouping* expr)
   {
     compile(expr->expression.get());
+  }
+  void CodeGen::visit_tuple_expr(expr::Tuple* expr)
+  {
+    for (auto& e : expr->exprs)
+    {
+      compile(e.get());
+    }
+    const uint16_t tuple_size = gsl::narrow_cast<uint16_t>(expr->exprs.size());
+    emit(OP_TUPLE, tuple_size);
+    pop_stack(tuple_size);
+    push_stack();
   }
   void CodeGen::visit_literal_expr(expr::Literal* expr)
   {
@@ -375,7 +384,12 @@ namespace foxlox
 
     compile(stmt->body.get());
     patch_jumps(continue_stmts);
-    compile(stmt->increment.get());
+    if (stmt->increment.get() != nullptr)
+    {
+      compile(stmt->increment.get());
+      pop_stack();
+      emit(OP_POP);
+    }
     emit_loop(start, OP_JUMP);
     patch_jumps(break_stmts);
     if (stmt->condition.get() != nullptr)

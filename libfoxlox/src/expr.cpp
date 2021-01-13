@@ -61,4 +61,8 @@ namespace foxlox::expr
     keyword(tk) 
   {
   }
+  Tuple::Tuple(std::vector<std::unique_ptr<Expr>>&& es):
+    exprs(std::move(es))
+  {
+  }
 }

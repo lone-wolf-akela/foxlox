@@ -399,4 +399,11 @@ namespace foxlox
 
     end_scope();
   }
+  void Resolver::visit_tuple_expr(expr::Tuple* expr)
+  {
+    for (auto& e : expr->exprs)
+    {
+      resolve(e.get());
+    }
+  }
 }

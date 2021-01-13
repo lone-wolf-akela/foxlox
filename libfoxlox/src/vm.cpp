@@ -11,13 +11,54 @@ namespace foxlox
   VM::VM()
   {
     chunk = nullptr;
+    is_moved = false;
     reset_stack();
   }
   VM::~VM()
   {
-    for (String* p : string_pool)
+    clean();
+  }
+  VM::VM(VM&& r) noexcept
+  {
+    is_moved = r.is_moved;
+    current_closure = r.current_closure;
+    ip = r.ip;
+    chunk = r.chunk;
+    stack = r.stack;
+    stack_top = stack.begin() + std::distance(r.stack.begin(), r.stack_top);
+    string_pool = std::move(r.string_pool);
+    tuple_pool = std::move(r.tuple_pool);
+    static_value_pool = std::move(r.static_value_pool);
+    r.is_moved = true;
+  }
+  VM& VM::operator=(VM&& r) noexcept
+  {
+    if (this == &r) { return *this; }
+    clean();
+    is_moved = r.is_moved;
+    current_closure = r.current_closure;
+    ip = r.ip;
+    chunk = r.chunk;
+    stack = r.stack;
+    stack_top = stack.begin() + std::distance(r.stack.begin(), r.stack_top);
+    string_pool = std::move(r.string_pool);
+    tuple_pool = std::move(r.tuple_pool);
+    static_value_pool = std::move(r.static_value_pool);
+    r.is_moved = true;
+    return *this;
+  }
+  void VM::clean()
+  {
+    if (!is_moved)
     {
-      String::free(p);
+      for (String* p : string_pool)
+      {
+        String::free(p);
+      }
+      for (Tuple* p : tuple_pool)
+      {
+        Tuple::free(p);
+      }
     }
   }
   Value VM::interpret(Chunk& c)
@@ -27,6 +68,7 @@ namespace foxlox
     ip = current_closure->get_code().begin();
     static_value_pool.resize(chunk->get_static_value_num());
     static_value_pool.shrink_to_fit();
+    reset_stack();
     return run();
   }
   size_t VM::get_stack_size()
@@ -84,6 +126,11 @@ namespace foxlox
         *top() = -*top();
         break;
       }
+      case OP_NOT:
+      {
+        *top() = !*top();
+        break;
+      }
       case OP_ADD:
       {
         auto l = top(1);
@@ -92,6 +139,10 @@ namespace foxlox
         if (l->type == Value::STR)
         {
           string_pool.push_back(l->v.str);
+        }
+        else if (l->type == Value::TUPLE)
+        {
+          tuple_pool.push_back(l->v.tuple);
         }
         pop();
         break;
@@ -198,6 +249,21 @@ namespace foxlox
       {
         push();
         *top() = Value(read_bool());
+        break;
+      }
+      case OP_TUPLE:
+      {
+        // note: n can be 0
+        const auto n = read_uint16();
+        const auto p = Tuple::alloc(n);
+        for (gsl::index i = 0; i < n; i++)
+        {
+          p->elems[i] = *top(gsl::narrow_cast<uint16_t>(n - i - 1));
+        }
+        tuple_pool.push_back(p);
+        pop(n);
+        push();
+        *top() = p;
         break;
       }
       case OP_LOAD_STACK:

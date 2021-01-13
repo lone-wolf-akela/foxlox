@@ -15,11 +15,20 @@ namespace foxlox
     const int this_line_num = closure.get_lines().get_line(index);
     if (this_line_num == last_line_num)
     {
-      fmt::print("{:04} {:>4} ", index, '|');
+      fmt::print("{:05} {:>4} ", index, '|');
     }
     else
     {
-      fmt::print("{:04} {:>4} ", index, this_line_num);
+      auto src = chunk.get_source(this_line_num - 1);
+      if (src != "")
+      {
+        fmt::print("{:>5} {:>4} {}\n", "[src]", this_line_num, src);
+        fmt::print("{:05} {:>4} ", index, '|');
+      }
+      else
+      {
+        fmt::print("{:05} {:>4} ", index, this_line_num);
+      }
     }
     const auto codes = closure.get_code();
 
@@ -91,6 +100,8 @@ namespace foxlox
     case OP_JUMP:
     case OP_JUMP_IF_TRUE:
     case OP_JUMP_IF_FALSE:
+    case OP_JUMP_IF_TRUE_NO_POP:
+    case OP_JUMP_IF_FALSE_NO_POP:
     {
       fmt::print("{:<16} {:>4}\n", magic_enum::enum_name(op), get_int16());
       return 3;

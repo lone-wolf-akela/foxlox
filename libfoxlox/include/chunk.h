@@ -55,7 +55,9 @@ namespace foxlox
     const std::vector<Closure>& get_closures() const;
     const std::vector<Value>& get_constants() const;
     const std::vector<String*>& get_const_strings() const;
-    
+    void set_source(std::vector<std::string>&& src);
+    std::string_view get_source(gsl::index line_num) const;
+
     uint16_t add_constant(Value v);
     uint16_t add_closure();
     uint16_t add_string(std::string_view str);
@@ -64,6 +66,8 @@ namespace foxlox
   private:
     void clean();
     bool is_moved;
+
+    std::vector<std::string> source;
 
     std::vector<Closure> closures;
 

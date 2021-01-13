@@ -60,8 +60,9 @@ namespace foxlox
     start = 0;
     current = 0;
     line = 1;
+    last_line_end = 0;
   }
-  std::vector<Token> Scanner::scan_tokens()
+  std::tuple<std::vector<Token>, std::vector<std::string>> Scanner::scan_tokens()
   {
     tokens = std::vector<Token>();
     while (!is_at_end())
@@ -72,7 +73,7 @@ namespace foxlox
     }
 
     tokens.emplace_back(Token(TokenType::TKEOF, "", {}, line));
-    return std::move(tokens);
+    return std::make_tuple(std::move(tokens), std::move(source_per_line));
   }
   bool Scanner::is_at_end()
   {
@@ -125,7 +126,15 @@ namespace foxlox
       break;
     }
     case '#': skipline(); break;
-    case '\n': line++; break;
+    case '\n': 
+    {
+      auto a_line_u32 = std::u32string_view(source).substr(last_line_end, current - last_line_end - 1);
+      auto a_line_u8 = u32_to_u8(a_line_u32);
+      source_per_line.emplace_back(std::move(a_line_u8));
+      last_line_end = current;
+      line++;
+      break;
+    }
     case '"': scanstring(); break;
     default:
       if (is_digit(c)) { number(); }

@@ -65,4 +65,8 @@ namespace foxlox::expr
     exprs(std::move(es))
   {
   }
+  Unary::Unary(Token&& tk, std::unique_ptr<Expr>&& r) : 
+    op(std::move(tk)), right(std::move(r)) 
+  {
+  }
 }

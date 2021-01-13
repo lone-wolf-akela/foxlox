@@ -111,6 +111,7 @@ namespace foxlox
   Chunk::Chunk(Chunk&& r) noexcept
   {
     is_moved = r.is_moved;
+    source = std::move(r.source);
     closures = std::move(r.closures);
     constants = std::move(r.constants);
     const_strings = std::move(r.const_strings);
@@ -122,6 +123,7 @@ namespace foxlox
     if (this == &r) { return *this; }
     clean();
     is_moved = r.is_moved;
+    source = std::move(r.source);
     closures = std::move(r.closures);
     constants = std::move(r.constants);
     const_strings = std::move(r.const_strings);
@@ -138,6 +140,15 @@ namespace foxlox
         String::free(p);
       }
     }
+  }
+  void Chunk::set_source(std::vector<std::string>&& src)
+  {
+    source = std::move(src);
+  }
+  std::string_view Chunk::get_source(gsl::index line_num) const
+  {
+    if (line_num < 0 || ssize(source) <= line_num) { return ""; }
+    return source[line_num];
   }
   const LineInfo& Closure::get_lines() const
   {

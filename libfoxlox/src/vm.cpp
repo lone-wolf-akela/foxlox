@@ -84,10 +84,10 @@ namespace foxlox
     while (true)
     {
 #ifdef DEBUG_TRACE_EXECUTION
-      fmt::print("{:10}", ' ');
+      fmt::print("{:>10}", '|');
       for (auto v : std::span(stack.begin(), stack_top))
       {
-        fmt::print("[ {} ]", v.to_string());
+        fmt::print("[{}] ", v.to_string());
       }
       fmt::print("\n");
       disassemble_inst(*chunk, *current_closure, std::distance(current_closure->get_code().begin(), ip));

@@ -85,7 +85,7 @@ namespace foxlox::expr
   class Unary : public Expr
   {
   public:
-    Unary(Token&& tk, std::unique_ptr<Expr>&& r) : op(std::move(tk)), right(std::move(r)) {}
+    Unary(Token&& tk, std::unique_ptr<Expr>&& r);
     Token op;
     std::unique_ptr<Expr> right;
   };

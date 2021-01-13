@@ -64,3 +64,362 @@ return r;
     ASSERT_EQ(s[1].get_int64(), 0);
   }
 }
+
+TEST(for_, syntax)
+{
+  VM vm;
+  // Single-expression body.
+  {
+    auto [res, chunk] = compile(R"(
+var r = ();
+for (var c = 0; c < 3;) r = r + (c = c + 1);
+return r;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::TUPLE);
+    auto s = v.get_tuplespan();
+    ASSERT_EQ(s.size(), 3);
+    for (int i = 0; i < 3; i++)
+    {
+      ASSERT_EQ(s[i].type, Value::I64);
+      ASSERT_EQ(s[i].get_int64(), i + 1);
+    }
+  }
+  // Block body.
+  {
+    auto [res, chunk] = compile(R"(
+var r = ();
+for (var a = 0; a < 3; a = a + 1) {
+  r = r + a;
+}
+return r;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::TUPLE);
+    auto s = v.get_tuplespan();
+    ASSERT_EQ(s.size(), 3);
+    for (int i = 0; i < 3; i++)
+    {
+      ASSERT_EQ(s[i].type, Value::I64);
+      ASSERT_EQ(s[i].get_int64(), i);
+    }
+  }
+  // No clauses.
+  {
+    auto [res, chunk] = compile(R"(
+for (;;) return "done";
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_EQ(v.get_strview(), "done");
+  }
+  // No variable.
+  {
+    auto [res, chunk] = compile(R"(
+var r = ();
+var i = 0;
+for (; i < 2; i = i + 1) r = r + i;
+return r;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::TUPLE);
+    auto s = v.get_tuplespan();
+    ASSERT_EQ(s.size(), 2);
+    for (int i = 0; i < 2; i++)
+    {
+      ASSERT_EQ(s[i].type, Value::I64);
+      ASSERT_EQ(s[i].get_int64(), i);
+    }
+  }
+  // No condition.
+  {
+    auto [res, chunk] = compile(R"(
+var r = ();
+for (var i = 0;; i = i + 1) {
+  r = r + i;
+  if (i >= 2) return r;
+}
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::TUPLE);
+    auto s = v.get_tuplespan();
+    ASSERT_EQ(s.size(), 3);
+    for (int i = 0; i < 3; i++)
+    {
+      ASSERT_EQ(s[i].type, Value::I64);
+      ASSERT_EQ(s[i].get_int64(), i);
+    }
+  }
+  // No increment.
+  {
+    auto [res, chunk] = compile(R"(
+var r = ();
+for (var i = 0; i < 2;) {
+  r = r + i;
+  i = i + 1;
+}
+return r;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::TUPLE);
+    auto s = v.get_tuplespan();
+    ASSERT_EQ(s.size(), 2);
+    for (int i = 0; i < 2; i++)
+    {
+      ASSERT_EQ(s[i].type, Value::I64);
+      ASSERT_EQ(s[i].get_int64(), i);
+    }
+  }
+  // Statement bodies.
+  {
+    auto [res, chunk] = compile(R"(
+for (; false;) if (true) 1; else 2;
+for (; false;) while (true) 1;
+for (; false;) for (;;) 1;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::NIL);
+  }
+}
+
+TEST(for_, break_)
+{
+  VM vm;
+  {
+    auto [res, chunk] = compile(R"(
+var c;
+for(c = 0; c < 10; c = c + 1) if (c >= 3) break;
+return c;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.get_int64(), 3);
+  }
+  {
+    auto [res, chunk] = compile(R"(
+var c;
+for(c = 0; c < 10; c = c + 1) {
+  if (c >= 3) {
+    break;
+  }
+}
+return c;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.get_int64(), 3);
+  }
+  // no init
+  {
+    auto [res, chunk] = compile(R"(
+var c = 0;
+for(; c < 10; c = c + 1) {
+  if (c >= 3) {
+    break;
+  }
+}
+return c;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.get_int64(), 3);
+  }
+  // no cond
+  {
+    auto [res, chunk] = compile(R"(
+var c;
+for(c = 0;; c = c + 1) {
+  if (c >= 3) {
+    break;
+  }
+}
+return c;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.get_int64(), 3);
+  }
+  // no incre
+  {
+    auto [res, chunk] = compile(R"(
+var c;
+for(c = 0; c < 10;) {
+  if (c >= 3) {
+    break;
+  }
+  c = c + 1;
+}
+return c;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.get_int64(), 3);
+  }
+}
+
+TEST(for_, continue_)
+{
+  VM vm;
+  {
+    auto [res, chunk] = compile(R"(
+var s = 0;
+for(var c = 1; c <= 5; c = c + 1) { 
+  if (c == 3) {
+    continue;
+  }
+  s = s + c;
+}
+return s;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.get_int64(), 1 + 2 + 3 + 4 + 5 - 3);
+  }
+  // no init
+  {
+    auto [res, chunk] = compile(R"(
+var s = 0;
+var c = 0;
+for(; c <= 5; c = c + 1) { 
+  if (c == 3) {
+    continue;
+  }
+  s = s + c;
+}
+return s;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.get_int64(), 1 + 2 + 3 + 4 + 5 - 3);
+  }
+  // no cond
+  {
+    auto [res, chunk] = compile(R"(
+var s = 0;
+for(var c = 1;; c = c + 1) { 
+  if (c > 5) break;
+  if (c == 3) {
+    continue;
+  }
+  s = s + c;
+}
+return s;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.get_int64(), 1 + 2 + 3 + 4 + 5 - 3);
+  }
+  // no incre
+  {
+    auto [res, chunk] = compile(R"(
+var s = 0;
+for(var c = 0; c < 5;) { 
+  c = c + 1;
+  if (c == 3) {
+    continue;
+  }
+  s = s + c;
+}
+return s;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.get_int64(), 1 + 2 + 3 + 4 + 5 - 3);
+  }
+}
+
+TEST(for_, nested_break)
+{
+  VM vm;
+  {
+    auto [res, chunk] = compile(R"(
+for(;;) { 
+  for(;;) {
+    break;
+    return "inner";
+  }
+  return "mid";
+}
+return "outer";
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_EQ(v.get_strview(), "mid");
+  }
+  {
+    auto [res, chunk] = compile(R"(
+while(true) { 
+  for(;;) {
+    break;
+    return "inner";
+  }
+  return "mid";
+}
+return "outer";
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_EQ(v.get_strview(), "mid");
+  }
+}
+
+TEST(for_, nested_continue)
+{
+  VM vm;
+  {
+    auto [res, chunk] = compile(R"(
+var outer_sum = 0;
+for(var i = 11; i <= 13; i = i + 1) { 
+  var inner_sum = 0;
+  for(var j = 1; j <= 3; j = i + 1) {
+    if (j == 2) continue;
+    inner_sum = inner_sum + j;
+  }
+  outer_sum = outer_sum + i * inner_sum;
+}
+return outer_sum;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.get_int64(), 11*(1+3) + 12*(1+3) + 13*(1+3));
+  }
+  {
+    auto [res, chunk] = compile(R"(
+var outer_sum = 0;
+var i = 11;
+while(i <= 13) { 
+  var inner_sum = 0;
+  for(var j = 1; j <= 3; j = i + 1) {
+    if (j == 2) continue;
+    inner_sum = inner_sum + j;
+  }
+  outer_sum = outer_sum + i * inner_sum;
+  i = i + 1;
+}
+return outer_sum;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.get_int64(), 11 * (1 + 3) + 12 * (1 + 3) + 13 * (1 + 3));
+  }
+}

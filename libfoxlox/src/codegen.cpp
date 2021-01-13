@@ -332,6 +332,7 @@ namespace foxlox
     loop_start_stack_size = current_stack_size;
 
     compile(stmt->body.get());
+    emit_pop_stack(loop_start_stack_size);
     patch_jumps(continue_stmts);
     emit_loop(start, OP_JUMP);
     patch_jumps(break_stmts);
@@ -383,6 +384,7 @@ namespace foxlox
     loop_start_stack_size = current_stack_size;
 
     compile(stmt->body.get());
+    emit_pop_stack(loop_start_stack_size);
     patch_jumps(continue_stmts);
     if (stmt->increment.get() != nullptr)
     {
@@ -396,7 +398,6 @@ namespace foxlox
     {
       patch_jump(jump_to_end);
     }
-
     loop_start_stack_size = enclosing_loop_start_stack_size;
 
     emit_pop_stack(stack_size_before_initializer);

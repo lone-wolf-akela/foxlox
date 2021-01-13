@@ -10,6 +10,7 @@
 #include <gsl/gsl>
 #include <range/v3/all.hpp>
 #include <fmt/format.h>
+#include <tuple>
 
 #include "token.h"
 #include "util.h"
@@ -20,12 +21,15 @@ namespace foxlox
   {
   public:
     Scanner(std::u32string&& s);
-    std::vector<Token> scan_tokens();
+    // return tokens with each line of the source file
+    std::tuple<std::vector<Token>, std::vector<std::string>> scan_tokens();
 
   private:
     const std::u32string source;
+    std::vector<std::string> source_per_line;
     std::vector<Token> tokens;
 
+    gsl::index last_line_end;
     gsl::index start;
     gsl::index current;
     int line;

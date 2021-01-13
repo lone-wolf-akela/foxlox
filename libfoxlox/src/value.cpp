@@ -182,7 +182,7 @@ namespace foxlox
     {
       const auto s2 = r.v.tuple->get_span();
       Tuple* p = Tuple::alloc(1 + s2.size());
-      p->elems[0] = r;
+      p->elems[0] = l;
       std::copy(s2.begin(), s2.end(), p->elems + 1);
       return Value(p);
     }

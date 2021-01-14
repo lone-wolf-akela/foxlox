@@ -53,5 +53,10 @@ namespace foxlox
     std::vector<String*> string_pool;
     std::vector<Tuple*> tuple_pool;
     std::vector<Value> static_value_pool;
+
+    // mem manage related
+    char* allocator(size_t l);
+    void deallocator(char* p, size_t l);
+    size_t current_heap_size;
   };
 }

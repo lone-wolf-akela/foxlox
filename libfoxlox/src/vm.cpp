@@ -1,4 +1,5 @@
 #include <span>
+#include <functional>
 
 #include <fmt/format.h>
 
@@ -12,6 +13,7 @@ namespace foxlox
   {
     chunk = nullptr;
     is_moved = false;
+    current_heap_size = 0;
     reset_stack();
   }
   VM::~VM()
@@ -29,6 +31,7 @@ namespace foxlox
     string_pool = std::move(r.string_pool);
     tuple_pool = std::move(r.tuple_pool);
     static_value_pool = std::move(r.static_value_pool);
+    current_heap_size = r.current_heap_size;
     r.is_moved = true;
   }
   VM& VM::operator=(VM&& r) noexcept
@@ -44,6 +47,7 @@ namespace foxlox
     string_pool = std::move(r.string_pool);
     tuple_pool = std::move(r.tuple_pool);
     static_value_pool = std::move(r.static_value_pool);
+    current_heap_size = r.current_heap_size;
     r.is_moved = true;
     return *this;
   }
@@ -53,11 +57,11 @@ namespace foxlox
     {
       for (String* p : string_pool)
       {
-        String::free(p);
+        String::free(std::bind_front(&VM::deallocator, this), p);
       }
       for (Tuple* p : tuple_pool)
       {
-        Tuple::free(p);
+        Tuple::free(std::bind_front(&VM::deallocator, this), p);
       }
     }
   }
@@ -135,14 +139,19 @@ namespace foxlox
       {
         auto l = top(1);
         auto r = top(0);
-        *l = *l + *r;
-        if (l->type == Value::STR)
+        if (l->type == Value::STR && r->type == Value::STR)
         {
+          *l = Value::strcat(std::bind_front(&VM::allocator, this), *l, *r);
           string_pool.push_back(l->v.str);
         }
-        else if (l->type == Value::TUPLE)
+        else if (l->type == Value::TUPLE || r->type == Value::TUPLE)
         {
+          *l = Value::tuplecat(std::bind_front(&VM::allocator, this), *l, *r);
           tuple_pool.push_back(l->v.tuple);
+        }
+        else
+        {
+          *l = *l + *r;
         }
         pop();
         break;
@@ -255,7 +264,7 @@ namespace foxlox
       {
         // note: n can be 0
         const auto n = read_uint16();
-        const auto p = Tuple::alloc(n);
+        const auto p = Tuple::alloc(std::bind_front(&VM::allocator, this), n);
         for (gsl::index i = 0; i < n; i++)
         {
           p->elems[i] = *top(gsl::narrow_cast<uint16_t>(n - i - 1));
@@ -388,5 +397,16 @@ namespace foxlox
   void VM::pop(uint16_t n)
   {
     stack_top -= n;
+  }
+  char* VM::allocator(size_t l)
+  {
+    current_heap_size += l;
+    return new char[l];
+  }
+  void VM::deallocator(char* p, size_t l)
+  {
+    assert(l <= current_heap_size);
+    current_heap_size -= l;
+    delete[] p;
   }
 }

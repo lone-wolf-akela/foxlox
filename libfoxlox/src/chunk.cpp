@@ -83,7 +83,7 @@ namespace foxlox
   }
   uint16_t Chunk::add_string(std::string_view str)
   {
-    String* p = String::alloc(str.size());
+    String* p = String::alloc([](auto l) {return new char[l]; }, str.size());
     std::copy(str.begin(), str.end(), p->str);
     const_strings.push_back(p);
     const auto index = const_strings.size() - 1;
@@ -137,7 +137,7 @@ namespace foxlox
     {
       for (String* p : const_strings)
       {
-        String::free(p);
+        String::free([](auto p, auto) { delete[] p; }, p);
       }
     }
   }

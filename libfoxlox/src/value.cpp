@@ -152,40 +152,6 @@ namespace foxlox
     {
       return Value(l.get_double() + r.get_double());
     }
-    if (l.type == Value::STR && r.type == Value::STR)
-    {
-      const auto s1 = l.v.str->get_view();
-      const auto s2 = r.v.str->get_view();
-      String* p = String::alloc(s1.size() + s2.size());
-      const auto it = std::copy(s1.begin(), s1.end(), p->str);
-      std::copy(s2.begin(), s2.end(), it);
-      return Value(p);
-    }
-    if (l.type == Value::TUPLE && r.type == Value::TUPLE)
-    {
-      const auto s1 = l.v.tuple->get_span();
-      const auto s2 = r.v.tuple->get_span();
-      Tuple* p = Tuple::alloc(s1.size() + s2.size());
-      const auto it = std::copy(s1.begin(), s1.end(), p->elems);
-      std::copy(s2.begin(), s2.end(), it);
-      return Value(p);
-    }
-    if (l.type == Value::TUPLE)
-    {
-      const auto s1 = l.v.tuple->get_span();
-      Tuple* p = Tuple::alloc(s1.size() + 1);
-      const auto it = std::copy(s1.begin(), s1.end(), p->elems);
-      *it = r;
-      return Value(p);
-    }
-    if (r.type == Value::TUPLE)
-    {
-      const auto s2 = r.v.tuple->get_span();
-      Tuple* p = Tuple::alloc(1 + s2.size());
-      p->elems[0] = l;
-      std::copy(s2.begin(), s2.end(), p->elems + 1);
-      return Value(p);
-    }
     assert(false);
     return {};
   }

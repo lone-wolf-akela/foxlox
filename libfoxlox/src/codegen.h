@@ -57,30 +57,30 @@ namespace foxlox
     std::vector<gsl::index> break_stmts;
     std::vector<gsl::index> continue_stmts;
 
-    void visit_binary_expr(expr::Binary* expr) override;
-    void visit_grouping_expr(expr::Grouping* expr) override;
-    void visit_tuple_expr(expr::Tuple* expr) override;
-    void visit_literal_expr(expr::Literal* expr) override;
-    void visit_unary_expr(expr::Unary* expr) override;
-    void visit_variable_expr(expr::Variable* expr) override;
-    void visit_assign_expr(expr::Assign* expr) override;
-    void visit_logical_expr(expr::Logical* expr) override;
-    void visit_call_expr(expr::Call* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    void visit_get_expr(expr::Get* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    void visit_set_expr(expr::Set* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    void visit_this_expr(expr::This* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    void visit_super_expr(expr::Super* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
+    virtual void visit_binary_expr(expr::Binary* expr) override;
+    virtual void visit_grouping_expr(expr::Grouping* expr) override;
+    virtual void visit_tuple_expr(expr::Tuple* expr) override;
+    virtual void visit_literal_expr(expr::Literal* expr) override;
+    virtual void visit_unary_expr(expr::Unary* expr) override;
+    virtual void visit_variable_expr(expr::Variable* expr) override;
+    virtual void visit_assign_expr(expr::Assign* expr) override;
+    virtual void visit_logical_expr(expr::Logical* expr) override;
+    virtual void visit_call_expr(expr::Call* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
+    virtual void visit_get_expr(expr::Get* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
+    virtual void visit_set_expr(expr::Set* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
+    virtual void visit_this_expr(expr::This* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
+    virtual void visit_super_expr(expr::Super* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
 
-    void visit_expression_stmt(stmt::Expression* stmt) override;
-    void visit_var_stmt(stmt::Var* stmt) override;
-    void visit_block_stmt(stmt::Block* stmt) override;
-    void visit_if_stmt(stmt::If* stmt) override;
-    void visit_while_stmt(stmt::While* stmt) override;
-    void visit_function_stmt(stmt::Function* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
-    void visit_return_stmt(stmt::Return* stmt) override;
-    void visit_break_stmt(stmt::Break* stmt) override;
-    void visit_continue_stmt(stmt::Continue* stmt) override;
-    void visit_class_stmt(stmt::Class* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
-    void visit_for_stmt(stmt::For* stmt) override;
+    virtual void visit_expression_stmt(stmt::Expression* stmt) override;
+    virtual void visit_var_stmt(stmt::Var* stmt) override;
+    virtual void visit_block_stmt(stmt::Block* stmt) override;
+    virtual void visit_if_stmt(stmt::If* stmt) override;
+    virtual void visit_while_stmt(stmt::While* stmt) override;
+    virtual void visit_function_stmt(stmt::Function* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
+    virtual void visit_return_stmt(stmt::Return* stmt) override;
+    virtual void visit_break_stmt(stmt::Break* stmt) override;
+    virtual void visit_continue_stmt(stmt::Continue* stmt) override;
+    virtual void visit_class_stmt(stmt::Class* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
+    virtual void visit_for_stmt(stmt::For* stmt) override;
   };
 }

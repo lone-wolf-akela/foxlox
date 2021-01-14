@@ -291,6 +291,27 @@ namespace foxlox
       std::unique_ptr<expr::Expr> right = unary();
       return std::make_unique<expr::Unary>(std::move(op), std::move(right));
     }
+    if (match(TokenType::PLUS_PLUS))
+    {
+      Token op = previous();
+      //de-sugarlize
+      std::unique_ptr<expr::Expr> right = unary();
+      auto literal_one = std::make_unique<expr::Literal>(CompiletimeValue(int64_t(1)));
+      Token tk_add(TokenType::PLUS, op.lexeme, op.literal, op.line);
+      if (auto variable = dynamic_cast<expr::Variable*>(right.get()); variable != nullptr)
+      {
+        auto assigned_to = variable->name;
+        auto add = std::make_unique<expr::Binary>(std::move(right), std::move(tk_add), std::move(literal_one));
+        return std::make_unique<expr::Assign>(std::move(assigned_to), std::move(add));
+      }
+      if (auto get = dynamic_cast<expr::Get*>(right.get()); get != nullptr)
+      {
+        auto set_to_obj = get->obj->clone();
+        auto set_to_name = get->name;
+        auto add = std::make_unique<expr::Binary>(std::move(right), std::move(tk_add), std::move(literal_one));
+        return std::make_unique<expr::Set>(std::move(set_to_obj), std::move(set_to_name), std::move(add));
+      }
+    }
     return call();
   }
   std::unique_ptr<expr::Expr> Parser::call()

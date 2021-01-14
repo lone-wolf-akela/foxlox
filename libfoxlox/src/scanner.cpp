@@ -81,52 +81,57 @@ namespace foxlox
   }
   void Scanner::scan_token()
   {
-    const auto c = advance();
+    const char32_t c = advance();
     switch (c)
     {
-    case '(': add_token(TokenType::LEFT_PAREN); break;
-    case ')': add_token(TokenType::RIGHT_PAREN); break;
-    case '{': add_token(TokenType::LEFT_BRACE); break;
-    case '}': add_token(TokenType::RIGHT_BRACE); break;
-    case ',': add_token(TokenType::COMMA); break;
-    case '.': add_token(TokenType::DOT); break;
-    case '-': add_token(TokenType::MINUS); break;
-    case '+': add_token(TokenType::PLUS); break;
-    case ';': add_token(TokenType::SEMICOLON); break;
-    case '*': add_token(TokenType::STAR); break;
-    case '/':  
+    case U'(': add_token(TokenType::LEFT_PAREN); break;
+    case U')': add_token(TokenType::RIGHT_PAREN); break;
+    case U'{': add_token(TokenType::LEFT_BRACE); break;
+    case U'}': add_token(TokenType::RIGHT_BRACE); break;
+    case U',': add_token(TokenType::COMMA); break;
+    case U'.': add_token(TokenType::DOT); break;
+    case U'-': add_token(TokenType::MINUS); break;
+    case U'+':
     {
-      if (match('/')) { add_token(TokenType::SLASH_SLASH); }
+      if (match(U'+')) { add_token(TokenType::PLUS_PLUS); }
+      else { add_token(TokenType::PLUS); }
+      break;
+    }
+    case U';': add_token(TokenType::SEMICOLON); break;
+    case U'*': add_token(TokenType::STAR); break;
+    case U'/':
+    {
+      if (match(U'/')) { add_token(TokenType::SLASH_SLASH); }
       else { add_token(TokenType::SLASH); }
       break;
     }
-    case ':': add_token(TokenType::COLON); break;
-    case '!':
+    case U':': add_token(TokenType::COLON); break;
+    case U'!':
     {
-      if (match('=')) { add_token(TokenType::BANG_EQUAL); }
+      if (match(U'=')) { add_token(TokenType::BANG_EQUAL); }
       else { add_token(TokenType::BANG); }
       break;
     }
-    case '=':
+    case U'=':
     {
-      if (match('=')) { add_token(TokenType::EQUAL_EQUAL); }
+      if (match(U'=')) { add_token(TokenType::EQUAL_EQUAL); }
       else { add_token(TokenType::EQUAL); }
       break;
     }
-    case '<':
+    case U'<':
     {
-      if (match('=')) { add_token(TokenType::LESS_EQUAL); }
+      if (match(U'=')) { add_token(TokenType::LESS_EQUAL); }
       else { add_token(TokenType::LESS); }
       break;
     }
-    case '>':
+    case U'>':
     {
-      if (match('=')) { add_token(TokenType::GREATER_EQUAL); }
+      if (match(U'=')) { add_token(TokenType::GREATER_EQUAL); }
       else { add_token(TokenType::GREATER); }
       break;
     }
-    case '#': skipline(); break;
-    case '\n': 
+    case U'#': skipline(); break;
+    case U'\n':
     {
       auto a_line_u32 = std::u32string_view(source).substr(last_line_end, current - last_line_end - 1);
       auto a_line_u8 = u32_to_u8(a_line_u32);
@@ -135,7 +140,7 @@ namespace foxlox
       line++;
       break;
     }
-    case '"': scanstring(); break;
+    case U'"': scanstring(); break;
     default:
       if (is_digit(c)) { number(); }
       else if (is_whitespace(c)) { /*Ignore whitespace*/ }

@@ -31,6 +31,7 @@ namespace foxlox::expr
   class Expr
   {
   public:
+    virtual std::unique_ptr<Expr> clone() = 0;
     virtual ~Expr() = default;
   };
 
@@ -44,6 +45,8 @@ namespace foxlox::expr
     // to be filled by resolver 
     // pointed to where the value is declared
     VarDeclareAt declare;
+
+    virtual std::unique_ptr<Expr> clone() override;
   };
 
   class Binary : public Expr
@@ -53,6 +56,8 @@ namespace foxlox::expr
     std::unique_ptr<Expr> left;
     Token op;
     std::unique_ptr<Expr> right;
+
+    virtual std::unique_ptr<Expr> clone() override;
   };
 
   class Logical : public Expr
@@ -62,18 +67,24 @@ namespace foxlox::expr
     std::unique_ptr<Expr> left;
     Token op;
     std::unique_ptr<Expr> right;
+
+    virtual std::unique_ptr<Expr> clone() override;
   };
   class Tuple : public Expr
   {
   public:
     Tuple(std::vector<std::unique_ptr<Expr>>&& es);
     std::vector<std::unique_ptr<Expr>> exprs;
+
+    virtual std::unique_ptr<Expr> clone() override;
   };
   class Grouping : public Expr
   {
   public:
     Grouping(std::unique_ptr<Expr>&& expr);
     std::unique_ptr<Expr> expression;
+
+    virtual std::unique_ptr<Expr> clone() override;
   };
   class Literal : public Expr
   {
@@ -81,6 +92,8 @@ namespace foxlox::expr
     Literal(CompiletimeValue&& v);
     Literal(const CompiletimeValue& v);
     CompiletimeValue value;
+
+    virtual std::unique_ptr<Expr> clone() override;
   };
   class Unary : public Expr
   {
@@ -88,6 +101,8 @@ namespace foxlox::expr
     Unary(Token&& tk, std::unique_ptr<Expr>&& r);
     Token op;
     std::unique_ptr<Expr> right;
+
+    virtual std::unique_ptr<Expr> clone() override;
   };
   class Call : public Expr
   {
@@ -98,6 +113,8 @@ namespace foxlox::expr
       // its location is used when we report a runtime error caused by a function call.
     Token paren;
     std::vector<std::unique_ptr<Expr>> arguments;
+
+    virtual std::unique_ptr<Expr> clone() override;
   };
   class Variable : public Expr
   {
@@ -108,6 +125,8 @@ namespace foxlox::expr
     // to be filled by resolver 
     // pointed to where the value is declared
     VarDeclareAt declare;
+
+    virtual std::unique_ptr<Expr> clone() override;
   };
   class Get : public Expr
   {
@@ -115,6 +134,8 @@ namespace foxlox::expr
     Get(std::unique_ptr<Expr>&& o, Token&& tk);
     std::unique_ptr<Expr> obj;
     Token name;
+
+    virtual std::unique_ptr<Expr> clone() override;
   };
   class Set : public Expr
   {
@@ -123,6 +144,8 @@ namespace foxlox::expr
     std::unique_ptr<Expr> obj;
     Token name;
     std::unique_ptr<Expr> value;
+
+    virtual std::unique_ptr<Expr> clone() override;
   };
   class Super : public Expr
   {
@@ -134,6 +157,8 @@ namespace foxlox::expr
     // to be filled by resolver 
     // pointed to the corresponding method 
     VarDeclareAt declare;
+
+    virtual std::unique_ptr<Expr> clone() override;
   };
   class This : public Expr
   {
@@ -144,6 +169,8 @@ namespace foxlox::expr
     // to be filled by resolver 
     // pointed to the corresponding method 
     VarDeclareAt declare;
+
+    virtual std::unique_ptr<Expr> clone() override;
   };
 
   template<typename R>

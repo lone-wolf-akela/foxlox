@@ -15,7 +15,7 @@ var r = ();
   var i = "before";
 
   # New variable is in inner scope.
-  for (var i = 0; i < 1; i = i + 1) {
+  for (var i = 0; i < 1; ++i) {
     r = r + i; # expect: 0
 
     # Loop body is in second inner scope.
@@ -40,14 +40,14 @@ return r;
 var r = ();
 {
   # New variable shadows outer variable.
-  for (var i = 0; i > 0; i = i + 1) {}
+  for (var i = 0; i > 0; ++i) {}
 
   # Goes out of scope after loop.
   var i = "after";
   r = r + i; # expect: after
 
   # Can reuse an existing variable.
-  for (i = 0; i < 1; i = i + 1) {
+  for (i = 0; i < 1; i = ++i) {
     r = r + i; # expect: 0
   }
 }
@@ -72,7 +72,7 @@ TEST(for_, syntax)
   {
     auto [res, chunk] = compile(R"(
 var r = ();
-for (var c = 0; c < 3;) r = r + (c = c + 1);
+for (var c = 0; c < 3;) r = r + (++c);
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
@@ -90,7 +90,7 @@ return r;
   {
     auto [res, chunk] = compile(R"(
 var r = ();
-for (var a = 0; a < 3; a = a + 1) {
+for (var a = 0; a < 3; ++a) {
   r = r + a;
 }
 return r;
@@ -121,7 +121,7 @@ for (;;) return "done";
     auto [res, chunk] = compile(R"(
 var r = ();
 var i = 0;
-for (; i < 2; i = i + 1) r = r + i;
+for (; i < 2; ++i) r = r + i;
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
@@ -139,7 +139,7 @@ return r;
   {
     auto [res, chunk] = compile(R"(
 var r = ();
-for (var i = 0;; i = i + 1) {
+for (var i = 0;; ++i) {
   r = r + i;
   if (i >= 2) return r;
 }
@@ -161,7 +161,7 @@ for (var i = 0;; i = i + 1) {
 var r = ();
 for (var i = 0; i < 2;) {
   r = r + i;
-  i = i + 1;
+  ++i;
 }
 return r;
 )");
@@ -195,7 +195,7 @@ TEST(for_, break_)
   {
     auto [res, chunk] = compile(R"(
 var c;
-for(c = 0; c < 10; c = c + 1) if (c >= 3) break;
+for(c = 0; c < 10; ++c) if (c >= 3) break;
 return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
@@ -206,7 +206,7 @@ return c;
   {
     auto [res, chunk] = compile(R"(
 var c;
-for(c = 0; c < 10; c = c + 1) {
+for(c = 0; c < 10; ++c) {
   if (c >= 3) {
     break;
   }
@@ -222,7 +222,7 @@ return c;
   {
     auto [res, chunk] = compile(R"(
 var c = 0;
-for(; c < 10; c = c + 1) {
+for(; c < 10; ++c) {
   if (c >= 3) {
     break;
   }
@@ -238,7 +238,7 @@ return c;
   {
     auto [res, chunk] = compile(R"(
 var c;
-for(c = 0;; c = c + 1) {
+for(c = 0;; ++c) {
   if (c >= 3) {
     break;
   }
@@ -258,7 +258,7 @@ for(c = 0; c < 10;) {
   if (c >= 3) {
     break;
   }
-  c = c + 1;
+  ++c;
 }
 return c;
 )");
@@ -275,7 +275,7 @@ TEST(for_, continue_)
   {
     auto [res, chunk] = compile(R"(
 var s = 0;
-for(var c = 1; c <= 5; c = c + 1) { 
+for(var c = 1; c <= 5; ++c) { 
   if (c == 3) {
     continue;
   }
@@ -293,7 +293,7 @@ return s;
     auto [res, chunk] = compile(R"(
 var s = 0;
 var c = 0;
-for(; c <= 5; c = c + 1) { 
+for(; c <= 5; ++c) { 
   if (c == 3) {
     continue;
   }
@@ -310,7 +310,7 @@ return s;
   {
     auto [res, chunk] = compile(R"(
 var s = 0;
-for(var c = 1;; c = c + 1) { 
+for(var c = 1;; ++c) { 
   if (c > 5) break;
   if (c == 3) {
     continue;
@@ -329,7 +329,7 @@ return s;
     auto [res, chunk] = compile(R"(
 var s = 0;
 for(var c = 0; c < 5;) { 
-  c = c + 1;
+  ++c;
   if (c == 3) {
     continue;
   }
@@ -387,9 +387,9 @@ TEST(for_, nested_continue)
   {
     auto [res, chunk] = compile(R"(
 var outer_sum = 0;
-for(var i = 11; i <= 13; i = i + 1) { 
+for(var i = 11; i <= 13; ++i) { 
   var inner_sum = 0;
-  for(var j = 1; j <= 3; j = j + 1) {
+  for(var j = 1; j <= 3; ++j) {
     if (j == 2) continue;
     inner_sum = inner_sum + j;
   }
@@ -408,12 +408,12 @@ var outer_sum = 0;
 var i = 11;
 while(i <= 13) { 
   var inner_sum = 0;
-  for(var j = 1; j <= 3; j = j + 1) {
+  for(var j = 1; j <= 3; ++j) {
     if (j == 2) continue;
     inner_sum = inner_sum + j;
   }
   outer_sum = outer_sum + i * inner_sum;
-  i = i + 1;
+  ++i;
 }
 return outer_sum;
 )");

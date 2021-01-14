@@ -13,7 +13,7 @@ TEST(while_, syntax)
     auto [res, chunk] = compile(R"(
 var r = ();
 var c = 0;
-while (c < 3) r = r + (c = c + 1);
+while (c < 3) r = r + (++c);
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
@@ -34,7 +34,7 @@ var r = ();
 var a = 0;
 while (a < 3) {
   r = r + a;
-  a = a + 1;
+  ++a;
 }
 return r;
 )");
@@ -68,7 +68,7 @@ TEST(while_, break_)
   {
     auto [res, chunk] = compile(R"(
 var c = 0;
-while (c < 10) if ((c = c + 1) >= 3) break;
+while (c < 10) if ((++c) >= 3) break;
 return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
@@ -80,7 +80,7 @@ return c;
     auto [res, chunk] = compile(R"(
 var c = 0;
 while (c < 10) {
-  c = c + 1;  
+  ++c;  
   if (c >= 3) {
     break;
   }
@@ -102,7 +102,7 @@ TEST(while_, continue_)
 var s = 0;
 var c = 0;
 while (c < 5) {
-  c = c + 1;  
+  ++c;  
   if (c == 3) {
     continue;
   }
@@ -165,12 +165,12 @@ while(i <= 13) {
   var inner_sum = 0;
   var j = 0;
   while(j < 3) {
-    j = j + 1;
+    ++j;
     if (j == 2) continue;
     inner_sum = inner_sum + j;
   }
   outer_sum = outer_sum + i * inner_sum;
-  i = i + 1;
+  ++i;
 }
 return outer_sum;
 )");
@@ -182,11 +182,11 @@ return outer_sum;
   {
     auto [res, chunk] = compile(R"(
 var outer_sum = 0;
-for(var i = 11; i <= 13; i = i + 1) { 
+for(var i = 11; i <= 13; ++i) { 
   var inner_sum = 0;
   var j = 0;
   while(j < 3) {
-    j = j + 1;
+    ++j;
     if (j == 2) continue;
     inner_sum = inner_sum + j;
   }

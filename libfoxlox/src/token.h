@@ -11,10 +11,11 @@ namespace foxlox
   {
     // Single-character tokens.
     LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
-    COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
-	  SLASH_SLASH,
-
+    COMMA, DOT, MINUS, SEMICOLON,  STAR,
+	  
     // One or two character tokens.
+    PLUS, PLUS_PLUS, 
+    SLASH, SLASH_SLASH,
     BANG, BANG_EQUAL,
     EQUAL, EQUAL_EQUAL,
     GREATER, GREATER_EQUAL,

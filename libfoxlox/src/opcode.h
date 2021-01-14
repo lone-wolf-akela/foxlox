@@ -13,6 +13,8 @@ namespace foxlox
     OP_POP,
     OP_POP_N,
 
+    OP_CALL,
+
     OP_NEGATE,
     OP_NOT,
 
@@ -33,6 +35,7 @@ namespace foxlox
     OP_STRING,
     OP_BOOL,
     OP_TUPLE,
+    OP_FUNC,
 
     OP_LOAD_STACK,
     OP_STORE_STACK,

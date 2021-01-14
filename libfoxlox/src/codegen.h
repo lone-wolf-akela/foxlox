@@ -18,8 +18,8 @@ namespace foxlox
     AST ast;
     Chunk chunk;
     int current_line;
-    std::vector<uint32_t> closure_stack;
-    Closure& current_closure();
+    uint16_t current_subroutine_idx;
+    Subroutine& current_subroutine();
 
     struct ValueIdx
     {
@@ -41,7 +41,7 @@ namespace foxlox
     template<typename Arg1, typename ... Args>
     void emit(Arg1 arg1, Args ... args)
     {
-      current_closure().add_code(arg1, current_line);
+      current_subroutine().add_code(arg1, current_line);
       if constexpr(sizeof...(Args) >= 1)
       {
         emit(std::forward<Args>(args)...);
@@ -65,7 +65,7 @@ namespace foxlox
     virtual void visit_variable_expr(expr::Variable* expr) override;
     virtual void visit_assign_expr(expr::Assign* expr) override;
     virtual void visit_logical_expr(expr::Logical* expr) override;
-    virtual void visit_call_expr(expr::Call* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
+    virtual void visit_call_expr(expr::Call* expr) override;
     virtual void visit_get_expr(expr::Get* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
     virtual void visit_set_expr(expr::Set* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
     virtual void visit_this_expr(expr::This* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
@@ -76,7 +76,7 @@ namespace foxlox
     virtual void visit_block_stmt(stmt::Block* stmt) override;
     virtual void visit_if_stmt(stmt::If* stmt) override;
     virtual void visit_while_stmt(stmt::While* stmt) override;
-    virtual void visit_function_stmt(stmt::Function* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
+    virtual void visit_function_stmt(stmt::Function* stmt) override;
     virtual void visit_return_stmt(stmt::Return* stmt) override;
     virtual void visit_break_stmt(stmt::Break* stmt) override;
     virtual void visit_continue_stmt(stmt::Continue* stmt) override;

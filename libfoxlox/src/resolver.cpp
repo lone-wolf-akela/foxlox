@@ -148,7 +148,10 @@ namespace foxlox
             auto at = std::get<VarDeclareAtFunc>(found->second.declare);
             at.func->param_store_types[at.param_index] = stmt::VarStoreType::Static;
           }
-          assert(false);
+          else
+          {
+            assert(false);
+          }
         }
         return found->second.declare;
       }

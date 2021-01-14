@@ -7,30 +7,37 @@ namespace foxlox
   CodeGen::CodeGen(AST&& a):
     ast(std::move(a))
   {
-    current_line = 0;
-    closure_stack.push_back(chunk.add_closure());
+    current_line = 1;
     current_stack_size = 0;
     loop_start_stack_size = 0;
   }
   Chunk CodeGen::gen()
   {
+    current_subroutine_idx = chunk.add_subroutine("script", 0);
+
     for (auto& stmt : ast)
     {
       compile(stmt.get());
     }
+
+    current_line = -1; // <EOF>
+    emit_pop_to(0);
     emit(OP_RETURN);
     return std::move(chunk);
   }
-  Closure& CodeGen::current_closure()
+
+  Subroutine& CodeGen::current_subroutine()
   {
-    return chunk.get_closures()[closure_stack.back()];
+    return chunk.get_subroutines()[current_subroutine_idx];
   }
+
   void CodeGen::push_stack()
   {
     current_stack_size++;
   }
   void CodeGen::pop_stack(uint16_t n)
   {
+    assert(n <= current_stack_size);
     current_stack_size -= n;
   }
   uint16_t CodeGen::idx_cast(uint16_t idx)
@@ -48,15 +55,15 @@ namespace foxlox
   gsl::index CodeGen::emit_jump(OpCode c)
   {
     emit(c);
-    const auto ip = current_closure().get_code_num();
+    const auto ip = current_subroutine().get_code_num();
     emit(int16_t{});
     return ip;
   }
   void CodeGen::patch_jump(gsl::index ip)
   {
-    const auto jump_length = current_closure().get_code_num() - ip - 2;
+    const auto jump_length = current_subroutine().get_code_num() - ip - 2;
     assert(jump_length <= std::numeric_limits<int16_t>::max());
-    current_closure().edit_code(ip, gsl::narrow_cast<int16_t>(jump_length));
+    current_subroutine().edit_code(ip, gsl::narrow_cast<int16_t>(jump_length));
   }
   void CodeGen::patch_jumps(std::vector<gsl::index>& ips)
   {
@@ -68,12 +75,12 @@ namespace foxlox
   }
   gsl::index CodeGen::prepare_loop()
   {
-    return current_closure().get_code_num();
+    return current_subroutine().get_code_num();
   }
   void CodeGen::emit_loop(gsl::index ip, OpCode c)
   {
     emit(c);
-    const auto jump_length = ip - current_closure().get_code_num() - 2;
+    const auto jump_length = ip - current_subroutine().get_code_num() - 2;
     assert(jump_length >= std::numeric_limits<int16_t>::min());
     emit(gsl::narrow_cast<int16_t>(jump_length));
   }
@@ -258,6 +265,17 @@ namespace foxlox
       patch_jump(jump);
     }
   }
+  void CodeGen::visit_call_expr(expr::Call* expr)
+  {
+    compile(expr->callee.get());
+    const auto enclosing_stack_size = current_stack_size;
+    for (auto& e : expr->arguments)
+    {
+      compile(e.get());
+    }
+    emit(OP_CALL, gsl::narrow_cast<uint16_t>(expr->arguments.size()));
+    pop_stack_to(enclosing_stack_size);
+  }
   void CodeGen::visit_expression_stmt(stmt::Expression* stmt)
   {
     compile(stmt->expression.get());
@@ -345,6 +363,56 @@ namespace foxlox
     patch_jump(jump_to_end);
 
     loop_start_stack_size = enclosing_loop_start_stack_size;
+  }
+  void CodeGen::visit_function_stmt(stmt::Function* stmt)
+  {
+    current_line = stmt->name.line;
+
+    const uint16_t subroutine_idx =
+      chunk.add_subroutine(stmt->name.lexeme, gsl::narrow_cast<int>(ssize(stmt->param)));
+    emit(OP_FUNC, subroutine_idx);
+    if (stmt->name_store_type == stmt::VarStoreType::Stack)
+    {
+      // no code here, just let it stays in stack
+      push_stack();
+      value_idxs[stmt] = ValueIdx{ stmt::VarStoreType::Stack, gsl::narrow_cast<uint16_t>(current_stack_size - 1) };
+    }
+    else
+    {
+      const uint16_t alloc_idx = chunk.add_static_value();
+      emit(OP_STORE_STATIC, alloc_idx);
+      emit(OP_POP);
+      value_idxs[stmt] = ValueIdx{ stmt::VarStoreType::Static, alloc_idx };
+    }
+
+    for (gsl::index i = 0; i < ssize(stmt->param); i++)
+    {
+      if (stmt->param_store_types[i] == stmt::VarStoreType::Stack)
+      {
+        // no code here, just let it stays in stack
+        push_stack();
+        value_idxs[stmt] = ValueIdx{ stmt::VarStoreType::Stack, gsl::narrow_cast<uint16_t>(current_stack_size - 1) };
+      }
+      else
+      {
+        const uint16_t alloc_idx = chunk.add_static_value();
+        value_idxs[stmt] = ValueIdx{ stmt::VarStoreType::Static, alloc_idx };
+      }
+    }
+
+    const auto stack_size_before = current_stack_size;
+    const auto enclosing_subroutine_idx = current_subroutine_idx;
+    current_subroutine_idx = subroutine_idx;
+
+    for (auto& s : stmt->body)
+    {
+      compile(s.get());
+    }
+    emit_pop_to(stack_size_before);
+    pop_stack_to(stack_size_before);
+    // make sure we have a return at the end of a func
+    emit(OP_RETURN);
+    current_subroutine_idx = enclosing_subroutine_idx;
   }
   void CodeGen::visit_return_stmt(stmt::Return* stmt)
   {

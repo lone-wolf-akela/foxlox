@@ -1,5 +1,6 @@
 #include <span>
 #include <functional>
+#include <utility>
 
 #include <fmt/format.h>
 
@@ -23,7 +24,7 @@ namespace foxlox
   VM::VM(VM&& r) noexcept
   {
     is_moved = r.is_moved;
-    current_closure = r.current_closure;
+    current_subroutine = r.current_subroutine;
     ip = r.ip;
     chunk = r.chunk;
     stack = r.stack;
@@ -39,7 +40,7 @@ namespace foxlox
     if (this == &r) { return *this; }
     clean();
     is_moved = r.is_moved;
-    current_closure = r.current_closure;
+    current_subroutine = r.current_subroutine;
     ip = r.ip;
     chunk = r.chunk;
     stack = r.stack;
@@ -55,11 +56,11 @@ namespace foxlox
   {
     if (!is_moved)
     {
-      for (String* p : string_pool)
+      for (const String* p : string_pool)
       {
         String::free(std::bind_front(&VM::deallocator, this), p);
       }
-      for (Tuple* p : tuple_pool)
+      for (const Tuple* p : tuple_pool)
       {
         Tuple::free(std::bind_front(&VM::deallocator, this), p);
       }
@@ -68,8 +69,9 @@ namespace foxlox
   Value VM::interpret(Chunk& c)
   {
     chunk = &c;
-    current_closure = chunk->get_closures().begin();
-    ip = current_closure->get_code().begin();
+    current_subroutine = &(chunk->get_subroutines()[0]);
+    ip = current_subroutine->get_code().begin();
+    calltrace.emplace_back(current_subroutine, ip);
     static_value_pool.resize(chunk->get_static_value_num());
     static_value_pool.shrink_to_fit();
     reset_stack();
@@ -88,13 +90,13 @@ namespace foxlox
     while (true)
     {
 #ifdef DEBUG_TRACE_EXECUTION
-      fmt::print("{:>10}", '|');
+      fmt::print("{:>26}", '|');
       for (auto v : std::span(stack.begin(), stack_top))
       {
         fmt::print("[{}] ", v.to_string());
       }
       fmt::print("\n");
-      disassemble_inst(*chunk, *current_closure, std::distance(current_closure->get_code().begin(), ip));
+      disassemble_inst(*chunk, *current_subroutine, std::distance(current_subroutine->get_code().begin(), ip));
 #endif
       const OpCode inst = read_inst();
       switch (inst)
@@ -107,7 +109,13 @@ namespace foxlox
       }
       case OP_RETURN:
       {
-        return Value();
+        if (calltrace.size() == 1) { return Value(); }
+        calltrace.pop_back();
+        std::tie(current_subroutine, ip) = calltrace.back();
+        // return a nil
+        push();
+        *top() = Value();
+        break;
       }
       case OP_RETURN_V:
       {
@@ -248,6 +256,12 @@ namespace foxlox
         *top() = chunk->get_constants()[read_uint16()];
         break;
       }
+      case OP_FUNC:
+      {
+        push();
+        *top() = &chunk->get_subroutines()[read_uint16()];
+        break;
+      }
       case OP_STRING:
       {
         push();
@@ -348,6 +362,16 @@ namespace foxlox
         }
         break;
       }
+      case OP_CALL:
+      {
+        const uint16_t arity = read_uint16();
+        current_subroutine = top()->get_func();
+        assert(current_subroutine->get_arity() == arity);
+        pop();
+        calltrace.emplace_back(current_subroutine, ip);
+        ip = current_subroutine->get_code().begin();
+        break;
+      }
       default:
         assert(false);
         break;
@@ -370,7 +394,7 @@ namespace foxlox
   uint8_t VM::read_uint8()
   {
     const auto v = *(ip++);
-    assert(ip <= current_closure->get_code().end());
+    assert(ip <= current_subroutine->get_code().end());
     return v;
   }
   uint16_t VM::read_uint16()
@@ -403,7 +427,7 @@ namespace foxlox
     current_heap_size += l;
     return new char[l];
   }
-  void VM::deallocator(char* p, size_t l)
+  void VM::deallocator(const char* p, size_t l)
   {
     assert(l <= current_heap_size);
     current_heap_size -= l;

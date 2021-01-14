@@ -9,9 +9,16 @@
 #include <version>
 #include <span>
 #include <concepts>
+#include <type_traits>
 
 namespace foxlox
 {
+  template<typename T1, typename T2>
+  concept remove_cv_same_as = std::same_as<std::remove_cv_t<T1>, std::remove_cv_t<T2>>;
+
+  template<typename T>
+  concept IntegralExcludeBool = std::integral<T> && !std::same_as<std::remove_cv_t<T>, bool>;
+
   template<typename F>
   concept Allocator = requires(F f) {
     { f(size_t(0)) } -> std::convertible_to<char*>;
@@ -38,15 +45,15 @@ namespace foxlox
     }
 
     template<Deallocator F>
-    static void free(F deallocator, String* p)
+    static void free(F deallocator, const String* p)
     {
       if (p->length <= sizeof(String::str))
       {
-        deallocator(reinterpret_cast<char*>(p), sizeof(String));
+        deallocator(reinterpret_cast<const char*>(p), sizeof(String));
       }
       else
       {
-        deallocator(reinterpret_cast<char*>(p), sizeof(String) + (p->length - sizeof(String::str)));
+        deallocator(reinterpret_cast<const char*>(p), sizeof(String) + (p->length - sizeof(String::str)));
       }
     }
 
@@ -60,35 +67,52 @@ namespace foxlox
     friend TStrViewComp operator<=>(const String& l, const String& r);
     friend bool operator==(const String& l, const String& r);
   };
+
   struct Tuple;
+  class Subroutine;
 
   struct Value
   {
     enum : uint8_t
     {
-      NIL, BOOL, F64, I64, STR, TUPLE
+      NIL, BOOL, F64, I64, STR, TUPLE, FUNC
     } type;
     union
     {
       bool b;
       double f64;
       int64_t i64;
-      String* str;
-      Tuple* tuple;
+      const String* str;
+      const Tuple* tuple;
+      const Subroutine* func;
     } v;
 
-    Value();
-    Value(String* str);
-    Value(Tuple* tuple);
-    Value(bool b);
-    Value(double f64);
-    Value(int64_t i64);
+    Value() : type(NIL) {}
+
+    template<std::convertible_to<const String*> T>
+    Value(T str) : type(STR), v{ .str = str } {}
+
+    template<std::convertible_to<const Tuple*> T>
+    Value(T tuple) : type(TUPLE), v{ .tuple = tuple } {}
+
+    template<std::convertible_to<const Subroutine*> T>
+    Value(T tuple) : type(FUNC), v{ .func = tuple } {}
+
+    template<remove_cv_same_as<bool> T>
+    Value(T b) : type(BOOL), v{ .b = b } {}
+
+    template<std::floating_point T>
+    Value(T f64) : type(F64), v{ .f64 = f64 } {}
+
+    template<IntegralExcludeBool T>
+    Value(T i64) : type(I64), v{ .i64 = i64 } {}
 
     double get_double() const;
     int64_t get_int64() const;
     bool get_bool() const;
     std::string_view get_strview() const;
     std::span<const Value> get_tuplespan() const;
+    const Subroutine* get_func() const;
 
     friend double operator/(const Value& l, const Value& r);
     friend Value operator*(const Value& l, const Value& r);
@@ -127,16 +151,16 @@ namespace foxlox
     }
 
     template<Deallocator F>
-    static void free(F deallocator, Tuple* p)
+    static void free(F deallocator, const Tuple* p)
     {
       char* data{};
       if (p->length == 0)
       {
-        deallocator(reinterpret_cast<char*>(p), sizeof(Tuple));
+        deallocator(reinterpret_cast<const char*>(p), sizeof(Tuple));
       }
       else
       {
-        deallocator(reinterpret_cast<char*>(p), sizeof(Tuple) + (p->length - 1) * sizeof(Value));
+        deallocator(reinterpret_cast<const char*>(p), sizeof(Tuple) + (p->length - 1) * sizeof(Value));
       }
     }
 

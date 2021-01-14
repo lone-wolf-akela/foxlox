@@ -40,23 +40,24 @@ namespace foxlox
 
     void clean();
 
-    std::vector<Closure>::iterator current_closure;
-    std::vector<uint8_t>::const_iterator ip;
+    const Subroutine* current_subroutine;
+    std::span<const uint8_t>::iterator ip;
     Chunk* chunk;
     
     bool is_moved;
 
     Stack stack;
     Stack::iterator stack_top;
+    std::vector<std::tuple<const Subroutine*, std::span<const uint8_t>::iterator>> calltrace;
 
     // data pool
-    std::vector<String*> string_pool;
-    std::vector<Tuple*> tuple_pool;
+    std::vector<const String*> string_pool;
+    std::vector<const Tuple*> tuple_pool;
     std::vector<Value> static_value_pool;
 
     // mem manage related
     char* allocator(size_t l);
-    void deallocator(char* p, size_t l);
+    void deallocator(const char* p, size_t l);
     size_t current_heap_size;
   };
 }

@@ -4,38 +4,11 @@
 
 #include <foxexcept.h>
 
+#include <chunk.h>
 #include "value.h"
+
 namespace foxlox
 {
-  Value::Value()
-  {
-    type = NIL;
-  }
-  Value::Value(String* str)
-  {
-    type = STR;
-    v.str = str;
-  }
-  Value::Value(Tuple* tuple)
-  {
-    type = TUPLE;
-    v.tuple = tuple;
-  }
-  Value::Value(bool b)
-  {
-    type = BOOL;
-    v.b = b;
-  }
-  Value::Value(double f64)
-  {
-    type = F64;
-    v.f64 = f64;
-  }
-  Value::Value(int64_t i64)
-  {
-    type = I64;
-    v.i64 = i64;
-  }
   double Value::get_double() const
   {
     if (type == F64) { return v.f64; }
@@ -71,6 +44,12 @@ namespace foxlox
     return v.tuple->get_span();
   }
 
+  const Subroutine* Value::get_func() const
+  {
+    assert(type == FUNC);
+    return v.func;
+  }
+
   std::partial_ordering operator<=>(const Value& l, const Value& r)
   {
     if (l.type == Value::NIL && r.type == Value::NIL)
@@ -96,7 +75,11 @@ namespace foxlox
     }
     if (l.type == Value::TUPLE && r.type == Value::TUPLE)
     {
-      return l.v.tuple <=> r.v.tuple;
+      return l.v.tuple == r.v.tuple ? std::partial_ordering::equivalent : std::partial_ordering::unordered;
+    }
+    if (l.type == Value::FUNC && r.type == Value::FUNC)
+    {
+      return l.v.func == r.v.func ? std::partial_ordering::equivalent : std::partial_ordering::unordered;
     }
     return std::partial_ordering::unordered;
   }
@@ -223,6 +206,8 @@ namespace foxlox
       str += ")";
       return str;
     }
+    case FUNC:
+      return fmt::format("{}", v.func->to_string());
     default:
       throw FatalError(fmt::format("Unknown ValueType: {}", magic_enum::enum_name(type)).c_str());
     }

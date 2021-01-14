@@ -8,7 +8,12 @@ using namespace foxlox;
 TEST(temp_test, temp)
 {
   auto [res, chunk] = compile(R"(
-return 123 + 234;
+var a = 123;
+fun first() {
+  a = a + 234;
+}
+first();
+return a;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;

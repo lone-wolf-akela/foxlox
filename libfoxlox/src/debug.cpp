@@ -9,25 +9,25 @@
 
 namespace foxlox
 {
-  gsl::index disassemble_inst(const Chunk& chunk, const Closure& closure, gsl::index index)
+  gsl::index disassemble_inst(const Chunk& chunk, const Subroutine& closure, gsl::index index)
   {
     const int last_line_num = index == 0 ? -1 : closure.get_lines().get_line(index - 1);
     const int this_line_num = closure.get_lines().get_line(index);
     if (this_line_num == last_line_num)
     {
-      fmt::print("{:05} {:>4} ", index, '|');
+      fmt::print("{:05} {:<15} {:>4} ", index, closure.to_string(), '|');
     }
     else
     {
       auto src = chunk.get_source(this_line_num - 1);
       if (src != "")
       {
-        fmt::print("{:>5} {:>4} {}\n", "[src]", this_line_num, src);
-        fmt::print("{:05} {:>4} ", index, '|');
+        fmt::print("{:>5} {:<15} {:>4} {}\n", "[src]", closure.to_string(), this_line_num, src);
+        fmt::print("{:05} {:<15} {:>4} ", index, closure.to_string(), '|');
       }
       else
       {
-        fmt::print("{:05} {:>4} ", index, this_line_num);
+        fmt::print("{:05} {:<15} {:>4} ", index, closure.to_string(), this_line_num);
       }
     }
     const auto codes = closure.get_code();
@@ -75,6 +75,12 @@ namespace foxlox
       fmt::print("{:<16} {:>4}, {}\n", "OP_CONSTANT", constant, chunk.get_constants()[constant].to_string());
       return 3;
     }
+    case OP_FUNC:
+    {
+      const uint16_t constant = get_uint16();
+      fmt::print("{:<16} {:>4}, {}\n", "OP_FUNC", constant, chunk.get_subroutines()[constant].to_string());
+      return 3;
+    }
     case OP_STRING:
     {
       const uint16_t str = get_uint16();
@@ -86,6 +92,12 @@ namespace foxlox
       bool b = static_cast<bool>(get_uint8());
       fmt::print("{:<16} {:>4}, {}\n", "OP_BOOL", "", b ? "true" : "false");
       return 2;
+    }
+    case OP_CALL:
+    {
+      const uint16_t arity = get_uint16();
+      fmt::print("{:<16} {:>4}, {}\n", "OP_CALL", "", arity);
+      return 3;
     }
     case OP_LOAD_STACK:
     case OP_STORE_STACK:
@@ -112,7 +124,7 @@ namespace foxlox
     assert(false);
     return 0;
   }
-  void disassemble_chunk(const Chunk& chunk, const Closure& closure, std::string_view name)
+  void disassemble_chunk(const Chunk& chunk, const Subroutine& closure, std::string_view name)
   {
     fmt::print("== {} ==\n", name);
     gsl::index i = 0;

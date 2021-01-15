@@ -3,7 +3,7 @@
 #include "codegen.h"
 #include "resolver.h"
 
-#include "compiler.h"
+#include <foxlox/compiler.h>
 
 namespace foxlox
 {

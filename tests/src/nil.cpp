@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <vm.h>
-#include <compiler.h>
+#include <foxlox/vm.h>
+#include <foxlox/compiler.h>
 
 using namespace foxlox;
 

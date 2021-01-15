@@ -185,39 +185,39 @@ namespace foxlox
 
     current_function = enclosing_func;
   }
-  void Resolver::visit_binary_expr(expr::Binary* expr)
+  void Resolver::visit_binary_expr(gsl::not_null<expr::Binary*> expr)
   {
     resolve(expr->left.get());
     resolve(expr->right.get());
   }
-  void Resolver::visit_grouping_expr(expr::Grouping* expr)
+  void Resolver::visit_grouping_expr(gsl::not_null<expr::Grouping*> expr)
   {
     resolve(expr->expression.get());
   }
-  void Resolver::visit_literal_expr(expr::Literal* /*expr*/)
+  void Resolver::visit_literal_expr(gsl::not_null<expr::Literal*> /*expr*/)
   {
     // do nothing
     return;
   }
-  void Resolver::visit_unary_expr(expr::Unary* expr)
+  void Resolver::visit_unary_expr(gsl::not_null<expr::Unary*> expr)
   {
     resolve(expr->right.get());
   }
-  void Resolver::visit_variable_expr(expr::Variable* expr)
+  void Resolver::visit_variable_expr(gsl::not_null<expr::Variable*> expr)
   {
     expr->declare = resolve_local(expr->name);
   }
-  void Resolver::visit_assign_expr(expr::Assign* expr)
+  void Resolver::visit_assign_expr(gsl::not_null<expr::Assign*> expr)
   {
     resolve(expr->value.get());
     expr->declare = resolve_local(expr->name);
   }
-  void Resolver::visit_logical_expr(expr::Logical* expr)
+  void Resolver::visit_logical_expr(gsl::not_null<expr::Logical*> expr)
   {
     resolve(expr->left.get());
     resolve(expr->right.get());
   }
-  void Resolver::visit_call_expr(expr::Call* expr)
+  void Resolver::visit_call_expr(gsl::not_null<expr::Call*> expr)
   {
     resolve(expr->callee.get());
     for (auto& arg : expr->arguments)
@@ -225,7 +225,7 @@ namespace foxlox
       resolve(arg.get());
     }
   }
-  void Resolver::visit_get_expr(expr::Get* expr)
+  void Resolver::visit_get_expr(gsl::not_null<expr::Get*> expr)
   {
     // note: access from keyword `super' is not in get_expr but in super_expr
     // so we do not check them here
@@ -240,7 +240,7 @@ namespace foxlox
     }
     resolve(expr->obj.get());
   }
-  void Resolver::visit_set_expr(expr::Set* expr)
+  void Resolver::visit_set_expr(gsl::not_null<expr::Set*> expr)
   {
     if (dynamic_cast<expr::This*>(expr->obj.get()) == nullptr 
       && expr->name.lexeme.starts_with("_"))
@@ -250,7 +250,7 @@ namespace foxlox
     resolve(expr->value.get());
     resolve(expr->obj.get());
   }
-  void Resolver::visit_this_expr(expr::This* expr)
+  void Resolver::visit_this_expr(gsl::not_null<expr::This*> expr)
   {
     if (current_class == ClassType::NONE)
     {
@@ -259,7 +259,7 @@ namespace foxlox
     }
     expr->declare = resolve_local(expr->keyword);
   }
-  void Resolver::visit_super_expr(expr::Super* expr)
+  void Resolver::visit_super_expr(gsl::not_null<expr::Super*> expr)
   {
     if (current_class == ClassType::NONE)
     {
@@ -271,11 +271,11 @@ namespace foxlox
     }
     expr->declare = resolve_local(expr->keyword);
   }
-  void Resolver::visit_expression_stmt(stmt::Expression* stmt)
+  void Resolver::visit_expression_stmt(gsl::not_null<stmt::Expression*> stmt)
   {
     resolve(stmt->expression.get());
   }
-  void Resolver::visit_var_stmt(stmt::Var* stmt)
+  void Resolver::visit_var_stmt(gsl::not_null<stmt::Var*> stmt)
   {
     declare_from_varstmt(stmt);
     if (stmt->initializer.get() != nullptr)
@@ -284,13 +284,13 @@ namespace foxlox
     }
     define(stmt->name);
   }
-  void Resolver::visit_block_stmt(stmt::Block* stmt)
+  void Resolver::visit_block_stmt(gsl::not_null<stmt::Block*> stmt)
   {
     begin_scope(false);
     resolve(stmt->statements);
     end_scope();
   }
-  void Resolver::visit_if_stmt(stmt::If* stmt)
+  void Resolver::visit_if_stmt(gsl::not_null<stmt::If*> stmt)
   {
     resolve(stmt->condition.get());
     if (const auto p = dynamic_cast<stmt::Var*>(stmt->then_branch.get()); p != nullptr)
@@ -307,7 +307,7 @@ namespace foxlox
       resolve(stmt->else_branch.get());
     }
   }
-  void Resolver::visit_while_stmt(stmt::While* stmt)
+  void Resolver::visit_while_stmt(gsl::not_null<stmt::While*> stmt)
   {
     resolve(stmt->condition.get());
 
@@ -320,13 +320,13 @@ namespace foxlox
     resolve(stmt->body.get());
     current_loop = enclosing_loop;
   }
-  void Resolver::visit_function_stmt(stmt::Function* stmt)
+  void Resolver::visit_function_stmt(gsl::not_null<stmt::Function*> stmt)
   {
     declare_from_functionname(stmt);
     define(stmt->name);
     resolve_function(stmt, FunctionType::FUNCTION);
   }
-  void Resolver::visit_return_stmt(stmt::Return* stmt)
+  void Resolver::visit_return_stmt(gsl::not_null<stmt::Return*> stmt)
   {
     if (stmt->value.get() != nullptr)
     {
@@ -337,21 +337,21 @@ namespace foxlox
       resolve(stmt->value.get());
     }
   }
-  void Resolver::visit_break_stmt(stmt::Break* stmt)
+  void Resolver::visit_break_stmt(gsl::not_null<stmt::Break*> stmt)
   {
     if (current_loop == LoopType::NONE)
     {
       error(stmt->keyword, "Can't use `break' outside of a loop body.");
     }
   }
-  void Resolver::visit_continue_stmt(stmt::Continue* stmt)
+  void Resolver::visit_continue_stmt(gsl::not_null<stmt::Continue*> stmt)
   {
     if (current_loop == LoopType::NONE)
     {
       error(stmt->keyword, "Can't use `continue' outside of a loop body.");
     }
   }
-  void Resolver::visit_class_stmt(stmt::Class* stmt)
+  void Resolver::visit_class_stmt(gsl::not_null<stmt::Class*> stmt)
   {
     const auto enclosing_class = current_class;
     current_class = ClassType::CLASS;
@@ -383,7 +383,7 @@ namespace foxlox
 
     current_class = enclosing_class;
   }
-  void Resolver::visit_for_stmt(stmt::For* stmt)
+  void Resolver::visit_for_stmt(gsl::not_null<stmt::For*> stmt)
   {
     begin_scope(false);
 
@@ -402,7 +402,7 @@ namespace foxlox
 
     end_scope();
   }
-  void Resolver::visit_tuple_expr(expr::Tuple* expr)
+  void Resolver::visit_tuple_expr(gsl::not_null<expr::Tuple*> expr)
   {
     for (auto& e : expr->exprs)
     {

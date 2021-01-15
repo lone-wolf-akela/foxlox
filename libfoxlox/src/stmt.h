@@ -7,6 +7,7 @@
 
 #include <gsl/gsl>
 
+#include <foxlox/foxexcept.h>
 #include "expr.h"
 #include "token.h"
 
@@ -140,17 +141,17 @@ namespace foxlox::stmt
   class IVisitor
   {
   public:
-    virtual R visit_expression_stmt(Expression* stmt) = 0;
-    virtual R visit_var_stmt(Var* stmt) = 0;
-    virtual R visit_block_stmt(Block* stmt) = 0;
-    virtual R visit_if_stmt(If* stmt) = 0;
-    virtual R visit_while_stmt(While* stmt) = 0;
-    virtual R visit_function_stmt(Function* stmt) = 0;
-    virtual R visit_return_stmt(Return* stmt) = 0;
-    virtual R visit_break_stmt(Break* stmt) = 0;
-    virtual R visit_continue_stmt(Continue* stmt) = 0;
-    virtual R visit_class_stmt(Class* stmt) = 0;
-    virtual R visit_for_stmt(For* stmt) = 0;
+    virtual R visit_expression_stmt(gsl::not_null<Expression*> stmt) = 0;
+    virtual R visit_var_stmt(gsl::not_null<Var*> stmt) = 0;
+    virtual R visit_block_stmt(gsl::not_null<Block*> stmt) = 0;
+    virtual R visit_if_stmt(gsl::not_null<If*> stmt) = 0;
+    virtual R visit_while_stmt(gsl::not_null<While*> stmt) = 0;
+    virtual R visit_function_stmt(gsl::not_null<Function*> stmt) = 0;
+    virtual R visit_return_stmt(gsl::not_null<Return*> stmt) = 0;
+    virtual R visit_break_stmt(gsl::not_null<Break*> stmt) = 0;
+    virtual R visit_continue_stmt(gsl::not_null<Continue*> stmt) = 0;
+    virtual R visit_class_stmt(gsl::not_null<Class*> stmt) = 0;
+    virtual R visit_for_stmt(gsl::not_null<For*> stmt) = 0;
 
     virtual ~IVisitor() = default;
 
@@ -204,8 +205,7 @@ namespace foxlox::stmt
       {
         return visit_for_stmt(p);
       }
-      assert(false);
-      return R();
+      throw FatalError("Unknown stmt type");
     }
   };
 }

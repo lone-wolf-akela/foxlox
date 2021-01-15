@@ -2,9 +2,11 @@
 
 #include <map>
 
+#include <foxlox/foxexcept.h>
+#include <foxlox/chunk.h>
+
 #include "stmt.h"
 #include "expr.h"
-#include "chunk.h"
 #include "parser.h"
 
 namespace foxlox
@@ -57,30 +59,30 @@ namespace foxlox
     std::vector<gsl::index> break_stmts;
     std::vector<gsl::index> continue_stmts;
 
-    virtual void visit_binary_expr(expr::Binary* expr) override;
-    virtual void visit_grouping_expr(expr::Grouping* expr) override;
-    virtual void visit_tuple_expr(expr::Tuple* expr) override;
-    virtual void visit_literal_expr(expr::Literal* expr) override;
-    virtual void visit_unary_expr(expr::Unary* expr) override;
-    virtual void visit_variable_expr(expr::Variable* expr) override;
-    virtual void visit_assign_expr(expr::Assign* expr) override;
-    virtual void visit_logical_expr(expr::Logical* expr) override;
-    virtual void visit_call_expr(expr::Call* expr) override;
-    virtual void visit_get_expr(expr::Get* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    virtual void visit_set_expr(expr::Set* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    virtual void visit_this_expr(expr::This* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
-    virtual void visit_super_expr(expr::Super* expr) override { /*TODO*/ std::ignore = expr; assert(false); }
+    void visit_binary_expr(gsl::not_null<expr::Binary*> expr) final;
+    void visit_grouping_expr(gsl::not_null<expr::Grouping*> expr) final;
+    void visit_tuple_expr(gsl::not_null<expr::Tuple*> expr) final;
+    void visit_literal_expr(gsl::not_null<expr::Literal*> expr) final;
+    void visit_unary_expr(gsl::not_null<expr::Unary*> expr) final;
+    void visit_variable_expr(gsl::not_null<expr::Variable*> expr) final;
+    void visit_assign_expr(gsl::not_null<expr::Assign*> expr) final;
+    void visit_logical_expr(gsl::not_null<expr::Logical*> expr) final;
+    void visit_call_expr(gsl::not_null<expr::Call*> expr) final;
+    void visit_get_expr(gsl::not_null<expr::Get*> /*expr*/) final { throw UnimplementedError(); }
+    void visit_set_expr(gsl::not_null<expr::Set*> /*expr*/) final { throw UnimplementedError(); }
+    void visit_this_expr(gsl::not_null<expr::This*> /*expr*/) final { throw UnimplementedError(); }
+    void visit_super_expr(gsl::not_null<expr::Super*> /*expr*/) final { throw UnimplementedError(); }
 
-    virtual void visit_expression_stmt(stmt::Expression* stmt) override;
-    virtual void visit_var_stmt(stmt::Var* stmt) override;
-    virtual void visit_block_stmt(stmt::Block* stmt) override;
-    virtual void visit_if_stmt(stmt::If* stmt) override;
-    virtual void visit_while_stmt(stmt::While* stmt) override;
-    virtual void visit_function_stmt(stmt::Function* stmt) override;
-    virtual void visit_return_stmt(stmt::Return* stmt) override;
-    virtual void visit_break_stmt(stmt::Break* stmt) override;
-    virtual void visit_continue_stmt(stmt::Continue* stmt) override;
-    virtual void visit_class_stmt(stmt::Class* stmt) override { /*TODO*/ std::ignore = stmt; assert(false); }
-    virtual void visit_for_stmt(stmt::For* stmt) override;
+    void visit_expression_stmt(gsl::not_null<stmt::Expression*> stmt) final;
+    void visit_var_stmt(gsl::not_null<stmt::Var*> stmt) final;
+    void visit_block_stmt(gsl::not_null<stmt::Block*> stmt) final;
+    void visit_if_stmt(gsl::not_null<stmt::If*> stmt) final;
+    void visit_while_stmt(gsl::not_null<stmt::While*> stmt) final;
+    void visit_function_stmt(gsl::not_null<stmt::Function*> stmt) final;
+    void visit_return_stmt(gsl::not_null<stmt::Return*> stmt) final;
+    void visit_break_stmt(gsl::not_null<stmt::Break*> stmt) final;
+    void visit_continue_stmt(gsl::not_null<stmt::Continue*> stmt) final;
+    void visit_class_stmt(gsl::not_null<stmt::Class*> /*stmt*/) final { throw UnimplementedError(); }
+    void visit_for_stmt(gsl::not_null<stmt::For*> stmt) final;
   };
 }

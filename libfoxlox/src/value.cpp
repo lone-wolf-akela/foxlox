@@ -2,9 +2,9 @@
 #include <fmt/format.h>
 #include <magic_enum.hpp>
 
-#include <foxexcept.h>
+#include <foxlox/foxexcept.h>
 
-#include <chunk.h>
+#include <foxlox/chunk.h>
 #include "value.h"
 
 namespace foxlox
@@ -212,12 +212,14 @@ namespace foxlox
       throw FatalError(fmt::format("Unknown ValueType: {}", magic_enum::enum_name(type)).c_str());
     }
   }
-  std::string_view String::get_view() const
+  std::string_view String::get_view() const noexcept
   {
+    GSL_SUPPRESS(bounds.3)
     return std::string_view(str, length);
   }
-  std::span<const Value> Tuple::get_span() const
+  std::span<const Value> Tuple::get_span() const noexcept
   {
+    GSL_SUPPRESS(bounds.3)
     return std::span{ elems, length };
   }
 }

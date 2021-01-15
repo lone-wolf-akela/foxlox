@@ -6,7 +6,7 @@
 
 #include <gsl/gsl>
 
-#include "chunk.h"
+#include <foxlox/chunk.h>
 
 namespace foxlox
 {
@@ -14,23 +14,23 @@ namespace foxlox
     arity(num_of_params), name(func_name)
   {
   }
-  std::string_view Subroutine::get_funcname() const
+  std::string_view Subroutine::get_funcname() const noexcept
   {
     return name;
   }
-  int Subroutine::get_arity() const
+  int Subroutine::get_arity() const noexcept
   {
     return arity;
   }
-  std::span<const uint8_t> Subroutine::get_code() const
+  std::span<const uint8_t> Subroutine::get_code() const noexcept
   {
     return code;
   }
-  std::vector<Subroutine>& Chunk::get_subroutines()
+  std::vector<Subroutine>& Chunk::get_subroutines() noexcept
   {
     return subroutines;
   }
-  std::span<const Subroutine> Chunk::get_subroutines() const
+  std::span<const Subroutine> Chunk::get_subroutines() const noexcept
   {
     return subroutines;
   }
@@ -45,7 +45,7 @@ namespace foxlox
   void Subroutine::add_code(bool c, int line_num)
   {
     lines.add_line(ssize(code), line_num);
-    code.push_back(c ? uint8_t(1) : uint8_t(0));
+    code.push_back(c ? uint8_t{ 1 } : uint8_t{ 0 });
   }
   void Subroutine::add_code(uint8_t c, int line_num)
   {
@@ -75,7 +75,7 @@ namespace foxlox
     code.at(idx) = tmp.a;
     code.at(idx + 1) = tmp.b;
   }
-  gsl::index Subroutine::get_code_num()
+  gsl::index Subroutine::get_code_num() const noexcept
   {
     return code.size();
   }
@@ -83,7 +83,7 @@ namespace foxlox
   {
     referenced_static_values.push_back(idx);
   }
-  std::span<const uint16_t> Subroutine::get_referenced_static_values() const
+  std::span<const uint16_t> Subroutine::get_referenced_static_values() const noexcept
   {
     return referenced_static_values;
   }
@@ -103,23 +103,24 @@ namespace foxlox
   }
   uint16_t Chunk::add_string(std::string_view str)
   {
-    String* p = String::alloc([](auto l) {return new char[l]; }, str.size());
+    String* p = String::alloc([](auto l) {GSL_SUPPRESS(r.11) return new char[l]; }, str.size());
+    GSL_SUPPRESS(stl.1) GSL_SUPPRESS(bounds.3)
     std::copy(str.begin(), str.end(), p->str);
     const_strings.push_back(p);
     const auto index = const_strings.size() - 1;
     assert(index <= std::numeric_limits<uint16_t>::max());
     return gsl::narrow_cast<uint16_t>(index);
   }
-  uint16_t Chunk::add_static_value()
+  uint16_t Chunk::add_static_value() noexcept
   {
     assert(uint32_t(static_value_num) + 1 <= std::numeric_limits<uint16_t>::max());
     return static_value_num++;
   }
-  uint16_t Chunk::get_static_value_num()
+  uint16_t Chunk::get_static_value_num() const noexcept
   {
     return static_value_num;
   }
-  Chunk::Chunk()
+  Chunk::Chunk() noexcept
   {
     static_value_num = 0;
     is_moved = false;
@@ -157,11 +158,14 @@ namespace foxlox
     {
       for (const String* p : const_strings)
       {
-        String::free([](auto p, auto) { delete[] p; }, p);
+        String::free([](auto p, auto) { 
+          GSL_SUPPRESS(r.11) GSL_SUPPRESS(i.11) 
+            delete[] p; 
+          }, p);
       }
     }
   }
-  void Chunk::set_source(std::vector<std::string>&& src)
+  void Chunk::set_source(std::vector<std::string>&& src) noexcept
   {
     source = std::move(src);
   }
@@ -169,9 +173,9 @@ namespace foxlox
   {
     if (line_num < 0) { return "<EOF>"; }
     if (ssize(source) <= line_num) { return ""; }
-    return source[line_num];
+    return source.at(line_num);
   }
-  const LineInfo& Subroutine::get_lines() const
+  const LineInfo& Subroutine::get_lines() const noexcept
   {
     return lines;
   }
@@ -180,7 +184,7 @@ namespace foxlox
     if (!lines.empty() && line_num == lines.back().line_num) { return; }
     lines.emplace_back(code_index, line_num);
   }
-  int LineInfo::get_line(gsl::index code_index) const
+  int LineInfo::get_line(gsl::index code_index) const noexcept
   {
     auto last_line_num = lines.front().line_num;
     for (auto& line : lines)

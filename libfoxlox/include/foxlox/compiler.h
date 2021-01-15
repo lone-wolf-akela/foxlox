@@ -3,7 +3,7 @@
 #include <tuple>
 #include <string_view>
 
-#include <chunk.h>
+#include <foxlox/chunk.h>
 
 namespace foxlox
 {

@@ -38,7 +38,7 @@ namespace foxlox
     }
     return std::move(statements);
   }
-  bool Parser::get_had_error()
+  bool Parser::get_had_error() noexcept
   {
     return had_error;
   }

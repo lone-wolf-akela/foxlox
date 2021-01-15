@@ -4,13 +4,13 @@
 
 #include <fmt/format.h>
 
-#include <foxexcept.h>
-#include "debug.h"
-#include "vm.h"
+#include <foxlox/foxexcept.h>
+#include <foxlox/debug.h>
+#include <foxlox/vm.h>
 
 namespace foxlox
 {
-  VM::VM()
+  VM::VM() noexcept
   {
     chunk = nullptr;
     is_moved = false;
@@ -29,6 +29,7 @@ namespace foxlox
     chunk = r.chunk;
     stack = r.stack;
     stack_top = stack.begin() + std::distance(r.stack.begin(), r.stack_top);
+    p_calltrace = calltrace.begin() + std::distance(r.calltrace.begin(), r.p_calltrace);
     string_pool = std::move(r.string_pool);
     tuple_pool = std::move(r.tuple_pool);
     static_value_pool = std::move(r.static_value_pool);
@@ -45,6 +46,7 @@ namespace foxlox
     chunk = r.chunk;
     stack = r.stack;
     stack_top = stack.begin() + std::distance(r.stack.begin(), r.stack_top);
+    p_calltrace = calltrace.begin() + std::distance(r.calltrace.begin(), r.p_calltrace);
     string_pool = std::move(r.string_pool);
     tuple_pool = std::move(r.tuple_pool);
     static_value_pool = std::move(r.static_value_pool);
@@ -66,10 +68,11 @@ namespace foxlox
       }
     }
   }
-  Value VM::interpret(Chunk& c)
+  Value VM::interpret(const Chunk& c)
   {
     chunk = &c;
-    current_subroutine = &(chunk->get_subroutines()[0]);
+    const std::span subroutines = chunk->get_subroutines();
+    current_subroutine = &gsl::at(subroutines, 0);
     ip = current_subroutine->get_code().begin();
     static_value_pool.resize(chunk->get_static_value_num());
     static_value_pool.shrink_to_fit();
@@ -80,7 +83,7 @@ namespace foxlox
   {
     return std::distance(stack.begin(), stack_top);
   }
-  size_t VM::get_stack_capacity()
+  size_t VM::get_stack_capacity() noexcept
   {
     return std::tuple_size_v<decltype(VM::stack)>;
   }
@@ -106,11 +109,11 @@ namespace foxlox
       }
       case OP_RETURN:
       {
-        if (calltrace.size() == 0) { return Value(); }
-        current_subroutine = calltrace.back().subroutine;
-        ip = calltrace.back().ip;
-        stack_top = calltrace.back().stack_top;
-        calltrace.pop_back();
+        if (p_calltrace == calltrace.begin()) { return Value(); }
+        p_calltrace--;
+        current_subroutine = p_calltrace->subroutine;
+        ip = p_calltrace->ip;
+        stack_top = p_calltrace->stack_top;
         // return a nil
         push();
         *top() = Value();
@@ -120,11 +123,11 @@ namespace foxlox
       {
         const auto v = *top();
 
-        if (calltrace.size() == 0) { return v; }
-        current_subroutine = calltrace.back().subroutine;
-        ip = calltrace.back().ip;
-        stack_top = calltrace.back().stack_top;
-        calltrace.pop_back();
+        if (p_calltrace == calltrace.begin()) { return v; }
+        p_calltrace--;
+        current_subroutine = p_calltrace->subroutine;
+        ip = p_calltrace->ip;
+        stack_top = p_calltrace->stack_top;
         // return a val
         push();
         *top() = v;
@@ -152,8 +155,8 @@ namespace foxlox
       }
       case OP_ADD:
       {
-        auto l = top(1);
-        auto r = top(0);
+        const auto l = top(1);
+        const auto r = top(0);
         if (l->type == Value::STR && r->type == Value::STR)
         {
           *l = Value::strcat(std::bind_front(&VM::allocator, this), *l, *r);
@@ -173,80 +176,80 @@ namespace foxlox
       }
       case OP_SUBTRACT:
       {
-        auto l = top(1);
-        auto r = top(0);
+        const auto l = top(1);
+        const auto r = top(0);
         *l = *l - *r;
         pop();
         break;
       }
       case OP_MULTIPLY:
       {
-        auto l = top(1);
-        auto r = top(0);
+        const auto l = top(1);
+        const auto r = top(0);
         *l = *l * *r;
         pop();
         break;
       }
       case OP_DIVIDE:
       {
-        auto l = top(1);
-        auto r = top(0);
+        const auto l = top(1);
+        const auto r = top(0);
         *l = *l / *r;
         pop();
         break;
       }
       case OP_INTDIV:
       {
-        auto l = top(1);
-        auto r = top(0);
+        const auto l = top(1);
+        const auto r = top(0);
         *l = intdiv(*l, *r);
         pop();
         break;
       }
       case OP_EQ:
       {
-        auto l = top(1);
-        auto r = top(0);
+        const auto l = top(1);
+        const auto r = top(0);
         *l = *l == *r;
         pop();
         break;
       }
       case OP_NE:
       {
-        auto l = top(1);
-        auto r = top(0);
+        const auto l = top(1);
+        const auto r = top(0);
         *l = *l != *r;
         pop();
         break;
       }
       case OP_GT:
       {
-        auto l = top(1);
-        auto r = top(0);
+        const auto l = top(1);
+        const auto r = top(0);
         *l = *l > *r;
         pop();
         break;
       }
       case OP_GE:
       {
-        auto l = top(1);
-        auto r = top(0);
+        const auto l = top(1);
+        const auto r = top(0);
         *l = *l >= *r;
         pop();
         break;
       }
       case OP_LT:
       {
-        auto l = top(1);
-        auto r = top(0);
+        const auto l = top(1);
+        const auto r = top(0);
         *l = *l < *r;
         pop();
         break;
       }
       case OP_LE:
       {
-        auto l = top(1);
-        auto r = top(0);
+        const auto l = top(1);
+        const auto r = top(0);
         *l = *l <= *r;
         pop();
         break;
@@ -260,19 +263,22 @@ namespace foxlox
       case OP_CONSTANT:
       {
         push();
-        *top() = chunk->get_constants()[read_uint16()];
+        const std::span constants = chunk->get_constants();
+        *top() = gsl::at(constants, read_uint16());
         break;
       }
       case OP_FUNC:
       {
         push();
-        *top() = &chunk->get_subroutines()[read_uint16()];
+        const std::span subroutines = chunk->get_subroutines();
+        *top() = &gsl::at(subroutines, read_uint16());
         break;
       }
       case OP_STRING:
       {
         push();
-        *top() = chunk->get_const_strings()[read_uint16()];
+        const std::span strings = chunk->get_const_strings();
+        *top() = gsl::at(strings, read_uint16());
         break;
       }
       case OP_BOOL:
@@ -288,6 +294,7 @@ namespace foxlox
         const auto p = Tuple::alloc(std::bind_front(&VM::allocator, this), n);
         for (gsl::index i = 0; i < n; i++)
         {
+          GSL_SUPPRESS(bounds.4) GSL_SUPPRESS(bounds.2)
           p->elems[i] = *top(gsl::narrow_cast<uint16_t>(n - i - 1));
         }
         tuple_pool.push_back(p);
@@ -315,14 +322,14 @@ namespace foxlox
       {
         const auto idx = read_uint16();
         push();
-        *top() = static_value_pool[idx];
+        *top() = static_value_pool.at(idx);
         break;
       }
       case OP_STORE_STATIC:
       {
         const auto idx = read_uint16();
         const auto r = top();
-        static_value_pool[idx] = *r;
+        static_value_pool.at(idx) = *r;
         break;
       }
       case OP_JUMP:
@@ -374,7 +381,10 @@ namespace foxlox
         const auto func_to_call = top()->get_func();
         pop();
         const uint16_t num_of_params = read_uint16();
-        calltrace.emplace_back(current_subroutine, ip, stack_top - num_of_params);
+        p_calltrace->subroutine = current_subroutine;
+        p_calltrace->ip = ip;
+        p_calltrace->stack_top = stack_top - num_of_params;
+        p_calltrace++;
         
         assert(func_to_call->get_arity() == num_of_params);
         current_subroutine = func_to_call;
@@ -387,59 +397,58 @@ namespace foxlox
       }
     }
   }
-  OpCode VM::read_inst()
+  OpCode VM::read_inst() noexcept
   {
     return static_cast<OpCode>(read_uint8());
   }
-  int16_t VM::read_int16()
+  int16_t VM::read_int16() noexcept
   {
     const struct { uint8_t a, b; } tmp{ read_uint8(), read_uint8() };
     return std::bit_cast<int16_t>(tmp);
   }
-  bool VM::read_bool()
+  bool VM::read_bool() noexcept
   {
-    return static_cast<bool>(read_uint8());
+    return gsl::narrow_cast<bool>(read_uint8());
   }
-  uint8_t VM::read_uint8()
+  uint8_t VM::read_uint8() noexcept
   {
     const auto v = *(ip++);
     assert(ip <= current_subroutine->get_code().end());
     return v;
   }
-  uint16_t VM::read_uint16()
+  uint16_t VM::read_uint16() noexcept
   {
     const struct { uint8_t a, b; } tmp{ read_uint8(), read_uint8() };
     return std::bit_cast<uint16_t>(tmp);
   }
-  void VM::reset_stack()
+  void VM::reset_stack() noexcept
   {
     stack_top = stack.begin();
+    p_calltrace = calltrace.begin();
   }
-  VM::Stack::iterator VM::top(int from_top)
+  VM::Stack::iterator VM::top(int from_top) noexcept
   {
     return stack_top - from_top - 1;
   }
-  void VM::push()
+  void VM::push() noexcept
   {
     stack_top++;
   }
-  void VM::pop()
-  {
-    stack_top--;
-  }
-  void VM::pop(uint16_t n)
+  void VM::pop(uint16_t n) noexcept
   {
     stack_top -= n;
   }
   char* VM::allocator(size_t l)
   {
     current_heap_size += l;
+    GSL_SUPPRESS(r.11)
     return new char[l];
   }
   void VM::deallocator(const char* p, size_t l)
   {
     assert(l <= current_heap_size);
     current_heap_size -= l;
+    GSL_SUPPRESS(r.11) GSL_SUPPRESS(i.11)
     delete[] p;
   }
 }

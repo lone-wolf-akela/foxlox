@@ -15,7 +15,7 @@ namespace foxlox
   public:
     Parser(std::vector<Token>&& tokens);
     AST parse();
-    bool get_had_error();
+    bool get_had_error() noexcept;
   private:
     const std::vector<Token> tokens;
     int current;

@@ -7,6 +7,7 @@
 
 #include <gsl/gsl>
 
+#include <foxlox/foxexcept.h>
 #include "token.h"
 #include "compiletime_value.h"
 
@@ -179,19 +180,19 @@ namespace foxlox::expr
   class IVisitor
   {
   public:
-    virtual R visit_binary_expr(Binary* expr) = 0;
-    virtual R visit_grouping_expr(Grouping* expr) = 0;
-    virtual R visit_tuple_expr(Tuple* expr) = 0;
-    virtual R visit_literal_expr(Literal* expr) = 0;
-    virtual R visit_unary_expr(Unary* expr) = 0;
-    virtual R visit_variable_expr(Variable* expr) = 0;
-    virtual R visit_assign_expr(Assign* expr) = 0;
-    virtual R visit_logical_expr(Logical* expr) = 0;
-    virtual R visit_call_expr(Call* expr) = 0;
-    virtual R visit_get_expr(Get* expr) = 0;
-    virtual R visit_set_expr(Set* expr) = 0;
-    virtual R visit_this_expr(This* expr) = 0;
-    virtual R visit_super_expr(Super* expr) = 0;
+    virtual R visit_binary_expr(gsl::not_null<Binary*> expr) = 0;
+    virtual R visit_grouping_expr(gsl::not_null<Grouping*> expr) = 0;
+    virtual R visit_tuple_expr(gsl::not_null<Tuple*> expr) = 0;
+    virtual R visit_literal_expr(gsl::not_null<Literal*> expr) = 0;
+    virtual R visit_unary_expr(gsl::not_null<Unary*> expr) = 0;
+    virtual R visit_variable_expr(gsl::not_null<Variable*> expr) = 0;
+    virtual R visit_assign_expr(gsl::not_null<Assign*> expr) = 0;
+    virtual R visit_logical_expr(gsl::not_null<Logical*> expr) = 0;
+    virtual R visit_call_expr(gsl::not_null<Call*> expr) = 0;
+    virtual R visit_get_expr(gsl::not_null<Get*> expr) = 0;
+    virtual R visit_set_expr(gsl::not_null<Set*> expr) = 0;
+    virtual R visit_this_expr(gsl::not_null<This*> expr) = 0;
+    virtual R visit_super_expr(gsl::not_null<Super*> expr) = 0;
 
     virtual ~IVisitor() = default;
 
@@ -253,6 +254,7 @@ namespace foxlox::expr
       {
         return visit_super_expr(p);
       }
+      throw FatalError("Unknown expr type");
     }
   };
 }

@@ -71,7 +71,6 @@ namespace foxlox
     chunk = &c;
     current_subroutine = &(chunk->get_subroutines()[0]);
     ip = current_subroutine->get_code().begin();
-    calltrace.emplace_back(current_subroutine, ip);
     static_value_pool.resize(chunk->get_static_value_num());
     static_value_pool.shrink_to_fit();
     reset_stack();
@@ -109,9 +108,11 @@ namespace foxlox
       }
       case OP_RETURN:
       {
-        if (calltrace.size() == 1) { return Value(); }
+        if (calltrace.size() == 0) { return Value(); }
+        current_subroutine = calltrace.back().subroutine;
+        ip = calltrace.back().ip;
+        stack_top = calltrace.back().stack_top;
         calltrace.pop_back();
-        std::tie(current_subroutine, ip) = calltrace.back();
         // return a nil
         push();
         *top() = Value();
@@ -120,7 +121,15 @@ namespace foxlox
       case OP_RETURN_V:
       {
         const auto v = *top();
-        pop();
+
+        if (calltrace.size() == 0) { return v; }
+        current_subroutine = calltrace.back().subroutine;
+        ip = calltrace.back().ip;
+        stack_top = calltrace.back().stack_top;
+        calltrace.pop_back();
+        // return a val
+        push();
+        *top() = v;
         return v;
       }
       case OP_POP:
@@ -364,11 +373,13 @@ namespace foxlox
       }
       case OP_CALL:
       {
-        const uint16_t arity = read_uint16();
-        current_subroutine = top()->get_func();
-        assert(current_subroutine->get_arity() == arity);
+        const auto func_to_call = top()->get_func();
         pop();
-        calltrace.emplace_back(current_subroutine, ip);
+        const uint16_t num_of_params = read_uint16();
+        calltrace.emplace_back(current_subroutine, ip, stack_top - num_of_params);
+        
+        assert(current_subroutine->get_arity() == num_of_params);
+        current_subroutine = func_to_call;
         ip = current_subroutine->get_code().begin();
         break;
       }

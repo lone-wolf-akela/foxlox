@@ -5,7 +5,6 @@
 #include <bit>
 
 #include <gsl/gsl>
-#include <fmt/format.h>
 
 #include "chunk.h"
 
@@ -15,9 +14,9 @@ namespace foxlox
     arity(num_of_params), name(func_name)
   {
   }
-  std::string Subroutine::to_string() const
+  std::string_view Subroutine::get_funcname() const
   {
-    return fmt::format("<fn {}>", name);
+    return name;
   }
   int Subroutine::get_arity() const
   {

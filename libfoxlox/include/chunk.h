@@ -41,8 +41,7 @@ namespace foxlox
     gsl::index get_code_num();
     const LineInfo& get_lines() const;
     int get_arity() const;
-
-    std::string to_string() const;
+    std::string_view get_funcname() const;
   private:
     const int arity;
     std::vector<uint8_t> code;

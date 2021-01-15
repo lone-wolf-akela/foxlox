@@ -21,7 +21,7 @@ namespace foxlox
     }
 
     current_line = -1; // <EOF>
-    emit_pop_to(0);
+    // emit_pop_to(0); // OP_RETURN will take charge of pop
     emit(OP_RETURN);
     return std::move(chunk);
   }
@@ -408,7 +408,7 @@ namespace foxlox
     {
       compile(s.get());
     }
-    emit_pop_to(stack_size_before);
+    //emit_pop_to(stack_size_before); // emit_pop_to(0); // OP_RETURN will take charge of pop
     pop_stack_to(stack_size_before);
     // make sure we have a return at the end of a func
     emit(OP_RETURN);

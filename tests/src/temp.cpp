@@ -9,10 +9,11 @@ TEST(temp_test, temp)
 {
   auto [res, chunk] = compile(R"(
 var a = 123;
-fun first() {
-  a = a + 234;
+fun first(param) {
+  var b = param;
+  a = a + b;
 }
-first();
+first(234);
 return a;
 )");
   ASSERT_EQ(res, CompilerResult::OK);

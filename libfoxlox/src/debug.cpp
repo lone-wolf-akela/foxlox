@@ -9,28 +9,29 @@
 
 namespace foxlox
 {
-  gsl::index disassemble_inst(const Chunk& chunk, const Subroutine& closure, gsl::index index)
+  gsl::index disassemble_inst(const Chunk& chunk, const Subroutine& subroutine, gsl::index index)
   {
-    const int last_line_num = index == 0 ? -1 : closure.get_lines().get_line(index - 1);
-    const int this_line_num = closure.get_lines().get_line(index);
+    const int last_line_num = index == 0 ? -1 : subroutine.get_lines().get_line(index - 1);
+    const int this_line_num = subroutine.get_lines().get_line(index);
+    const std::string formated_funcname = fmt::format("<{}>", subroutine.get_funcname());
     if (this_line_num == last_line_num)
     {
-      fmt::print("{:05} {:<15} {:>4} ", index, closure.to_string(), '|');
+      fmt::print("{:05} {:15} {:>4} ", index, formated_funcname, '|');
     }
     else
     {
       auto src = chunk.get_source(this_line_num - 1);
       if (src != "")
       {
-        fmt::print("{:>5} {:<15} {:>4} {}\n", "[src]", closure.to_string(), this_line_num, src);
-        fmt::print("{:05} {:<15} {:>4} ", index, closure.to_string(), '|');
+        fmt::print("{:>5} {:15} {:>4} {}\n", "[src]", formated_funcname, this_line_num, src);
+        fmt::print("{:05} {:15} {:>4} ", index, formated_funcname, '|');
       }
       else
       {
-        fmt::print("{:05} {:<15} {:>4} ", index, closure.to_string(), this_line_num);
+        fmt::print("{:05} {:15} {:>4} ", index, formated_funcname, this_line_num);
       }
     }
-    const auto codes = closure.get_code();
+    const auto codes = subroutine.get_code();
 
     const auto get_uint8 = [&] {
       return codes[index + 1];
@@ -78,7 +79,7 @@ namespace foxlox
     case OP_FUNC:
     {
       const uint16_t constant = get_uint16();
-      fmt::print("{:<16} {:>4}, {}\n", "OP_FUNC", constant, chunk.get_subroutines()[constant].to_string());
+      fmt::print("{:<16} {:>4}, {}\n", "OP_FUNC", constant, chunk.get_subroutines()[constant].get_funcname());
       return 3;
     }
     case OP_STRING:
@@ -124,13 +125,13 @@ namespace foxlox
     assert(false);
     return 0;
   }
-  void disassemble_chunk(const Chunk& chunk, const Subroutine& closure, std::string_view name)
+  void disassemble_chunk(const Chunk& chunk, const Subroutine& subroutine, std::string_view name)
   {
     fmt::print("== {} ==\n", name);
     gsl::index i = 0;
-    while (i < ssize(closure.get_code()))
+    while (i < ssize(subroutine.get_code()))
     {
-      i += disassemble_inst(chunk, closure, i);
+      i += disassemble_inst(chunk, subroutine, i);
     }
   }
 }

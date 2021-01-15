@@ -207,7 +207,7 @@ namespace foxlox
       return str;
     }
     case FUNC:
-      return fmt::format("{}", v.func->to_string());
+      return fmt::format("<fn {}>", v.func->get_funcname());
     default:
       throw FatalError(fmt::format("Unknown ValueType: {}", magic_enum::enum_name(type)).c_str());
     }

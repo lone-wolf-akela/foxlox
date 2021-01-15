@@ -41,14 +41,22 @@ namespace foxlox
     void clean();
 
     const Subroutine* current_subroutine;
-    std::span<const uint8_t>::iterator ip;
+    using IP = std::span<const uint8_t>::iterator;
+    IP ip;
     Chunk* chunk;
     
     bool is_moved;
 
     Stack stack;
     Stack::iterator stack_top;
-    std::vector<std::tuple<const Subroutine*, std::span<const uint8_t>::iterator>> calltrace;
+
+    struct CallFrame
+    {
+      const Subroutine* subroutine;
+      const IP ip;
+      const Stack::iterator stack_top;
+    };
+    std::vector<CallFrame> calltrace;
 
     // data pool
     std::vector<const String*> string_pool;

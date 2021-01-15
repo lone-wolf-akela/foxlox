@@ -150,31 +150,32 @@ namespace foxlox
     auto condition = check(TokenType::SEMICOLON) ? nullptr : expression();
     consume(TokenType::SEMICOLON, "Expect `;' after loop condition.");
     auto increment = check(TokenType::RIGHT_PAREN) ? nullptr : expression();
-    consume(TokenType::RIGHT_PAREN, "Expect `)' after for clauses.");
+    auto r_paren = consume(TokenType::RIGHT_PAREN, "Expect `)' after for clauses.");
     auto body = statement();
     return std::make_unique<stmt::For>(
       std::move(initializer),
       std::move(condition),
       std::move(increment),
-      std::move(body)
+      std::move(body),
+      std::move(r_paren)
       );
   }
   std::unique_ptr<stmt::Stmt> Parser::while_statement()
   {
     consume(TokenType::LEFT_PAREN, "Expect `(' after `while'.");
     auto condition = expression();
-    consume(TokenType::RIGHT_PAREN, "Expect `)' after condition.");
+    auto r_paren = consume(TokenType::RIGHT_PAREN, "Expect `)' after condition.");
     auto body = statement();
-    return std::make_unique<stmt::While>(std::move(condition), std::move(body));
+    return std::make_unique<stmt::While>(std::move(condition), std::move(body), std::move(r_paren));
   }
   std::unique_ptr<stmt::Stmt> Parser::if_statement()
   {
     consume(TokenType::LEFT_PAREN, "Expect `(' after `if'.");
     auto condition = expression();
-    consume(TokenType::RIGHT_PAREN, "Expect `)' after if condition.");
+    auto r_paren = consume(TokenType::RIGHT_PAREN, "Expect `)' after if condition.");
     auto then_branch = statement();
     auto else_branch = match(TokenType::ELSE) ? statement() : nullptr;
-    return std::make_unique<stmt::If>(std::move(condition), std::move(then_branch), std::move(else_branch));
+    return std::make_unique<stmt::If>(std::move(condition), std::move(then_branch), std::move(else_branch), std::move(r_paren));
   }
   std::vector<std::unique_ptr<stmt::Stmt>> Parser::block()
   {

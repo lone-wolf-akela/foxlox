@@ -11,9 +11,10 @@ namespace foxlox::stmt
     initializer(std::move(init)) 
   {
   }
-  While::While(std::unique_ptr<expr::Expr>&& cond, std::unique_ptr<Stmt>&& bd) :
+  While::While(std::unique_ptr<expr::Expr>&& cond, std::unique_ptr<Stmt>&& bd, Token&& r_paren) :
 	  condition(std::move(cond)), 
-    body(std::move(bd))
+    body(std::move(bd)),
+    right_paren(std::move(r_paren))
   {
   }
   Block::Block(std::vector<std::unique_ptr<Stmt>>&& stmts) : 
@@ -23,11 +24,13 @@ namespace foxlox::stmt
   If::If(
     std::unique_ptr<expr::Expr>&& cond, 
     std::unique_ptr<Stmt>&& thenb, 
-    std::unique_ptr<Stmt>&& elseb
+    std::unique_ptr<Stmt>&& elseb,
+    Token&& r_paren
   ) :
     condition(std::move(cond)), 
     then_branch(std::move(thenb)), 
-    else_branch(std::move(elseb))
+    else_branch(std::move(elseb)),
+    right_paren(std::move(r_paren))
   {
   }
   Function::Function(Token&& tk, std::vector<Token>&& par, std::vector<std::unique_ptr<Stmt>>&& bd) :
@@ -59,12 +62,14 @@ namespace foxlox::stmt
     std::unique_ptr<Stmt>&& init, 
     std::unique_ptr<expr::Expr>&& cond, 
     std::unique_ptr<expr::Expr>&& incre, 
-    std::unique_ptr<Stmt>&& bd
+    std::unique_ptr<Stmt>&& bd,
+    Token&& r_paren
   ) :
     initializer(std::move(init)), 
     condition(std::move(cond)), 
     increment(std::move(incre)), 
-    body(std::move(bd))
+    body(std::move(bd)),
+    right_paren(std::move(r_paren))
   {
   }
 }

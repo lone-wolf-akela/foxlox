@@ -1,5 +1,3 @@
-#include <cassert>
-
 #include <range/v3/all.hpp>
 
 #include "codegen.h"
@@ -12,6 +10,8 @@ namespace foxlox
     current_line = 1;
     current_stack_size = 0;
     loop_start_stack_size = 0;
+
+    had_error = false;
   }
   Chunk CodeGen::gen()
   {
@@ -28,21 +28,35 @@ namespace foxlox
     return std::move(chunk);
   }
 
-  Subroutine& CodeGen::current_subroutine()
+  bool CodeGen::get_had_error() noexcept
   {
-    return chunk.get_subroutines()[current_subroutine_idx];
+    return had_error;
   }
 
-  void CodeGen::push_stack()
+  Subroutine& CodeGen::current_subroutine()
+  {
+    return chunk.get_subroutines().at(current_subroutine_idx);
+  }
+
+  void CodeGen::error(Token token, std::string_view message)
+  {
+    format_error(token, message);
+    had_error = true;
+  }
+
+  void CodeGen::push_stack() noexcept
   {
     current_stack_size++;
   }
   void CodeGen::pop_stack(uint16_t n)
   {
-    assert(n <= current_stack_size);
+    if (n > current_stack_size)
+    {
+      throw FatalError("Wrong stack size.");
+    }
     current_stack_size -= n;
   }
-  uint16_t CodeGen::idx_cast(uint16_t idx)
+  uint16_t CodeGen::idx_cast(uint16_t idx) noexcept
   {
     return current_stack_size - idx - 1;
   }
@@ -61,17 +75,24 @@ namespace foxlox
     emit(int16_t{});
     return ip;
   }
-  void CodeGen::patch_jump(gsl::index ip)
+  void CodeGen::patch_jump(gsl::index ip, Token tk)
   {
     const auto jump_length = current_subroutine().get_code_num() - ip - 2;
-    assert(jump_length <= std::numeric_limits<int16_t>::max());
+    if (jump_length < 0)
+    {
+      throw FatalError("Wrong jump length.");
+    }
+    if (jump_length > std::numeric_limits<int16_t>::max())
+    {
+      error(tk, "Jump length is too long.");
+    }
     current_subroutine().edit_code(ip, gsl::narrow_cast<int16_t>(jump_length));
   }
-  void CodeGen::patch_jumps(std::vector<gsl::index>& ips)
+  void CodeGen::patch_jumps(std::vector<gsl::index>& ips, Token tk)
   {
     for (auto ip : ips)
     {
-      patch_jump(ip);
+      patch_jump(ip, tk);
     }
     ips.clear();
   }
@@ -79,16 +100,26 @@ namespace foxlox
   {
     return current_subroutine().get_code_num();
   }
-  void CodeGen::emit_loop(gsl::index ip, OpCode c)
+  void CodeGen::emit_loop(gsl::index ip, OpCode c, Token tk)
   {
     emit(c);
     const auto jump_length = ip - current_subroutine().get_code_num() - 2;
-    assert(jump_length >= std::numeric_limits<int16_t>::min());
+    if (jump_length > 0)
+    {
+      throw FatalError("Wrong jump length.");
+    }
+    if (jump_length < std::numeric_limits<int16_t>::min())
+    {
+      error(tk, "Jump length is too long");
+    }
     emit(gsl::narrow_cast<int16_t>(jump_length));
   }
   void CodeGen::emit_pop_to(uint16_t stack_size_before)
   {
-    assert(current_stack_size >= stack_size_before);
+    if (current_stack_size < stack_size_before)
+    {
+      throw FatalError("Wrong stack size.");
+    }
     const uint16_t new_stack_elem_num = current_stack_size - stack_size_before;
     if (new_stack_elem_num > 1)
     {
@@ -101,7 +132,10 @@ namespace foxlox
   }
   void CodeGen::pop_stack_to(uint16_t stack_size_before)
   {
-    assert(current_stack_size >= stack_size_before);
+    if (current_stack_size < stack_size_before)
+    {
+      throw FatalError("Wrong stack size.");
+    }
     const uint16_t new_stack_elem_num = current_stack_size - stack_size_before;
     pop_stack(new_stack_elem_num);
   }
@@ -147,7 +181,7 @@ namespace foxlox
       emit(OP_EQ);
       break;
     default:
-      assert(false);
+      throw FatalError("Unknown binary op.");
     }
     pop_stack();
   }
@@ -195,7 +229,7 @@ namespace foxlox
     }
     else
     {
-      assert(false);
+      throw FatalError("Unknown literal type.");
     }
     push_stack();
   }
@@ -213,7 +247,7 @@ namespace foxlox
       emit(OP_NOT);
       break;
     default:
-      assert(false);
+      throw FatalError("Unknown unary op.");
     }
   }
   void CodeGen::visit_variable_expr(gsl::not_null<expr::Variable*> expr)
@@ -227,6 +261,7 @@ namespace foxlox
     }
     else
     {
+      current_subroutine().add_referenced_static_value(info.idx);
       emit(OP_LOAD_STATIC, info.idx);
     }
     push_stack();
@@ -256,7 +291,7 @@ namespace foxlox
       pop_stack();
       emit(OP_POP);
       compile(expr->right.get());
-      patch_jump(jump);
+      patch_jump(jump, expr->op);
     }
     else // TokenType::AND
     {
@@ -264,7 +299,7 @@ namespace foxlox
       pop_stack();
       emit(OP_POP);
       compile(expr->right.get());
-      patch_jump(jump);
+      patch_jump(jump, expr->op);
     }
   }
   void CodeGen::visit_call_expr(gsl::not_null<expr::Call*> expr)
@@ -300,7 +335,10 @@ namespace foxlox
     if (stmt->store_type == stmt::VarStoreType::Stack)
     {
       // no code here, just let it stays in stack
-      value_idxs[stmt] = ValueIdx{ stmt::VarStoreType::Stack, gsl::narrow_cast<uint16_t>(current_stack_size - 1) };
+      value_idxs.emplace(
+        stmt,
+        ValueIdx{ stmt::VarStoreType::Stack, gsl::narrow_cast<uint16_t>(current_stack_size - 1) }
+      );
     }
     else
     {
@@ -308,7 +346,10 @@ namespace foxlox
       emit(OP_STORE_STATIC, alloc_idx);
       pop_stack();
       emit(OP_POP);
-      value_idxs[stmt] = ValueIdx{ stmt::VarStoreType::Static, alloc_idx };
+      value_idxs.emplace(
+        stmt,
+        ValueIdx{ stmt::VarStoreType::Static, alloc_idx }
+      );
     }
   }
   void CodeGen::visit_block_stmt(gsl::not_null<stmt::Block*> stmt)
@@ -334,15 +375,15 @@ namespace foxlox
       emit(OP_JUMP);
       const auto else_jump_ip = emit_jump(OP_JUMP);
 
-      patch_jump(then_jump_ip);
+      patch_jump(then_jump_ip, stmt->right_paren);
 
       compile(stmt->else_branch.get());
 
-      patch_jump(else_jump_ip);
+      patch_jump(else_jump_ip, stmt->right_paren);
     }
     else
     {
-      patch_jump(then_jump_ip);
+      patch_jump(then_jump_ip, stmt->right_paren);
     }
   }
   void CodeGen::visit_while_stmt(gsl::not_null<stmt::While*> stmt)
@@ -359,10 +400,10 @@ namespace foxlox
 
     compile(stmt->body.get());
 
-    patch_jumps(continue_stmts);
-    emit_loop(start, OP_JUMP);
-    patch_jumps(break_stmts);
-    patch_jump(jump_to_end);
+    patch_jumps(continue_stmts, stmt->right_paren);
+    emit_loop(start, OP_JUMP, stmt->right_paren);
+    patch_jumps(break_stmts, stmt->right_paren);
+    patch_jump(jump_to_end, stmt->right_paren);
 
     loop_start_stack_size = enclosing_loop_start_stack_size;
   }
@@ -478,18 +519,18 @@ namespace foxlox
 
     compile(stmt->body.get());
 
-    patch_jumps(continue_stmts);
+    patch_jumps(continue_stmts, stmt->right_paren);
     if (stmt->increment.get() != nullptr)
     {
       compile(stmt->increment.get());
       pop_stack();
       emit(OP_POP);
     }
-    emit_loop(start, OP_JUMP);
-    patch_jumps(break_stmts);
+    emit_loop(start, OP_JUMP, stmt->right_paren);
+    patch_jumps(break_stmts, stmt->right_paren);
     if (stmt->condition.get() != nullptr)
     {
-      patch_jump(jump_to_end);
+      patch_jump(jump_to_end, stmt->right_paren);
     }
     loop_start_stack_size = enclosing_loop_start_stack_size;
 

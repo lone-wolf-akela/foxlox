@@ -49,7 +49,7 @@ namespace foxlox
     // for error report
     const std::string name;
     LineInfo lines;
-
+    
     // for memory management
     std::vector<uint16_t> referenced_static_values;
   };

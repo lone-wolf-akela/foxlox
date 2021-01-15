@@ -81,7 +81,10 @@ namespace foxlox
   }
   void Subroutine::add_referenced_static_value(uint16_t idx)
   {
-    referenced_static_values.push_back(idx);
+    if (std::ranges::find(referenced_static_values, idx) == referenced_static_values.end())
+    {
+      referenced_static_values.push_back(idx);
+    }
   }
   std::span<const uint16_t> Subroutine::get_referenced_static_values() const noexcept
   {

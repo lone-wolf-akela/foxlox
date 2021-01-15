@@ -28,6 +28,11 @@ namespace foxlox
 
     CodeGen codegen(std::move(resolved_ast));
     auto chunk = codegen.gen();
+    if (codegen.get_had_error())
+    {
+      return std::make_tuple(CompilerResult::COMPILE_ERROR, Chunk());
+    }
+
     chunk.set_source(std::move(src_per_line));
     return std::make_tuple(CompilerResult::OK, std::move(chunk));
   }

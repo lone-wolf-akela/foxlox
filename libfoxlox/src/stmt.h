@@ -46,9 +46,12 @@ namespace foxlox::stmt
   class While : public Stmt
   {
   public:
-    While(std::unique_ptr<expr::Expr>&& cond, std::unique_ptr<Stmt>&& bd);
+    While(std::unique_ptr<expr::Expr>&& cond, std::unique_ptr<Stmt>&& bd, Token&& r_paren);
     std::unique_ptr<expr::Expr> condition;
     std::unique_ptr<Stmt> body;
+
+    // for error reporting
+    Token right_paren;
   };
 
   class Block : public Stmt
@@ -64,11 +67,15 @@ namespace foxlox::stmt
     If(
       std::unique_ptr<expr::Expr>&& cond, 
       std::unique_ptr<Stmt>&& thenb, 
-      std::unique_ptr<Stmt>&& elseb
+      std::unique_ptr<Stmt>&& elseb,
+      Token&& r_paren
     );
     std::unique_ptr<expr::Expr> condition;
     std::unique_ptr<Stmt> then_branch;
     std::unique_ptr<Stmt> else_branch;
+
+    // for error reporting
+    Token right_paren;
   };
 
   class Function : public Stmt
@@ -129,12 +136,16 @@ namespace foxlox::stmt
       std::unique_ptr<Stmt>&& init, 
       std::unique_ptr<expr::Expr>&& cond, 
       std::unique_ptr<expr::Expr>&& incre, 
-      std::unique_ptr<Stmt>&& bd
+      std::unique_ptr<Stmt>&& bd,
+      Token&& r_paren
     );
     std::unique_ptr<Stmt> initializer;
     std::unique_ptr<expr::Expr> condition;
     std::unique_ptr<expr::Expr> increment;
     std::unique_ptr<Stmt> body;
+
+    // for error reporting
+    Token right_paren;
   };
 
   template<typename R>

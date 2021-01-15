@@ -5,6 +5,7 @@
 #include <foxlox/foxexcept.h>
 #include <foxlox/chunk.h>
 
+#include "common.h"
 #include "stmt.h"
 #include "expr.h"
 #include "parser.h"
@@ -16,12 +17,16 @@ namespace foxlox
   public:
     CodeGen(AST&& a);
     Chunk gen();
+    bool get_had_error() noexcept;
   private:
     AST ast;
     Chunk chunk;
     int current_line;
     uint16_t current_subroutine_idx;
     Subroutine& current_subroutine();
+
+    bool had_error;
+    void error(Token token, std::string_view message);
 
     struct ValueIdx
     {
@@ -30,10 +35,10 @@ namespace foxlox
     };
     std::map<VarDeclareAt, ValueIdx> value_idxs;
     uint16_t current_stack_size;
-    void push_stack();
+    void push_stack() noexcept;
     void pop_stack(uint16_t n = 1);
     // convert a stack idx between "idx from the stack bottom" and "idx from the stack top"
-    uint16_t idx_cast(uint16_t idx);
+    uint16_t idx_cast(uint16_t idx) noexcept;
 
     uint16_t loop_start_stack_size;
 
@@ -50,10 +55,10 @@ namespace foxlox
       }
     }
     gsl::index emit_jump(OpCode c);
-    void patch_jump(gsl::index ip);
-    void patch_jumps(std::vector<gsl::index>& ips);
+    void patch_jump(gsl::index ip, Token tk);
+    void patch_jumps(std::vector<gsl::index>& ips, Token tk);
     gsl::index prepare_loop();
-    void emit_loop(gsl::index ip, OpCode c);    
+    void emit_loop(gsl::index ip, OpCode c, Token tk);    
     void emit_pop_to(uint16_t stack_size_before);
     void pop_stack_to(uint16_t stack_size_before);
     std::vector<gsl::index> break_stmts;

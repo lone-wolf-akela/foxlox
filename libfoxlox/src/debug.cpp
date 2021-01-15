@@ -1,34 +1,41 @@
 #include <bit>
+#include <iostream>
 
 #include <fmt/format.h>
 #include <gsl/gsl>
 #include <range/v3/all.hpp>
 #include <magic_enum.hpp>
 
+#include <vm.h>
 #include "debug.h"
 
 namespace foxlox
 {
-  gsl::index disassemble_inst(const Chunk& chunk, const Subroutine& subroutine, gsl::index index)
+  Debugger::Debugger(bool colored_output)
+  {
+    colored = colored_output;
+  }
+  gsl::index Debugger::disassemble_inst(const Chunk& chunk, const Subroutine& subroutine, gsl::index index)
   {
     const int last_line_num = index == 0 ? -1 : subroutine.get_lines().get_line(index - 1);
     const int this_line_num = subroutine.get_lines().get_line(index);
-    const std::string formated_funcname = fmt::format("<{}>", subroutine.get_funcname());
+    const auto formated_funcname = fmt::format("<{}>", subroutine.get_funcname());
     if (this_line_num == last_line_num)
     {
-      fmt::print("{:05} {:15} {:>4} ", index, formated_funcname, '|');
+      std::cout << fmt::format("{:05} {:15} {:>4} ", index, formated_funcname, '|');
     }
     else
     {
       auto src = chunk.get_source(this_line_num - 1);
       if (src != "")
       {
-        fmt::print("{:>5} {:15} {:>4} {}\n", "[src]", formated_funcname, this_line_num, src);
-        fmt::print("{:05} {:15} {:>4} ", index, formated_funcname, '|');
+        const auto formatted = fmt::format("{:>5} {:15} {:>4} {}", "[src]", formated_funcname, this_line_num, src);
+        std::cout << fmt::format(colored ? "\x1b[46m\x1b[30m{:80}\x1b[0m\n" : "{}\n", formatted);
+        std::cout << fmt::format("{:05} {:15} {:>4} ", index, formated_funcname, '|');
       }
       else
       {
-        fmt::print("{:05} {:15} {:>4} ", index, formated_funcname, this_line_num);
+        std::cout << fmt::format("{:05} {:15} {:>4} ", index, formated_funcname, this_line_num);
       }
     }
     const auto codes = subroutine.get_code();
@@ -67,37 +74,37 @@ namespace foxlox
     case OP_LT:
     case OP_LE:
     {
-      fmt::print("{}\n", magic_enum::enum_name(op));
+      std::cout << fmt::format("{}\n", magic_enum::enum_name(op));
       return 1;
     }
     case OP_CONSTANT:
     {
       const uint16_t constant = get_uint16();
-      fmt::print("{:<16} {:>4}, {}\n", "OP_CONSTANT", constant, chunk.get_constants()[constant].to_string());
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_CONSTANT", constant, chunk.get_constants()[constant].to_string());
       return 3;
     }
     case OP_FUNC:
     {
       const uint16_t constant = get_uint16();
-      fmt::print("{:<16} {:>4}, {}\n", "OP_FUNC", constant, chunk.get_subroutines()[constant].get_funcname());
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_FUNC", constant, chunk.get_subroutines()[constant].get_funcname());
       return 3;
     }
     case OP_STRING:
     {
       const uint16_t str = get_uint16();
-      fmt::print("{:<16} {:>4}, {}\n", "OP_STRING", str, chunk.get_const_strings()[str]->get_view());
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_STRING", str, chunk.get_const_strings()[str]->get_view());
       return 3;
     }
     case OP_BOOL:
     {
       bool b = static_cast<bool>(get_uint8());
-      fmt::print("{:<16} {:>4}, {}\n", "OP_BOOL", "", b ? "true" : "false");
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_BOOL", "", b ? "true" : "false");
       return 2;
     }
     case OP_CALL:
     {
       const uint16_t arity = get_uint16();
-      fmt::print("{:<16} {:>4}, {}\n", "OP_CALL", "", arity);
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_CALL", "", arity);
       return 3;
     }
     case OP_LOAD_STACK:
@@ -107,7 +114,7 @@ namespace foxlox
     case OP_POP_N:
     case OP_TUPLE:
     {
-      fmt::print("{:<16} {:>4}\n", magic_enum::enum_name(op), get_uint16());
+      std::cout << fmt::format("{:<16} {:>4}\n", magic_enum::enum_name(op), get_uint16());
       return 3;
     }
     case OP_JUMP:
@@ -116,7 +123,7 @@ namespace foxlox
     case OP_JUMP_IF_TRUE_NO_POP:
     case OP_JUMP_IF_FALSE_NO_POP:
     {
-      fmt::print("{:<16} {:>4}\n", magic_enum::enum_name(op), get_int16());
+      std::cout << fmt::format("{:<16} {:>4}\n", magic_enum::enum_name(op), get_int16());
       return 3;
     }
     default:
@@ -125,13 +132,22 @@ namespace foxlox
     assert(false);
     return 0;
   }
-  void disassemble_chunk(const Chunk& chunk, const Subroutine& subroutine, std::string_view name)
+  void Debugger::disassemble_chunk(const Chunk& chunk, const Subroutine& subroutine, std::string_view name)
   {
-    fmt::print("== {} ==\n", name);
+    std::cout << fmt::format("== {} ==\n", name);
     gsl::index i = 0;
     while (i < ssize(subroutine.get_code()))
     {
       i += disassemble_inst(chunk, subroutine, i);
     }
+  }
+  void Debugger::print_vm_stack(VM& vm)
+  {
+    fmt::print("{:>26}", '|');
+    for (auto v : std::span(vm.stack.begin(), vm.stack_top))
+    {
+      fmt::print("[{}] ", v.to_string());
+    }
+    fmt::print("\n");
   }
 }

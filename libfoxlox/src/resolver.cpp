@@ -80,7 +80,7 @@ namespace foxlox
   }
   void Resolver::declare_from_functionparam(stmt::Function* stmt, int param_index)
   {
-    ValueInfo* vinfo = declare(stmt->name);
+    ValueInfo* vinfo = declare(stmt->param[param_index]);
     if (vinfo != nullptr)
     {
       vinfo->declare = VarDeclareAtFunc{ .func = stmt, .param_index = param_index };

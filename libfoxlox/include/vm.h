@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <chunk.h>
+#include <debug.h>
 #include "../src/config.h"
 #include "../src/value.h"
 
@@ -67,5 +68,7 @@ namespace foxlox
     char* allocator(size_t l);
     void deallocator(const char* p, size_t l);
     size_t current_heap_size;
+
+    friend class Debugger;
   };
 }

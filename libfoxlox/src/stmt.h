@@ -5,6 +5,8 @@
 
 #include <cassert>
 
+#include <gsl/gsl>
+
 #include "expr.h"
 #include "token.h"
 

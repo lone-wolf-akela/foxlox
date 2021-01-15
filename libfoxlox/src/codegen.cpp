@@ -267,14 +267,14 @@ namespace foxlox
   }
   void CodeGen::visit_call_expr(expr::Call* expr)
   {
-    compile(expr->callee.get());
     const auto enclosing_stack_size = current_stack_size;
     for (auto& e : expr->arguments)
     {
       compile(e.get());
     }
+    compile(expr->callee.get());
     emit(OP_CALL, gsl::narrow_cast<uint16_t>(expr->arguments.size()));
-    pop_stack_to(enclosing_stack_size);
+    pop_stack_to(enclosing_stack_size + 1); // + 1 to store return value
   }
   void CodeGen::visit_expression_stmt(stmt::Expression* stmt)
   {
@@ -385,22 +385,25 @@ namespace foxlox
       value_idxs[stmt] = ValueIdx{ stmt::VarStoreType::Static, alloc_idx };
     }
 
+    const auto stack_size_before = current_stack_size;
+
     for (gsl::index i = 0; i < ssize(stmt->param); i++)
     {
       if (stmt->param_store_types[i] == stmt::VarStoreType::Stack)
       {
         // no code here, just let it stays in stack
         push_stack();
-        value_idxs[stmt] = ValueIdx{ stmt::VarStoreType::Stack, gsl::narrow_cast<uint16_t>(current_stack_size - 1) };
+        value_idxs[VarDeclareAtFunc{ .func = stmt , .param_index = gsl::narrow_cast<int>(i) }] = 
+          ValueIdx{ stmt::VarStoreType::Stack, gsl::narrow_cast<uint16_t>(current_stack_size - 1) };
       }
       else
       {
         const uint16_t alloc_idx = chunk.add_static_value();
-        value_idxs[stmt] = ValueIdx{ stmt::VarStoreType::Static, alloc_idx };
+        value_idxs[VarDeclareAtFunc{ .func = stmt , .param_index = gsl::narrow_cast<int>(i) }] = 
+          ValueIdx{ stmt::VarStoreType::Static, alloc_idx };
       }
     }
 
-    const auto stack_size_before = current_stack_size;
     const auto enclosing_subroutine_idx = current_subroutine_idx;
     current_subroutine_idx = subroutine_idx;
 

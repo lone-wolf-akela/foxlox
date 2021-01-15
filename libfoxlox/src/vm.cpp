@@ -86,16 +86,14 @@ namespace foxlox
   }
   Value VM::run()
   {
+#ifdef DEBUG_TRACE_EXECUTION
+    Debugger debugger(true);
+#endif
     while (true)
     {
 #ifdef DEBUG_TRACE_EXECUTION
-      fmt::print("{:>26}", '|');
-      for (auto v : std::span(stack.begin(), stack_top))
-      {
-        fmt::print("[{}] ", v.to_string());
-      }
-      fmt::print("\n");
-      disassemble_inst(*chunk, *current_subroutine, std::distance(current_subroutine->get_code().begin(), ip));
+      debugger.print_vm_stack(*this);
+      debugger.disassemble_inst(*chunk, *current_subroutine, std::distance(current_subroutine->get_code().begin(), ip));
 #endif
       const OpCode inst = read_inst();
       switch (inst)
@@ -378,7 +376,7 @@ namespace foxlox
         const uint16_t num_of_params = read_uint16();
         calltrace.emplace_back(current_subroutine, ip, stack_top - num_of_params);
         
-        assert(current_subroutine->get_arity() == num_of_params);
+        assert(func_to_call->get_arity() == num_of_params);
         current_subroutine = func_to_call;
         ip = current_subroutine->get_code().begin();
         break;

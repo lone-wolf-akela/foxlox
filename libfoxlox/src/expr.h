@@ -5,6 +5,8 @@
 #include <variant>
 #include <compare>
 
+#include <gsl/gsl>
+
 #include "token.h"
 #include "compiletime_value.h"
 

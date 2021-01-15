@@ -42,6 +42,8 @@ namespace foxlox
     const LineInfo& get_lines() const noexcept;
     int get_arity() const noexcept;
     std::string_view get_funcname() const noexcept;
+
+    bool gc_mark;
   private:
     const int arity;
     std::vector<uint8_t> code;
@@ -68,6 +70,7 @@ namespace foxlox
     std::span<const Subroutine> get_subroutines() const noexcept;
     std::span<const Value> get_constants() const;
     std::span<const String* const> get_const_strings() const;
+    std::span<String*> get_const_strings();
     void set_source(std::vector<std::string>&& src) noexcept;
     std::string_view get_source(gsl::index line_num) const;
 
@@ -85,7 +88,7 @@ namespace foxlox
     std::vector<Subroutine> subroutines;
 
     std::vector<Value> constants;
-    std::vector<const String*> const_strings;
+    std::vector<String*> const_strings;
 
     uint16_t static_value_num;
   };

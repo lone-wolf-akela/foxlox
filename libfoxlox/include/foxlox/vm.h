@@ -2,6 +2,7 @@
 
 #include <array>
 #include <vector>
+#include <stack>
 
 #include <foxlox/chunk.h>
 #include <foxlox/debug.h>
@@ -20,7 +21,7 @@ namespace foxlox
     VM(VM&& r) noexcept;
     VM& operator=(VM&& r) noexcept;
 
-    Value interpret(const Chunk& c);
+    Value interpret(Chunk& c);
 
     // stack ops
     using Stack = std::array<Value, STACK_MAX>;
@@ -40,10 +41,10 @@ namespace foxlox
 
     void clean();
 
-    const Subroutine* current_subroutine;
+    Subroutine* current_subroutine;
     using IP = std::span<const uint8_t>::iterator;
     IP ip;
-    const Chunk* chunk;
+    Chunk* chunk;
     
     bool is_moved;
 
@@ -52,7 +53,7 @@ namespace foxlox
 
     struct CallFrame
     {
-      const Subroutine* subroutine{};
+      Subroutine* subroutine{};
       IP ip{};
       Stack::iterator stack_top{};
     };
@@ -61,15 +62,22 @@ namespace foxlox
     CallTrace::iterator p_calltrace;
 
     // data pool
-    std::vector<const String*> string_pool;
-    std::vector<const Tuple*> tuple_pool;
+    std::vector<String*> string_pool;
+    std::vector<Tuple*> tuple_pool;
     std::vector<Value> static_value_pool;
 
     // mem manage related
-    char* allocator(size_t l);
-    void deallocator(const char* p, size_t l);
+    char* allocator(size_t l) noexcept;
+    void deallocator(const char* p, size_t l) noexcept;
     size_t current_heap_size;
+    size_t next_gc_heap_size;
     void collect_garbage();
+    void mark_roots();
+    void mark_value(Value& v);
+    void mark_subroutine(Subroutine& s);
+    std::stack<Value*> gray_stack;
+    void trace_references();
+    void sweep();
 
     friend class Debugger;
   };

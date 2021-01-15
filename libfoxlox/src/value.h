@@ -28,45 +28,68 @@ namespace foxlox
 
   template<typename F>
   concept Allocator = requires(F f) {
-    { f(std::ptrdiff_t{}) } -> std::convertible_to<char*>;
+    { f(std::size_t{}) } -> std::convertible_to<char*>;
   };
   template<typename F>
   concept Deallocator = requires(F f) {
-    { f(reinterpret_cast<char*>(0), std::ptrdiff_t{}) };
+    { f(reinterpret_cast<char*>(0), std::size_t{}) };
   };
 
   template<typename T>
-  class SimpleObj
+  class ObjBase
   {
   public:
-    bool is_marked() const
+    auto data() noexcept
     {
-      return staic_cast<T*>(this)->length < 0;
+      return static_cast<T*>(this)->data_array;
     }
-    void mark()
+    auto data() const noexcept
     {
-      staic_cast<T*>(this)->length = staic_cast<T*>(this)->length | signbit_mask;
+      return static_cast<const T*>(this)->data_array;
     }
-    void unmark()
+    bool get_mark() const noexcept
     {
-      staic_cast<T*>(this)->length = staic_cast<T*>(this)->length & ~signbit_mask;
+      return bool(real_length() & signbit_mask);
     }
-    std::ptrdiff_t get_length() const
+    void mark() noexcept
     {
-      return staic_cast<T*>(this)->length & ~signbit_mask;
+      real_length() |= signbit_mask;
     }
+    void unmark() noexcept
+    {
+      real_length() &= ~signbit_mask;
+    }
+    std::size_t size() const noexcept
+    {
+      return real_length() & ~signbit_mask;
+    }
+  protected:
+    static constexpr auto signbit_mask = 1ull << (sizeof std::size_t * CHAR_BIT - 1);
+    static constexpr auto max_length = ~signbit_mask;
   private:
-    static constexpr auto signbit_mask = 1ull << (sizeof std::ptrdiff_t * CHAR_BIT - 1);
+    std::size_t& real_length()
+    {
+      return static_cast<T*>(this)->length;
+    }
+    std::size_t real_length() const
+    {
+      return static_cast<const T*>(this)->length;
+    }
   };
 
-  class String : public SimpleObj<String>
+  class String : public ObjBase<String>
   {
+    friend class ObjBase<String>;
+  private:
+    std::size_t length;
+    char data_array[sizeof(length)];
   public:
     template<Allocator F>
-    static gsl::not_null<String*> alloc(F allocator, std::ptrdiff_t l)
+    static gsl::not_null<String*> alloc(F allocator, std::size_t l)
     {
-      const gsl::not_null<char*> data = l <= sizeof(String::str) ? allocator(sizeof(String)) :
-        allocator(sizeof(String) + (l - sizeof(String::str)));
+      assert(l <= max_length);
+      const gsl::not_null<char*> data = l <= sizeof(String::data_array) ? allocator(sizeof(String)) :
+        allocator(sizeof(String) + (l - sizeof(String::data_array)));
 
       GSL_SUPPRESS(type.1)
       gsl::not_null<String*> str = reinterpret_cast<String*>(data.get());
@@ -77,7 +100,7 @@ namespace foxlox
     template<Deallocator F>
     static void free(F deallocator, gsl::not_null<const String*> p)
     {
-      if (p->get_length() <= sizeof(String::str))
+      if (p->size() <= sizeof(String::data_array))
       {
         GSL_SUPPRESS(type.1)
         deallocator(reinterpret_cast<const char*>(p.get()), sizeof(String));
@@ -85,7 +108,7 @@ namespace foxlox
       else
       {
         GSL_SUPPRESS(type.1)
-        deallocator(reinterpret_cast<const char*>(p.get()), sizeof(String) + (p->get_length() - sizeof(String::str)));
+        deallocator(reinterpret_cast<const char*>(p.get()), sizeof(String) + (p->size() - sizeof(String::data_array)));
       }
     }
 
@@ -98,10 +121,6 @@ namespace foxlox
 #endif
     friend TStrViewComp operator<=>(const String& l, const String& r);
     friend bool operator==(const String& l, const String& r);
-
-  private:
-    std::ptrdiff_t length;
-    char str[sizeof(length)];
   };
 
   class Tuple;
@@ -119,18 +138,18 @@ namespace foxlox
       bool b;
       double f64;
       int64_t i64;
-      const String* str;
-      const Tuple* tuple;
-      const Subroutine* func;
+      String* str;
+      Tuple* tuple;
+      Subroutine* func;
     } v;
 
 
     Value() noexcept : type(NIL), v{} {}
 
-    template<std::convertible_to<const String*> T>
+    template<std::convertible_to<String*> T>
     Value(T str) noexcept : type(STR), v{ .str = str } {}
 
-    template<std::convertible_to<const Tuple*> T>
+    template<std::convertible_to<Tuple*> T>
     Value(T tuple) noexcept : type(TUPLE), v{ .tuple = tuple } {}
 
     template<std::convertible_to<const Subroutine*> T>
@@ -151,6 +170,7 @@ namespace foxlox
     std::string_view get_strview() const;
     std::span<const Value> get_tuplespan() const;
     const Subroutine* get_func() const;
+    Subroutine* get_func();
 
     friend double operator/(const Value& l, const Value& r);
     friend Value operator*(const Value& l, const Value& r);
@@ -171,12 +191,17 @@ namespace foxlox
     std::string to_string() const;
   };
 
-  class Tuple : public SimpleObj<Tuple>
+  class Tuple : public ObjBase<Tuple>
   {
+    friend class ObjBase<Tuple>;
+  private:
+    std::size_t length;
+    Value data_array[1];
   public:
     template<Allocator F>
     static gsl::not_null<Tuple*> alloc(F allocator, size_t l)
     {
+      assert(l <= max_length);
       const gsl::not_null<char*> data = (l == 0) ? allocator(sizeof(Tuple)) :
         allocator(sizeof(Tuple) + (l - 1) * sizeof(Value));
 
@@ -189,7 +214,7 @@ namespace foxlox
     template<Deallocator F>
     static void free(F deallocator, gsl::not_null<const Tuple*> p)
     {
-      if (p->get_length() == 0)
+      if (p->size() == 0)
       {
         GSL_SUPPRESS(type.1)
         deallocator(reinterpret_cast<const char*>(p.get()), sizeof(Tuple));
@@ -197,14 +222,12 @@ namespace foxlox
       else
       {
         GSL_SUPPRESS(type.1)
-        deallocator(reinterpret_cast<const char*>(p.get()), sizeof(Tuple) + (p->get_length() - 1) * sizeof(Value));
+        deallocator(reinterpret_cast<const char*>(p.get()), sizeof(Tuple) + (p->size() - 1) * sizeof(Value));
       }
     }
 
     std::span<const Value> get_span() const noexcept;
-  private:
-    std::ptrdiff_t length;
-    Value elems[1];
+    std::span<Value> get_span() noexcept;
   };
 
   template<Allocator F>
@@ -215,7 +238,7 @@ namespace foxlox
     const auto s2 = r.v.str->get_view();
     String* p = String::alloc(allocator, s1.size() + s2.size());
     GSL_SUPPRESS(bounds.3) GSL_SUPPRESS(stl.1)
-    const auto it = std::copy(s1.begin(), s1.end(), p->str);
+    const auto it = std::copy(s1.begin(), s1.end(), p->data());
     GSL_SUPPRESS(stl.1)
     std::copy(s2.begin(), s2.end(), it);
     return p;
@@ -229,7 +252,7 @@ namespace foxlox
       const auto s2 = r.v.tuple->get_span();
       Tuple* p = Tuple::alloc(allocator, s1.size() + s2.size());
       GSL_SUPPRESS(bounds.3) GSL_SUPPRESS(stl.1)
-      const auto it = std::copy(s1.begin(), s1.end(), p->elems);
+      const auto it = std::copy(s1.begin(), s1.end(), p->data());
       GSL_SUPPRESS(stl.1)
       std::copy(s2.begin(), s2.end(), it);
       return p;
@@ -239,7 +262,7 @@ namespace foxlox
       const auto s1 = l.v.tuple->get_span();
       Tuple* p = Tuple::alloc(allocator, s1.size() + 1);
       GSL_SUPPRESS(bounds.3) GSL_SUPPRESS(stl.1)
-      const auto it = std::copy(s1.begin(), s1.end(), p->elems);
+      const auto it = std::copy(s1.begin(), s1.end(), p->data());
       *it = r;
       return p;
     }
@@ -247,9 +270,9 @@ namespace foxlox
     {
       const auto s2 = r.v.tuple->get_span();
       Tuple* p = Tuple::alloc(allocator, 1 + s2.size());
-      p->elems[0] = l;
+      p->data()[0] = l;
       GSL_SUPPRESS(bounds.3) GSL_SUPPRESS(stl.1) GSL_SUPPRESS(bounds.1)
-      std::copy(s2.begin(), s2.end(), p->elems + 1);
+      std::copy(s2.begin(), s2.end(), p->data() + 1);
       return p;
     }
   }

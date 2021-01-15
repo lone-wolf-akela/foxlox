@@ -11,7 +11,7 @@
 namespace foxlox
 {
   Subroutine::Subroutine(std::string_view func_name, int num_of_params) :
-    arity(num_of_params), name(func_name)
+    arity(num_of_params), name(func_name), gc_mark(false)
   {
   }
   std::string_view Subroutine::get_funcname() const noexcept
@@ -39,6 +39,10 @@ namespace foxlox
     return constants;
   }
   std::span<const String* const> Chunk::get_const_strings() const
+  {
+    return const_strings;
+  }
+  std::span<String*> Chunk::get_const_strings()
   {
     return const_strings;
   }
@@ -92,6 +96,8 @@ namespace foxlox
   }
   uint16_t Chunk::add_constant(Value v)
   {
+    assert(v.type == Value::F64 || v.type == Value::I64);
+
     constants.push_back(v);
     const auto index = constants.size() - 1;
     assert(index <= std::numeric_limits<uint16_t>::max());
@@ -108,7 +114,7 @@ namespace foxlox
   {
     String* p = String::alloc([](auto l) {GSL_SUPPRESS(r.11) return new char[l]; }, str.size());
     GSL_SUPPRESS(stl.1) GSL_SUPPRESS(bounds.3)
-    std::copy(str.begin(), str.end(), p->str);
+    std::copy(str.begin(), str.end(), p->data());
     const_strings.push_back(p);
     const auto index = const_strings.size() - 1;
     assert(index <= std::numeric_limits<uint16_t>::max());

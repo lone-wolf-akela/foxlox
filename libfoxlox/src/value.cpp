@@ -89,6 +89,12 @@ namespace foxlox
     return v.func;
   }
 
+  Subroutine* Value::get_func()
+  {
+    type_check(type, FUNC);
+    return v.func;
+  }
+
   std::partial_ordering operator<=>(const Value& l, const Value& r)
   {
     if (l.type == Value::NIL && r.type == Value::NIL)
@@ -252,12 +258,16 @@ namespace foxlox
   }
   std::string_view String::get_view() const noexcept
   {
-    GSL_SUPPRESS(bounds.3)
-    return std::string_view(str, length);
+    return std::string_view(data(), size());
   }
   std::span<const Value> Tuple::get_span() const noexcept
   {
     GSL_SUPPRESS(bounds.3)
-    return std::span{ elems, length };
+    return std::span{ data(), size() };
+  }
+  std::span<Value> Tuple::get_span() noexcept
+  {
+    GSL_SUPPRESS(bounds.3)
+    return std::span{ data(), size() };
   }
 }

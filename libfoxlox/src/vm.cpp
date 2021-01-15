@@ -16,6 +16,7 @@ namespace foxlox
     chunk = nullptr;
     is_moved = false;
     current_heap_size = 0;
+    next_gc_heap_size = FIRST_GC_HEAP_SIZE;
     reset_stack();
   }
   VM::~VM()
@@ -35,6 +36,7 @@ namespace foxlox
     tuple_pool = std::move(r.tuple_pool);
     static_value_pool = std::move(r.static_value_pool);
     current_heap_size = r.current_heap_size;
+    next_gc_heap_size = r.next_gc_heap_size;
     r.is_moved = true;
   }
   VM& VM::operator=(VM&& r) noexcept
@@ -52,6 +54,7 @@ namespace foxlox
     tuple_pool = std::move(r.tuple_pool);
     static_value_pool = std::move(r.static_value_pool);
     current_heap_size = r.current_heap_size;
+    next_gc_heap_size = r.next_gc_heap_size;
     r.is_moved = true;
     return *this;
   }
@@ -69,11 +72,11 @@ namespace foxlox
       }
     }
   }
-  Value VM::interpret(const Chunk& c)
+  Value VM::interpret(Chunk& c)
   {
     chunk = &c;
-    const std::span subroutines = chunk->get_subroutines();
-    current_subroutine = &gsl::at(subroutines, 0);
+    auto& subroutines = chunk->get_subroutines();
+    current_subroutine = &subroutines.at(0);
     ip = current_subroutine->get_code().begin();
     static_value_pool.resize(chunk->get_static_value_num());
     static_value_pool.shrink_to_fit();
@@ -280,14 +283,14 @@ namespace foxlox
         case OP_FUNC:
         {
           push();
-          const std::span subroutines = chunk->get_subroutines();
-          *top() = &gsl::at(subroutines, read_uint16());
+          auto& subroutines = chunk->get_subroutines();
+          *top() = &subroutines.at(read_uint16());
           break;
         }
         case OP_STRING:
         {
           push();
-          const std::span strings = chunk->get_const_strings();
+          std::span strings = chunk->get_const_strings();
           *top() = gsl::at(strings, read_uint16());
           break;
         }
@@ -305,7 +308,7 @@ namespace foxlox
           for (gsl::index i = 0; i < n; i++)
           {
             GSL_SUPPRESS(bounds.4) GSL_SUPPRESS(bounds.2)
-              p->elems[i] = *top(gsl::narrow_cast<uint16_t>(n - i - 1));
+              p->data()[i] = *top(gsl::narrow_cast<uint16_t>(n - i - 1));
           }
           tuple_pool.push_back(p);
           pop(n);
@@ -400,7 +403,7 @@ namespace foxlox
         }
         case OP_CALL:
         {
-          const auto func_to_call = top()->get_func();
+          auto func_to_call = top()->get_func();
           pop();
           const uint16_t num_of_params = read_uint16();
           p_calltrace->subroutine = current_subroutine;
@@ -469,17 +472,20 @@ namespace foxlox
   {
     stack_top -= n;
   }
-  char* VM::allocator(size_t l)
+  char* VM::allocator(size_t l) noexcept
   {
     current_heap_size += l;
     GSL_SUPPRESS(r.11)
+#ifdef DEBUG_LOG_GC
+      std::cout << fmt::format("alloc size={} ", l);
+#endif
     char* const data = new char[l];
 #ifdef DEBUG_LOG_GC
-      std::cout << fmt::format("alloc size={} at {}; heap size: {} -> {}\n", l, static_cast<const void*>(data), current_heap_size - l, current_heap_size);
+      std::cout << fmt::format("at {}; heap size: {} -> {}\n", static_cast<const void*>(data), current_heap_size - l, current_heap_size);
 #endif
     return data;
   }
-  void VM::deallocator(const char* p, size_t l)
+  void VM::deallocator(const char* p, size_t l) noexcept
   {
 #ifdef DEBUG_LOG_GC
     std::cout << fmt::format("free size={} at {}; heap size: {} -> {}\n", l, static_cast<const void*>(p), current_heap_size, current_heap_size -l);
@@ -494,17 +500,135 @@ namespace foxlox
 #ifdef DEBUG_STRESS_GC
     constexpr bool do_gc = true;
 #else
-    constexpr bool do_gc = true;
+    const bool do_gc = current_heap_size > next_gc_heap_size;
 #endif
     if (do_gc)
     {
 #ifdef DEBUG_LOG_GC
-      std::cout << "-- gc begin\n";
+      std::cout << "-- gc begin --\n";
+      const size_t heap_size_before = current_heap_size;
 #endif
-
+      mark_roots();
+      trace_references();
+      sweep();
+      next_gc_heap_size = std::max<size_t>(current_heap_size * GC_HEAP_GROW_FACTOR, FIRST_GC_HEAP_SIZE);
 #ifdef DEBUG_LOG_GC
-      std::cout << "-- gc end\n";
+      std::cout << "-- gc end --\n";
+      std::cout << fmt::format("   collected {} bytes (from {} to {}). next at {}.\n",
+        heap_size_before - current_heap_size,
+        heap_size_before, 
+        current_heap_size,
+        next_gc_heap_size);
 #endif
+    }
+  }
+  void VM::mark_roots()
+  {
+    // stack
+    for (auto& v : std::span(stack.begin(), stack_top))
+    {
+      mark_value(v);
+    }
+    // function wait for return
+    for (auto& c : std::span(calltrace.begin(), p_calltrace))
+    {
+      mark_subroutine(*c.subroutine);
+    }
+    // current function
+    mark_subroutine(*current_subroutine);
+  }
+  void VM::mark_subroutine(Subroutine& s)
+  {
+    if (s.gc_mark) { return; }
+    s.gc_mark = true;
+    for (auto idx : s.get_referenced_static_values())
+    {
+      mark_value(static_value_pool.at(idx));
+    }
+  }
+  void VM::mark_value(Value& v)
+  {
+#ifdef DEBUG_LOG_GC
+    if (v.type == Value::STR)
+    {
+      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.str), v.v.str->get_mark() ? "is_marked" : "not_marked", v.to_string());
+    }
+    if (v.type == Value::TUPLE)
+    {
+      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.tuple), v.v.tuple->get_mark() ? "is_marked" : "not_marked", v.to_string());
+    }
+    if (v.type == Value::FUNC)
+    {
+      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.func), v.v.func->gc_mark ? "is_marked" : "not_marked", v.to_string());
+    }
+#endif
+    switch (v.type)
+    {
+    case Value::STR:
+      v.v.str->mark();
+      break;
+    case Value::TUPLE:
+      if (!v.v.tuple->get_mark())
+      {
+        gray_stack.push(&v);
+        v.v.tuple->mark();
+      }
+      break;
+    case Value::FUNC:
+      mark_subroutine(*v.v.func);
+      break;
+    default:
+      /*do nothing*/
+      break;
+    }
+  }
+  void VM::trace_references()
+  {
+    while (!gray_stack.empty())
+    {
+      Value* const v = gray_stack.top();
+      gray_stack.pop();
+      if (v->type == Value::TUPLE)
+      {
+        for (auto& tuple_elem : v->v.tuple->get_span())
+        {
+          mark_value(tuple_elem);
+        }
+      }
+    }
+  }
+  void VM::sweep()
+  {
+    // string_pool
+    std::erase_if(string_pool, [this](String* str) {
+#ifdef DEBUG_LOG_GC
+      std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(str), str->get_mark() ? "is_marked" : "not_marked", str->get_view());
+#endif
+      if (!str->get_mark())
+      {
+        String::free(std::bind_front(&VM::deallocator, this), str);
+        return true;
+      }
+      str->unmark();
+      return false;
+      });
+    // tuple_pool
+    std::erase_if(tuple_pool, [this](Tuple* tuple) {
+#ifdef DEBUG_LOG_GC
+      std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(tuple), tuple->get_mark() ? "is_marked" : "not_marked", tuple->get_mark() ? Value(tuple).to_string() : "<tuple elem may not avail>");
+#endif
+      if (!tuple->get_mark())
+      {
+        Tuple::free(std::bind_front(&VM::deallocator, this), tuple);
+        return true;
+      }
+      tuple->unmark();
+      return false;
+      });
+    // whiten all subroutines
+    for (auto& s : chunk->get_subroutines())
+    {
+      s.gc_mark = false;
     }
   }
 }

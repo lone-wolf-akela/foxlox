@@ -4,6 +4,7 @@
 #include <memory>
 #include <string_view>
 
+#include "value.h"
 #include "token.h"
 #include "stmt.h"
 
@@ -14,9 +15,11 @@ namespace foxlox
   {
   public:
     Parser(std::vector<Token>&& tokens);
+    void define(std::string_view name, CppFunc* func);
     AST parse();
     bool get_had_error() noexcept;
   private:
+    AST ast;
     const std::vector<Token> tokens;
     int current;
     bool had_error;

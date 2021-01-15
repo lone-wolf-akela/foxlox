@@ -96,7 +96,7 @@ namespace foxlox
   }
   uint16_t Chunk::add_constant(Value v)
   {
-    assert(v.type == Value::F64 || v.type == Value::I64);
+    assert(v.type == Value::F64 || v.type == Value::I64 || v.type == Value::CPP_FUNC);
 
     constants.push_back(v);
     const auto index = constants.size() - 1;

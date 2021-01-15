@@ -26,6 +26,10 @@ namespace foxlox
   {
     v = b;
   }
+  CompiletimeValue::CompiletimeValue(CppFunc* cppfunc)
+  {
+    v = cppfunc;
+  }
   std::string CompiletimeValue::to_string() const
   {
     if (std::holds_alternative<std::monostate>(v))

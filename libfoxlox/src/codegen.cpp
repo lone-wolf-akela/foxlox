@@ -227,6 +227,12 @@ namespace foxlox
     {
       emit(OP_BOOL, std::get<bool>(v));
     }
+    else if (std::holds_alternative<CppFunc*>(v))
+    {
+      const auto func = std::get<CppFunc*>(v);
+      const uint16_t constant = chunk.add_constant(Value(func));
+      emit(OP_CONSTANT, constant);
+    }
     else
     {
       throw FatalError("Unknown literal type.");

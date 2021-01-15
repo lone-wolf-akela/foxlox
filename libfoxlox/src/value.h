@@ -12,6 +12,8 @@
 #include <concepts>
 #include <type_traits>
 
+#include <gsl/gsl>
+
 namespace foxlox
 {
   class ValueTypeError : public std::exception 
@@ -125,12 +127,16 @@ namespace foxlox
 
   class Tuple;
   class Subroutine;
+  struct Value;
+  class VM;
+
+  using CppFunc = Value(VM&, std::span<Value>);
 
   struct Value
   {
     enum Type : uint8_t
     {
-      NIL, BOOL, F64, I64, STR, TUPLE, FUNC
+      NIL, BOOL, F64, I64, STR, TUPLE, FUNC, CPP_FUNC,
     } type;
 
     union
@@ -141,6 +147,7 @@ namespace foxlox
       String* str;
       Tuple* tuple;
       Subroutine* func;
+      CppFunc* cppfunc;
     } v;
 
 
@@ -152,8 +159,11 @@ namespace foxlox
     template<std::convertible_to<Tuple*> T>
     Value(T tuple) noexcept : type(TUPLE), v{ .tuple = tuple } {}
 
-    template<std::convertible_to<const Subroutine*> T>
-    Value(T tuple) noexcept : type(FUNC), v{ .func = tuple } {}
+    template<std::convertible_to<Subroutine*> T>
+    Value(T func) noexcept : type(FUNC), v{ .func = func } {}
+
+    template<std::convertible_to<CppFunc*> T>
+    Value(T cppfunc) noexcept : type(CPP_FUNC), v{ .cppfunc = cppfunc } {}
 
     template<remove_cv_same_as<bool> T>
     Value(T b) noexcept : type(BOOL), v{ .b = b } {}
@@ -169,8 +179,6 @@ namespace foxlox
     bool get_bool() const;
     std::string_view get_strview() const;
     std::span<const Value> get_tuplespan() const;
-    const Subroutine* get_func() const;
-    Subroutine* get_func();
 
     friend double operator/(const Value& l, const Value& r);
     friend Value operator*(const Value& l, const Value& r);

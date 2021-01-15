@@ -27,16 +27,22 @@ namespace foxlox
     current = 0;
     had_error = false;
   }
+  void Parser::define(std::string_view name, CppFunc* func)
+  {
+    Token tk_name(TokenType::IDENTIFIER, name, {}, 0);
+    auto initializer = std::make_unique<expr::Literal>(CompiletimeValue(func));
+    auto var_stmt = std::make_unique<stmt::Var>(std::move(tk_name), std::move(initializer));
+    ast.emplace_back(std::move(var_stmt));
+  }
   AST Parser::parse()
   {
     had_error = false;
 
-    std::vector<std::unique_ptr<stmt::Stmt>> statements;
     while (!is_at_end())
     {
-      statements.emplace_back(declaration());
+      ast.emplace_back(declaration());
     }
-    return std::move(statements);
+    return std::move(ast);
   }
   bool Parser::get_had_error() noexcept
   {

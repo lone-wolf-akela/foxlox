@@ -83,18 +83,6 @@ namespace foxlox
     return v.tuple->get_span();
   }
 
-  const Subroutine* Value::get_func() const
-  {
-    type_check(type, FUNC);
-    return v.func;
-  }
-
-  Subroutine* Value::get_func()
-  {
-    type_check(type, FUNC);
-    return v.func;
-  }
-
   std::partial_ordering operator<=>(const Value& l, const Value& r)
   {
     if (l.type == Value::NIL && r.type == Value::NIL)
@@ -252,6 +240,8 @@ namespace foxlox
     }
     case FUNC:
       return fmt::format("<fn {}>", v.func->get_funcname());
+    case CPP_FUNC:
+      return fmt::format("<native fn {}>", static_cast<void*>(v.cppfunc));
     default:
       throw FatalError(fmt::format("Unknown ValueType: {}", magic_enum::enum_name(type)).c_str());
     }

@@ -45,7 +45,7 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 
 find_package(Microsoft.GSL CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft.GSL::GSL)
+target_link_libraries(${PROJECT_NAME} PUBLIC Microsoft.GSL::GSL)
 
 find_package(fmt CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)

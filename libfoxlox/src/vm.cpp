@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <fmt/format.h>
+#include <magic_enum.hpp>
 
 #include <foxlox/except.h>
 #include <foxlox/debug.h>
@@ -403,17 +404,35 @@ namespace foxlox
         }
         case OP_CALL:
         {
-          auto func_to_call = top()->get_func();
-          pop();
+          const auto v = *top();
           const uint16_t num_of_params = read_uint16();
-          p_calltrace->subroutine = current_subroutine;
-          p_calltrace->ip = ip;
-          p_calltrace->stack_top = stack_top - num_of_params;
-          p_calltrace++;
+          pop();
+          if (v.type == Value::FUNC)
+          {
+            const auto func_to_call = v.v.func;
+            p_calltrace->subroutine = current_subroutine;
+            p_calltrace->ip = ip;
+            p_calltrace->stack_top = stack_top - num_of_params;
+            p_calltrace++;
 
-          assert(func_to_call->get_arity() == num_of_params);
-          current_subroutine = func_to_call;
-          ip = current_subroutine->get_code().begin();
+            assert(func_to_call->get_arity() == num_of_params);
+            current_subroutine = func_to_call;
+            ip = current_subroutine->get_code().begin();
+          }
+          else if (v.type == Value::CPP_FUNC)
+          {
+            const auto func_to_call = v.v.cppfunc;
+            const std::span<Value> params{ next(top(num_of_params)), next(top(0)) };
+            const Value result = func_to_call(*this, params);
+            pop(num_of_params);
+            push();
+            *top() = result;
+          }
+          else
+          {
+            throw ValueTypeError(fmt::format("Value of type {} is not callable.", 
+              magic_enum::enum_name(v.type)).c_str());
+          }    
           collect_garbage();
           break;
         }

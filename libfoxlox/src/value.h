@@ -1,5 +1,6 @@
 #pragma once
 
+#include <climits>
 #include <cassert>
 #include <cstdint>
 #include <string>
@@ -27,20 +28,42 @@ namespace foxlox
 
   template<typename F>
   concept Allocator = requires(F f) {
-    { f(size_t(0)) } -> std::convertible_to<char*>;
+    { f(std::ptrdiff_t{}) } -> std::convertible_to<char*>;
   };
   template<typename F>
   concept Deallocator = requires(F f) {
-    { f(reinterpret_cast<char*>(0), size_t(0)) };
+    { f(reinterpret_cast<char*>(0), std::ptrdiff_t{}) };
   };
 
-  struct String
+  template<typename T>
+  class SimpleObj
   {
-    size_t length;
-    char str[sizeof(length)];
+  public:
+    bool is_marked() const
+    {
+      return staic_cast<T*>(this)->length < 0;
+    }
+    void mark()
+    {
+      staic_cast<T*>(this)->length = staic_cast<T*>(this)->length | signbit_mask;
+    }
+    void unmark()
+    {
+      staic_cast<T*>(this)->length = staic_cast<T*>(this)->length & ~signbit_mask;
+    }
+    std::ptrdiff_t get_length() const
+    {
+      return staic_cast<T*>(this)->length & ~signbit_mask;
+    }
+  private:
+    static constexpr auto signbit_mask = 1ull << (sizeof std::ptrdiff_t * CHAR_BIT - 1);
+  };
 
+  class String : public SimpleObj<String>
+  {
+  public:
     template<Allocator F>
-    static gsl::not_null<String*> alloc(F allocator, size_t l)
+    static gsl::not_null<String*> alloc(F allocator, std::ptrdiff_t l)
     {
       const gsl::not_null<char*> data = l <= sizeof(String::str) ? allocator(sizeof(String)) :
         allocator(sizeof(String) + (l - sizeof(String::str)));
@@ -54,7 +77,7 @@ namespace foxlox
     template<Deallocator F>
     static void free(F deallocator, gsl::not_null<const String*> p)
     {
-      if (p->length <= sizeof(String::str))
+      if (p->get_length() <= sizeof(String::str))
       {
         GSL_SUPPRESS(type.1)
         deallocator(reinterpret_cast<const char*>(p.get()), sizeof(String));
@@ -62,7 +85,7 @@ namespace foxlox
       else
       {
         GSL_SUPPRESS(type.1)
-        deallocator(reinterpret_cast<const char*>(p.get()), sizeof(String) + (p->length - sizeof(String::str)));
+        deallocator(reinterpret_cast<const char*>(p.get()), sizeof(String) + (p->get_length() - sizeof(String::str)));
       }
     }
 
@@ -75,9 +98,13 @@ namespace foxlox
 #endif
     friend TStrViewComp operator<=>(const String& l, const String& r);
     friend bool operator==(const String& l, const String& r);
+
+  private:
+    std::ptrdiff_t length;
+    char str[sizeof(length)];
   };
 
-  struct Tuple;
+  class Tuple;
   class Subroutine;
 
   struct Value
@@ -144,12 +171,9 @@ namespace foxlox
     std::string to_string() const;
   };
 
-  struct Tuple
+  class Tuple : public SimpleObj<Tuple>
   {
-    size_t length;
-    Value elems[1];
-    const int a = sizeof(Value);
-
+  public:
     template<Allocator F>
     static gsl::not_null<Tuple*> alloc(F allocator, size_t l)
     {
@@ -165,7 +189,7 @@ namespace foxlox
     template<Deallocator F>
     static void free(F deallocator, gsl::not_null<const Tuple*> p)
     {
-      if (p->length == 0)
+      if (p->get_length() == 0)
       {
         GSL_SUPPRESS(type.1)
         deallocator(reinterpret_cast<const char*>(p.get()), sizeof(Tuple));
@@ -173,11 +197,14 @@ namespace foxlox
       else
       {
         GSL_SUPPRESS(type.1)
-        deallocator(reinterpret_cast<const char*>(p.get()), sizeof(Tuple) + (p->length - 1) * sizeof(Value));
+        deallocator(reinterpret_cast<const char*>(p.get()), sizeof(Tuple) + (p->get_length() - 1) * sizeof(Value));
       }
     }
 
     std::span<const Value> get_span() const noexcept;
+  private:
+    std::ptrdiff_t length;
+    Value elems[1];
   };
 
   template<Allocator F>

@@ -1,6 +1,7 @@
 #include <span>
 #include <functional>
 #include <utility>
+#include <iostream>
 
 #include <fmt/format.h>
 
@@ -98,6 +99,9 @@ namespace foxlox
       debugger.print_vm_stack(*this);
       debugger.disassemble_inst(*chunk, *current_subroutine, std::distance(current_subroutine->get_code().begin(), ip));
 #endif
+#ifdef DEBUG_STRESS_GC
+      collect_garbage();
+#endif
       try
       {
         const OpCode inst = read_inst();
@@ -119,6 +123,8 @@ namespace foxlox
           // return a nil
           push();
           *top() = Value();
+
+          collect_garbage();
           break;
         }
         case OP_RETURN_V:
@@ -133,7 +139,9 @@ namespace foxlox
           // return a val
           push();
           *top() = v;
-          return v;
+
+          collect_garbage();
+          break;
         }
         case OP_POP:
         {
@@ -338,6 +346,10 @@ namespace foxlox
         {
           const int16_t offset = read_int16();
           ip += offset;
+          if (offset < 0)
+          {
+            collect_garbage();
+          }
           break;
         }
         case OP_JUMP_IF_TRUE:
@@ -348,6 +360,10 @@ namespace foxlox
             ip += offset;
           }
           pop();
+          if (offset < 0)
+          {
+            collect_garbage();
+          }
           break;
         }
         case OP_JUMP_IF_FALSE:
@@ -358,6 +374,10 @@ namespace foxlox
             ip += offset;
           }
           pop();
+          if (offset < 0)
+          {
+            collect_garbage();
+          }
           break;
         }
         case OP_JUMP_IF_TRUE_NO_POP:
@@ -391,6 +411,7 @@ namespace foxlox
           assert(func_to_call->get_arity() == num_of_params);
           current_subroutine = func_to_call;
           ip = current_subroutine->get_code().begin();
+          collect_garbage();
           break;
         }
         default:
@@ -452,13 +473,38 @@ namespace foxlox
   {
     current_heap_size += l;
     GSL_SUPPRESS(r.11)
-    return new char[l];
+    char* const data = new char[l];
+#ifdef DEBUG_LOG_GC
+      std::cout << fmt::format("alloc size={} at {}; heap size: {} -> {}\n", l, static_cast<const void*>(data), current_heap_size - l, current_heap_size);
+#endif
+    return data;
   }
   void VM::deallocator(const char* p, size_t l)
   {
+#ifdef DEBUG_LOG_GC
+    std::cout << fmt::format("free size={} at {}; heap size: {} -> {}\n", l, static_cast<const void*>(p), current_heap_size, current_heap_size -l);
+#endif
     assert(l <= current_heap_size);
     current_heap_size -= l;
     GSL_SUPPRESS(r.11) GSL_SUPPRESS(i.11)
     delete[] p;
+  }
+  void VM::collect_garbage()
+  {
+#ifdef DEBUG_STRESS_GC
+    constexpr bool do_gc = true;
+#else
+    constexpr bool do_gc = true;
+#endif
+    if (do_gc)
+    {
+#ifdef DEBUG_LOG_GC
+      std::cout << "-- gc begin\n";
+#endif
+
+#ifdef DEBUG_LOG_GC
+      std::cout << "-- gc end\n";
+#endif
+    }
   }
 }

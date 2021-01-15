@@ -69,6 +69,7 @@ namespace foxlox
     char* allocator(size_t l);
     void deallocator(const char* p, size_t l);
     size_t current_heap_size;
+    void collect_garbage();
 
     friend class Debugger;
   };

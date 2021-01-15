@@ -90,19 +90,39 @@ namespace foxlox
     case U'}': add_token(TokenType::RIGHT_BRACE); break;
     case U',': add_token(TokenType::COMMA); break;
     case U'.': add_token(TokenType::DOT); break;
-    case U'-': add_token(TokenType::MINUS); break;
+    case U'-': 
+    {
+      if (match(U'-')) { add_token(TokenType::MINUS_MINUS); }
+      else if (match(U'=')) { add_token(TokenType::MINUS_EQUAL); }
+      else { add_token(TokenType::MINUS); }
+      break;
+    }
     case U'+':
     {
       if (match(U'+')) { add_token(TokenType::PLUS_PLUS); }
+      else if (match(U'=')) { add_token(TokenType::PLUS_EQUAL); }
       else { add_token(TokenType::PLUS); }
       break;
     }
     case U';': add_token(TokenType::SEMICOLON); break;
-    case U'*': add_token(TokenType::STAR); break;
+    case U'*': 
+    {
+      if (match(U'=')) { add_token(TokenType::STAR_EQUAL); }
+      else { add_token(TokenType::STAR); }
+      break;
+    }
     case U'/':
     {
-      if (match(U'/')) { add_token(TokenType::SLASH_SLASH); }
-      else { add_token(TokenType::SLASH); }
+      if (match(U'/')) 
+      { 
+        if (match(U'=')) { add_token(TokenType::SLASH_SLASH_EQUAL); }
+        else { add_token(TokenType::SLASH_SLASH); }
+      }
+      else 
+      { 
+        if (match(U'=')) { add_token(TokenType::SLASH_EQUAL); }
+        else { add_token(TokenType::SLASH); }
+      }
       break;
     }
     case U':': add_token(TokenType::COLON); break;

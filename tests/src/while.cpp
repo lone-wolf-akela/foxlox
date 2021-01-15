@@ -13,7 +13,7 @@ TEST(while_, syntax)
     auto [res, chunk] = compile(R"(
 var r = ();
 var c = 0;
-while (c < 3) r = r + (++c);
+while (c < 3) r += (++c);
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
@@ -33,7 +33,7 @@ return r;
 var r = ();
 var a = 0;
 while (a < 3) {
-  r = r + a;
+  r += a;
   ++a;
 }
 return r;

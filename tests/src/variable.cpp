@@ -28,13 +28,13 @@ TEST(variable, in_middle_of_block)
 var r = ();
 {
   var a = "a";
-  r = r + a; # expect: "a"
+  r += a; # expect: "a"
   var b = a + " b";
-  r = r + b; # expect: "a b"
+  r += b; # expect: "a b"
   var c = a + " c";
-  r = r + c; # expect: "a c"
+  r += c; # expect: "a c"
   var d = b + " d";
-  r = r + d; # expect: "a b d"
+  r += d; # expect: "a b d"
 }
 return r;
 )");
@@ -60,11 +60,11 @@ TEST(variable, scope_reuse_in_different_blocks)
 var r = ();
 {
   var a = "first";
-  r = r + a; # expect: first
+  r += a; # expect: first
 }
 {
   var a = "second";
-  r = r + a; # expect: second
+  r += a; # expect: second
 }
 return r;
 )");
@@ -87,9 +87,9 @@ var r = ();
 {
   var a = "outer";
   {
-    r = r + a; # expect: outer
+    r += a; # expect: outer
     var a = "inner";
-    r = r + a; # expect: inner
+    r += a; # expect: inner
   }
 }
 return r;
@@ -113,9 +113,9 @@ var r = ();
 var a = "global";
 {
   var a = "shadow";
-  r = r + a; # expect: shadow
+  r += a; # expect: shadow
 }
-r = r + a; # expect: global
+r += a; # expect: global
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
@@ -138,9 +138,9 @@ var r = ();
   var a = "local";
   {
     var a = "shadow";
-    r = r + a; # expect: shadow
+    r += a; # expect: shadow
   }
-  r = r + a; # expect: local
+  r += a; # expect: local
 }
 return r;
 )");

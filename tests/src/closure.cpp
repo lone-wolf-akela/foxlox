@@ -16,16 +16,16 @@ var g;
 {
   var local = "local";
   fun f_() {
-    r = r + local;
+    r += local;
     local = "after f";
-    r = r + local;
+    r += local;
   }
   f = f_;
 
   fun g_() {
-    r = r + local;
+    r += local;
     local = "after g";
-    r = r + local;
+    r += local;
   }
   g = g_;
 }
@@ -68,9 +68,9 @@ var a = "global";
   }
   var a = "inner";
   assign();
-  r = r + a; # expect: inner
+  r += a; # expect: inner
 }
-r = r + a; # expect: assigned
+r += a; # expect: assigned
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
@@ -124,8 +124,8 @@ fun f() {
   var a = "a";
   var b = "b";
   fun g() {
-    r = r + b; # expect: b
-    r = r + a; # expect: a
+    r += b; # expect: b
+    r += a; # expect: a
   }
   g();
 }
@@ -182,9 +182,9 @@ fun f1() {
     fun f3() {
       var c = "c";
       fun f4() {
-        r = r + a;
-        r = r + b;
-        r = r + c;
+        r += a;
+        r += b;
+        r += c;
       }
       f = f4;
     }
@@ -245,8 +245,8 @@ var f;
 {
   var a = "a";
   fun f_() {
-    r = r + a;
-    r = r + a;
+    r += a;
+    r += a;
   }
   f = f_;
 }
@@ -307,11 +307,11 @@ var r = ();
   var foo = "closure";
   fun f() {
     {
-      r = r + foo; # expect: closure
+      r += foo; # expect: closure
       var foo = "shadow";
-      r = r + foo; # expect: shadow
+      r += foo; # expect: shadow
     }
-    r = r + foo; # expect: closure
+    r += foo; # expect: closure
   }
   f();
 }

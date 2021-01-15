@@ -16,11 +16,11 @@ var r = ();
 
   # New variable is in inner scope.
   for (var i = 0; i < 1; ++i) {
-    r = r + i; # expect: 0
+    r += i; # expect: 0
 
     # Loop body is in second inner scope.
     var i = -1;
-    r = r + i; # expect: -1
+    r += i; # expect: -1
   }
 }
 return r;
@@ -44,11 +44,11 @@ var r = ();
 
   # Goes out of scope after loop.
   var i = "after";
-  r = r + i; # expect: after
+  r += i; # expect: after
 
   # Can reuse an existing variable.
   for (i = 0; i < 1; i = ++i) {
-    r = r + i; # expect: 0
+    r += i; # expect: 0
   }
 }
 return r;
@@ -72,7 +72,7 @@ TEST(for_, syntax)
   {
     auto [res, chunk] = compile(R"(
 var r = ();
-for (var c = 0; c < 3;) r = r + (++c);
+for (var c = 0; c < 3;) r += (++c);
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
@@ -91,7 +91,7 @@ return r;
     auto [res, chunk] = compile(R"(
 var r = ();
 for (var a = 0; a < 3; ++a) {
-  r = r + a;
+  r += a;
 }
 return r;
 )");
@@ -121,7 +121,7 @@ for (;;) return "done";
     auto [res, chunk] = compile(R"(
 var r = ();
 var i = 0;
-for (; i < 2; ++i) r = r + i;
+for (; i < 2; ++i) r += i;
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
@@ -140,7 +140,7 @@ return r;
     auto [res, chunk] = compile(R"(
 var r = ();
 for (var i = 0;; ++i) {
-  r = r + i;
+  r += i;
   if (i >= 2) return r;
 }
 )");
@@ -160,7 +160,7 @@ for (var i = 0;; ++i) {
     auto [res, chunk] = compile(R"(
 var r = ();
 for (var i = 0; i < 2;) {
-  r = r + i;
+  r += i;
   ++i;
 }
 return r;

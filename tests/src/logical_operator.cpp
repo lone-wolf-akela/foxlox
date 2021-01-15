@@ -63,8 +63,8 @@ var r = ();
 var a = "before";
 var b = "before";
 (a = true) and (b = false) and (a = "bad");
-r = r + a; # expect: true
-r = r + b; # expect: false
+r += a; # expect: true
+r += b; # expect: false
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
@@ -188,8 +188,8 @@ var r = ();
 var a = "before";
 var b = "before";
 (a = false) or (b = true) or (a = "bad");
-r = r + a; # expect: false
-r = r + b; # expect: true
+r += a; # expect: false
+r += b; # expect: true
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);

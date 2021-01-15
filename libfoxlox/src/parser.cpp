@@ -200,11 +200,28 @@ namespace foxlox
   std::unique_ptr<expr::Expr> Parser::assignment()
   {
     auto expr = or_expr();
-    if (match(TokenType::EQUAL))
+    if (match(
+      TokenType::EQUAL, 
+      TokenType::PLUS_EQUAL, 
+      TokenType::MINUS_EQUAL,
+      TokenType::STAR_EQUAL,
+      TokenType::SLASH_EQUAL,
+      TokenType::SLASH_SLASH_EQUAL))
     {
       auto equals = previous();
       auto value = assignment();
-
+      // desugaring
+      if (equals.type != TokenType::EQUAL)
+      {
+        TokenType tk = 
+          equals.type == TokenType::PLUS_EQUAL ? TokenType::PLUS :
+          equals.type == TokenType::MINUS_EQUAL ? TokenType::MINUS :
+          equals.type == TokenType::STAR_EQUAL ? TokenType::STAR :
+          equals.type == TokenType::SLASH_EQUAL ? TokenType::SLASH :
+          TokenType::SLASH_SLASH;
+        value = std::make_unique<expr::Binary>(std::move(expr->clone()), 
+          Token(tk, equals.lexeme, equals.literal, equals.line), std::move(value));
+      }
       auto p_expr = expr.get();
       if (auto variable = dynamic_cast<expr::Variable*>(p_expr); variable != nullptr)
       {
@@ -292,25 +309,29 @@ namespace foxlox
       std::unique_ptr<expr::Expr> right = unary();
       return std::make_unique<expr::Unary>(std::move(op), std::move(right));
     }
-    if (match(TokenType::PLUS_PLUS))
+    if (match(TokenType::PLUS_PLUS, TokenType::MINUS_MINUS))
     {
       Token op = previous();
       //de-sugarlize
       std::unique_ptr<expr::Expr> right = unary();
       auto literal_one = std::make_unique<expr::Literal>(CompiletimeValue(int64_t(1)));
-      Token tk_add(TokenType::PLUS, op.lexeme, op.literal, op.line);
+      Token tk(
+        op.type == TokenType::PLUS_PLUS ? TokenType::PLUS : TokenType::MINUS,
+        op.lexeme, 
+        op.literal, 
+        op.line);
       if (auto variable = dynamic_cast<expr::Variable*>(right.get()); variable != nullptr)
       {
         auto assigned_to = variable->name;
-        auto add = std::make_unique<expr::Binary>(std::move(right), std::move(tk_add), std::move(literal_one));
-        return std::make_unique<expr::Assign>(std::move(assigned_to), std::move(add));
+        auto bin = std::make_unique<expr::Binary>(std::move(right), std::move(tk), std::move(literal_one));
+        return std::make_unique<expr::Assign>(std::move(assigned_to), std::move(bin));
       }
       if (auto get = dynamic_cast<expr::Get*>(right.get()); get != nullptr)
       {
         auto set_to_obj = get->obj->clone();
         auto set_to_name = get->name;
-        auto add = std::make_unique<expr::Binary>(std::move(right), std::move(tk_add), std::move(literal_one));
-        return std::make_unique<expr::Set>(std::move(set_to_obj), std::move(set_to_name), std::move(add));
+        auto bin = std::make_unique<expr::Binary>(std::move(right), std::move(tk), std::move(literal_one));
+        return std::make_unique<expr::Set>(std::move(set_to_obj), std::move(set_to_name), std::move(bin));
       }
     }
     return call();

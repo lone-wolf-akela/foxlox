@@ -30,7 +30,7 @@ var a = "outer";
 var r = ();
 {
   var a = "inner";
-  r = r + a;
+  r += a;
 }
 return r + a; 
 )");

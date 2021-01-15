@@ -7,7 +7,7 @@
 
 #include <gsl/gsl>
 
-#include <foxlox/foxexcept.h>
+#include <foxlox/except.h>
 #include "token.h"
 #include "compiletime_value.h"
 

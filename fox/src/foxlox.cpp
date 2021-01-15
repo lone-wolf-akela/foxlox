@@ -12,7 +12,7 @@
 #include <foxlox/chunk.h>
 #include <foxlox/vm.h>
 #include <foxlox/compiler.h>
-#include <foxlox/foxexcept.h>
+#include <foxlox/except.h>
 
 using namespace foxlox;
 

@@ -2,7 +2,7 @@
 
 #include <map>
 
-#include <foxlox/foxexcept.h>
+#include <foxlox/except.h>
 #include <foxlox/chunk.h>
 
 #include "common.h"

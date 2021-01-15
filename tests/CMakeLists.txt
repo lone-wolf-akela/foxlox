@@ -22,7 +22,8 @@ target_sources(${PROJECT_NAME} PRIVATE
    "src/while.cpp" 
    "src/for.cpp" 
    "src/logical_operator.cpp" 
-   "src/tuple.cpp")
+   "src/tuple.cpp"
+   "src/closure.cpp")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE libfoxlox)
 

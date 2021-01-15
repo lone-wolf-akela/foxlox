@@ -1,24 +1,63 @@
+#include <concepts>
+
 #include <gsl/gsl>
 #include <fmt/format.h>
 #include <magic_enum.hpp>
 
-#include <foxlox/foxexcept.h>
+#include <foxlox/except.h>
 
 #include <foxlox/chunk.h>
 #include "value.h"
+
+namespace
+{
+  using namespace foxlox;
+
+  template<typename ... Args> requires (std::same_as<Args, Value::Type> && ...)
+  ValueTypeError exception_wrongtype_binop(Value::Type got1, Value::Type got2, Args ... expected)
+  {
+    auto msg_expected = (fmt::format("{}, ", magic_enum::enum_name(expected)) + ...);
+    msg_expected.at(ssize(msg_expected) - 2) = ';';
+    auto msg = fmt::format("Value type error. Expected: {}got: {} and {}.", msg_expected, magic_enum::enum_name(got1), magic_enum::enum_name(got2));
+    return ValueTypeError(msg.c_str());
+  }
+
+  template<typename ... Args> requires (std::same_as<Args, Value::Type> && ...)
+  ValueTypeError exception_wrongtype(Value::Type got, Args ... expected)
+  {
+    auto msg_expected = (fmt::format("{}, ", magic_enum::enum_name(expected)) + ...);
+    msg_expected.at(ssize(msg_expected) - 2) = ';';
+    auto msg = fmt::format("Value type error. Expected: {}got: {}.", msg_expected, magic_enum::enum_name(got));
+    return ValueTypeError(msg.c_str());
+  }
+
+  constexpr void type_check(Value::Type got, Value::Type expected)
+  {
+    if (got != expected)
+    {
+      throw exception_wrongtype(got, expected);
+    }
+  }
+}
 
 namespace foxlox
 {
   double Value::get_double() const
   {
     if (type == F64) { return v.f64; }
-    assert(type == I64);
+    if (type != I64)
+    {
+      throw exception_wrongtype(type, I64, F64);
+    }
     return static_cast<double>(v.i64);
   }
   int64_t Value::get_int64() const
   {
     if (type == I64) { return v.i64; }
-    assert(type == F64);
+    if (type != F64)
+    {
+      throw exception_wrongtype(type, I64, F64);
+    }
     return static_cast<int64_t>(v.f64);
   }
 
@@ -34,19 +73,19 @@ namespace foxlox
 
   std::string_view Value::get_strview() const
   {
-    assert(type == STR);
+    type_check(type, STR);
     return v.str->get_view();
   }
 
   std::span<const Value> Value::get_tuplespan() const
   {
-    assert(type == TUPLE);
+    type_check(type, TUPLE);
     return v.tuple->get_span();
   }
 
   const Subroutine* Value::get_func() const
   {
-    assert(type == FUNC);
+    type_check(type, FUNC);
     return v.func;
   }
 
@@ -107,8 +146,7 @@ namespace foxlox
     {
       return l.get_double() / r.get_double();
     }
-    assert(false);
-    return {};
+    throw exception_wrongtype_binop(l.type, r.type, Value::I64, Value::F64);
   }
   Value operator*(const Value& l, const Value& r)
   {
@@ -121,8 +159,7 @@ namespace foxlox
     {
       return Value(l.get_double() * r.get_double());
     }
-    assert(false);
-    return {};
+    throw exception_wrongtype_binop(l.type, r.type, Value::I64, Value::F64);
   }
   Value operator+(const Value& l, const Value& r)
   {
@@ -135,8 +172,7 @@ namespace foxlox
     {
       return Value(l.get_double() + r.get_double());
     }
-    assert(false);
-    return {};
+    throw exception_wrongtype_binop(l.type, r.type, Value::I64, Value::F64);
   }
   Value operator-(const Value& l, const Value& r)
   {
@@ -149,18 +185,20 @@ namespace foxlox
     {
       return Value(l.get_double() - r.get_double());
     }
-    assert(false);
-    return {};
+    throw exception_wrongtype_binop(l.type, r.type, Value::I64, Value::F64);
   }
   Value operator-(const Value& val)
   {
     if (val.type == Value::F64) { return Value(-val.v.f64); }
-    assert(val.type == Value::I64);
+    if (val.type != Value::I64)
+    {
+      throw exception_wrongtype(val.type, Value::I64, Value::F64);
+    }
     return Value(-val.v.i64);
   }
   bool operator!(const Value& val)
   {
-    assert(val.type == Value::BOOL);
+    type_check(val.type, Value::BOOL);
     return !val.v.b;
   }
   int64_t intdiv(const Value& l, const Value& r)

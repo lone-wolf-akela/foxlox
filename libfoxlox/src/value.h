@@ -13,6 +13,12 @@
 
 namespace foxlox
 {
+  class ValueTypeError : public std::exception 
+  { 
+  public:
+    using std::exception::exception; 
+  };
+
   template<typename T1, typename T2>
   concept remove_cv_same_as = std::same_as<std::remove_cv_t<T1>, std::remove_cv_t<T2>>;
 
@@ -76,7 +82,7 @@ namespace foxlox
 
   struct Value
   {
-    enum : uint8_t
+    enum Type : uint8_t
     {
       NIL, BOOL, F64, I64, STR, TUPLE, FUNC
     } type;

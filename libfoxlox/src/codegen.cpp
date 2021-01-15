@@ -304,6 +304,8 @@ namespace foxlox
   }
   void CodeGen::visit_call_expr(gsl::not_null<expr::Call*> expr)
   {
+    current_line = expr->paren.line;
+
     const auto enclosing_stack_size = current_stack_size;
     for (auto& e : expr->arguments)
     {
@@ -364,6 +366,8 @@ namespace foxlox
   }
   void CodeGen::visit_if_stmt(gsl::not_null<stmt::If*> stmt)
   {
+    current_line = stmt->right_paren.line;
+
     compile(stmt->condition.get());
     const auto then_jump_ip = emit_jump(OP_JUMP_IF_FALSE);
     pop_stack();
@@ -388,6 +392,8 @@ namespace foxlox
   }
   void CodeGen::visit_while_stmt(gsl::not_null<stmt::While*> stmt)
   {
+    current_line = stmt->right_paren.line;
+
     const auto start = prepare_loop();
 
     compile(stmt->condition.get());
@@ -438,10 +444,9 @@ namespace foxlox
 
     for (auto [i, store_type] : stmt->param_store_types | ranges::views::enumerate)
     {
+      push_stack();
       if (store_type == stmt::VarStoreType::Stack)
       {
-        // no code here, just let it stays in stack
-        push_stack();
         value_idxs.emplace(
           VarDeclareAtFunc{ stmt, gsl::narrow_cast<int>(i) },
           ValueIdx{ stmt::VarStoreType::Stack, gsl::narrow_cast<uint16_t>(current_stack_size - 1) }
@@ -460,6 +465,17 @@ namespace foxlox
     const auto enclosing_subroutine_idx = current_subroutine_idx;
     current_subroutine_idx = subroutine_idx;
 
+    // note: if one of the func args is a static value
+    // we should do a store when the function is called
+    for (auto [i, store_type] : stmt->param_store_types | ranges::views::enumerate)
+    {
+      if (store_type == stmt::VarStoreType::Static)
+      {
+        emit(OP_LOAD_STACK, gsl::narrow_cast<uint16_t>(stmt->param.size() - i - 1));
+        emit(OP_STORE_STATIC, value_idxs.at(VarDeclareAtFunc{ stmt, gsl::narrow_cast<int>(i) }).idx);
+        emit(OP_POP);
+      }
+    }
     for (auto& s : stmt->body)
     {
       compile(s.get());
@@ -500,6 +516,8 @@ namespace foxlox
   }
   void CodeGen::visit_for_stmt(gsl::not_null<stmt::For*> stmt)
   {
+    current_line = stmt->right_paren.line;
+
     const auto stack_size_before_initializer = current_stack_size;
 
     compile(stmt->initializer.get());

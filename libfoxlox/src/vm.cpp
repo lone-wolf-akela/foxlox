@@ -4,7 +4,7 @@
 
 #include <fmt/format.h>
 
-#include <foxlox/foxexcept.h>
+#include <foxlox/except.h>
 #include <foxlox/debug.h>
 #include <foxlox/vm.h>
 
@@ -98,302 +98,312 @@ namespace foxlox
       debugger.print_vm_stack(*this);
       debugger.disassemble_inst(*chunk, *current_subroutine, std::distance(current_subroutine->get_code().begin(), ip));
 #endif
-      const OpCode inst = read_inst();
-      switch (inst)
+      try
       {
-      // N
-      case OP_NOP:
-      {
-        /* do nothing */
-        break;
-      }
-      case OP_RETURN:
-      {
-        if (p_calltrace == calltrace.begin()) { return Value(); }
-        p_calltrace--;
-        current_subroutine = p_calltrace->subroutine;
-        ip = p_calltrace->ip;
-        stack_top = p_calltrace->stack_top;
-        // return a nil
-        push();
-        *top() = Value();
-        break;
-      }
-      case OP_RETURN_V:
-      {
-        const auto v = *top();
+        const OpCode inst = read_inst();
+        switch (inst)
+        {
+          // N
+        case OP_NOP:
+        {
+          /* do nothing */
+          break;
+        }
+        case OP_RETURN:
+        {
+          if (p_calltrace == calltrace.begin()) { return Value(); }
+          p_calltrace--;
+          current_subroutine = p_calltrace->subroutine;
+          ip = p_calltrace->ip;
+          stack_top = p_calltrace->stack_top;
+          // return a nil
+          push();
+          *top() = Value();
+          break;
+        }
+        case OP_RETURN_V:
+        {
+          const auto v = *top();
 
-        if (p_calltrace == calltrace.begin()) { return v; }
-        p_calltrace--;
-        current_subroutine = p_calltrace->subroutine;
-        ip = p_calltrace->ip;
-        stack_top = p_calltrace->stack_top;
-        // return a val
-        push();
-        *top() = v;
-        return v;
-      }
-      case OP_POP:
-      {
-        pop();
-        break;
-      }
-      case OP_POP_N:
-      {
-        pop(read_uint16());
-        break;
-      }
-      case OP_NEGATE:
-      {
-        *top() = -*top();
-        break;
-      }
-      case OP_NOT:
-      {
-        *top() = !*top();
-        break;
-      }
-      case OP_ADD:
-      {
-        const auto l = top(1);
-        const auto r = top(0);
-        if (l->type == Value::STR && r->type == Value::STR)
-        {
-          *l = Value::strcat(std::bind_front(&VM::allocator, this), *l, *r);
-          string_pool.push_back(l->v.str);
+          if (p_calltrace == calltrace.begin()) { return v; }
+          p_calltrace--;
+          current_subroutine = p_calltrace->subroutine;
+          ip = p_calltrace->ip;
+          stack_top = p_calltrace->stack_top;
+          // return a val
+          push();
+          *top() = v;
+          return v;
         }
-        else if (l->type == Value::TUPLE || r->type == Value::TUPLE)
+        case OP_POP:
         {
-          *l = Value::tuplecat(std::bind_front(&VM::allocator, this), *l, *r);
-          tuple_pool.push_back(l->v.tuple);
+          pop();
+          break;
         }
-        else
+        case OP_POP_N:
         {
-          *l = *l + *r;
+          pop(read_uint16());
+          break;
         }
-        pop();
-        break;
-      }
-      case OP_SUBTRACT:
-      {
-        const auto l = top(1);
-        const auto r = top(0);
-        *l = *l - *r;
-        pop();
-        break;
-      }
-      case OP_MULTIPLY:
-      {
-        const auto l = top(1);
-        const auto r = top(0);
-        *l = *l * *r;
-        pop();
-        break;
-      }
-      case OP_DIVIDE:
-      {
-        const auto l = top(1);
-        const auto r = top(0);
-        *l = *l / *r;
-        pop();
-        break;
-      }
-      case OP_INTDIV:
-      {
-        const auto l = top(1);
-        const auto r = top(0);
-        *l = intdiv(*l, *r);
-        pop();
-        break;
-      }
-      case OP_EQ:
-      {
-        const auto l = top(1);
-        const auto r = top(0);
-        *l = *l == *r;
-        pop();
-        break;
-      }
-      case OP_NE:
-      {
-        const auto l = top(1);
-        const auto r = top(0);
-        *l = *l != *r;
-        pop();
-        break;
-      }
-      case OP_GT:
-      {
-        const auto l = top(1);
-        const auto r = top(0);
-        *l = *l > *r;
-        pop();
-        break;
-      }
-      case OP_GE:
-      {
-        const auto l = top(1);
-        const auto r = top(0);
-        *l = *l >= *r;
-        pop();
-        break;
-      }
-      case OP_LT:
-      {
-        const auto l = top(1);
-        const auto r = top(0);
-        *l = *l < *r;
-        pop();
-        break;
-      }
-      case OP_LE:
-      {
-        const auto l = top(1);
-        const auto r = top(0);
-        *l = *l <= *r;
-        pop();
-        break;
-      }
-      case OP_NIL:
-      {
-        push();
-        *top() = Value();
-        break;
-      }
-      case OP_CONSTANT:
-      {
-        push();
-        const std::span constants = chunk->get_constants();
-        *top() = gsl::at(constants, read_uint16());
-        break;
-      }
-      case OP_FUNC:
-      {
-        push();
-        const std::span subroutines = chunk->get_subroutines();
-        *top() = &gsl::at(subroutines, read_uint16());
-        break;
-      }
-      case OP_STRING:
-      {
-        push();
-        const std::span strings = chunk->get_const_strings();
-        *top() = gsl::at(strings, read_uint16());
-        break;
-      }
-      case OP_BOOL:
-      {
-        push();
-        *top() = Value(read_bool());
-        break;
-      }
-      case OP_TUPLE:
-      {
-        // note: n can be 0
-        const auto n = read_uint16();
-        const auto p = Tuple::alloc(std::bind_front(&VM::allocator, this), n);
-        for (gsl::index i = 0; i < n; i++)
+        case OP_NEGATE:
         {
-          GSL_SUPPRESS(bounds.4) GSL_SUPPRESS(bounds.2)
-          p->elems[i] = *top(gsl::narrow_cast<uint16_t>(n - i - 1));
+          *top() = -*top();
+          break;
         }
-        tuple_pool.push_back(p);
-        pop(n);
-        push();
-        *top() = p;
-        break;
-      }
-      case OP_LOAD_STACK:
-      {
-        const auto idx = read_uint16();
-        const auto v = *top(idx);
-        push();
-        *top() = v;
-        break;
-      }
-      case OP_STORE_STACK:
-      {
-        const auto idx = read_uint16();
-        const auto r = top();
-        *top(idx) = *r;
-        break;
-      }
-      case OP_LOAD_STATIC:
-      {
-        const auto idx = read_uint16();
-        push();
-        *top() = static_value_pool.at(idx);
-        break;
-      }
-      case OP_STORE_STATIC:
-      {
-        const auto idx = read_uint16();
-        const auto r = top();
-        static_value_pool.at(idx) = *r;
-        break;
-      }
-      case OP_JUMP:
-      {
-        const int16_t offset = read_int16();
-        ip += offset;
-        break;
-      }
-      case OP_JUMP_IF_TRUE:
-      {
-        const int16_t offset = read_int16();
-        if (top()->get_bool() == true)
+        case OP_NOT:
         {
+          *top() = !*top();
+          break;
+        }
+        case OP_ADD:
+        {
+          const auto l = top(1);
+          const auto r = top(0);
+          if (l->type == Value::STR && r->type == Value::STR)
+          {
+            *l = Value::strcat(std::bind_front(&VM::allocator, this), *l, *r);
+            string_pool.push_back(l->v.str);
+          }
+          else if (l->type == Value::TUPLE || r->type == Value::TUPLE)
+          {
+            *l = Value::tuplecat(std::bind_front(&VM::allocator, this), *l, *r);
+            tuple_pool.push_back(l->v.tuple);
+          }
+          else
+          {
+            *l = *l + *r;
+          }
+          pop();
+          break;
+        }
+        case OP_SUBTRACT:
+        {
+          const auto l = top(1);
+          const auto r = top(0);
+          *l = *l - *r;
+          pop();
+          break;
+        }
+        case OP_MULTIPLY:
+        {
+          const auto l = top(1);
+          const auto r = top(0);
+          *l = *l * *r;
+          pop();
+          break;
+        }
+        case OP_DIVIDE:
+        {
+          const auto l = top(1);
+          const auto r = top(0);
+          *l = *l / *r;
+          pop();
+          break;
+        }
+        case OP_INTDIV:
+        {
+          const auto l = top(1);
+          const auto r = top(0);
+          *l = intdiv(*l, *r);
+          pop();
+          break;
+        }
+        case OP_EQ:
+        {
+          const auto l = top(1);
+          const auto r = top(0);
+          *l = *l == *r;
+          pop();
+          break;
+        }
+        case OP_NE:
+        {
+          const auto l = top(1);
+          const auto r = top(0);
+          *l = *l != *r;
+          pop();
+          break;
+        }
+        case OP_GT:
+        {
+          const auto l = top(1);
+          const auto r = top(0);
+          *l = *l > *r;
+          pop();
+          break;
+        }
+        case OP_GE:
+        {
+          const auto l = top(1);
+          const auto r = top(0);
+          *l = *l >= *r;
+          pop();
+          break;
+        }
+        case OP_LT:
+        {
+          const auto l = top(1);
+          const auto r = top(0);
+          *l = *l < *r;
+          pop();
+          break;
+        }
+        case OP_LE:
+        {
+          const auto l = top(1);
+          const auto r = top(0);
+          *l = *l <= *r;
+          pop();
+          break;
+        }
+        case OP_NIL:
+        {
+          push();
+          *top() = Value();
+          break;
+        }
+        case OP_CONSTANT:
+        {
+          push();
+          const std::span constants = chunk->get_constants();
+          *top() = gsl::at(constants, read_uint16());
+          break;
+        }
+        case OP_FUNC:
+        {
+          push();
+          const std::span subroutines = chunk->get_subroutines();
+          *top() = &gsl::at(subroutines, read_uint16());
+          break;
+        }
+        case OP_STRING:
+        {
+          push();
+          const std::span strings = chunk->get_const_strings();
+          *top() = gsl::at(strings, read_uint16());
+          break;
+        }
+        case OP_BOOL:
+        {
+          push();
+          *top() = Value(read_bool());
+          break;
+        }
+        case OP_TUPLE:
+        {
+          // note: n can be 0
+          const auto n = read_uint16();
+          const auto p = Tuple::alloc(std::bind_front(&VM::allocator, this), n);
+          for (gsl::index i = 0; i < n; i++)
+          {
+            GSL_SUPPRESS(bounds.4) GSL_SUPPRESS(bounds.2)
+              p->elems[i] = *top(gsl::narrow_cast<uint16_t>(n - i - 1));
+          }
+          tuple_pool.push_back(p);
+          pop(n);
+          push();
+          *top() = p;
+          break;
+        }
+        case OP_LOAD_STACK:
+        {
+          const auto idx = read_uint16();
+          const auto v = *top(idx);
+          push();
+          *top() = v;
+          break;
+        }
+        case OP_STORE_STACK:
+        {
+          const auto idx = read_uint16();
+          const auto r = top();
+          *top(idx) = *r;
+          break;
+        }
+        case OP_LOAD_STATIC:
+        {
+          const auto idx = read_uint16();
+          push();
+          *top() = static_value_pool.at(idx);
+          break;
+        }
+        case OP_STORE_STATIC:
+        {
+          const auto idx = read_uint16();
+          const auto r = top();
+          static_value_pool.at(idx) = *r;
+          break;
+        }
+        case OP_JUMP:
+        {
+          const int16_t offset = read_int16();
           ip += offset;
+          break;
         }
-        pop();
-        break;
-      }
-      case OP_JUMP_IF_FALSE:
-      {
-        const int16_t offset = read_int16();
-        if (top()->get_bool() == false)
+        case OP_JUMP_IF_TRUE:
         {
-          ip += offset;
+          const int16_t offset = read_int16();
+          if (top()->get_bool() == true)
+          {
+            ip += offset;
+          }
+          pop();
+          break;
         }
-        pop();
-        break;
-      }
-      case OP_JUMP_IF_TRUE_NO_POP:
-      {
-        const int16_t offset = read_int16();
-        if (top()->get_bool() == true)
+        case OP_JUMP_IF_FALSE:
         {
-          ip += offset;
+          const int16_t offset = read_int16();
+          if (top()->get_bool() == false)
+          {
+            ip += offset;
+          }
+          pop();
+          break;
         }
-        break;
-      }
-      case OP_JUMP_IF_FALSE_NO_POP:
-      {
-        const int16_t offset = read_int16();
-        if (top()->get_bool() == false)
+        case OP_JUMP_IF_TRUE_NO_POP:
         {
-          ip += offset;
+          const int16_t offset = read_int16();
+          if (top()->get_bool() == true)
+          {
+            ip += offset;
+          }
+          break;
         }
-        break;
+        case OP_JUMP_IF_FALSE_NO_POP:
+        {
+          const int16_t offset = read_int16();
+          if (top()->get_bool() == false)
+          {
+            ip += offset;
+          }
+          break;
+        }
+        case OP_CALL:
+        {
+          const auto func_to_call = top()->get_func();
+          pop();
+          const uint16_t num_of_params = read_uint16();
+          p_calltrace->subroutine = current_subroutine;
+          p_calltrace->ip = ip;
+          p_calltrace->stack_top = stack_top - num_of_params;
+          p_calltrace++;
+
+          assert(func_to_call->get_arity() == num_of_params);
+          current_subroutine = func_to_call;
+          ip = current_subroutine->get_code().begin();
+          break;
+        }
+        default:
+          assert(false);
+          break;
+        }
       }
-      case OP_CALL:
+      catch(const ValueTypeError& e)
       {
-        const auto func_to_call = top()->get_func();
-        pop();
-        const uint16_t num_of_params = read_uint16();
-        p_calltrace->subroutine = current_subroutine;
-        p_calltrace->ip = ip;
-        p_calltrace->stack_top = stack_top - num_of_params;
-        p_calltrace++;
-        
-        assert(func_to_call->get_arity() == num_of_params);
-        current_subroutine = func_to_call;
-        ip = current_subroutine->get_code().begin();
-        break;
-      }
-      default:
-        assert(false);
-        break;
+        const auto code_idx = std::distance(current_subroutine->get_code().begin(), ip);
+        const auto line_num = current_subroutine->get_lines().get_line(code_idx);
+        const auto src = chunk->get_source(line_num - 1);
+        throw RuntimeError(e.what(), line_num, src);
       }
     }
   }

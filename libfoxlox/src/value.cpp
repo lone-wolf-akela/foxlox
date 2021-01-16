@@ -14,21 +14,27 @@ namespace
 {
   using namespace foxlox;
 
-  template<typename ... Args> requires (std::same_as<Args, Value::Type> && ...)
-  ValueTypeError exception_wrongtype_binop(Value::Type got1, Value::Type got2, Args ... expected)
+  template<typename ... Args>
+  std::string wrongtype_msg_fmt(Args ... expected) requires (std::same_as<Args, Value::Type> && ...)
   {
-    auto msg_expected = (fmt::format("{}, ", magic_enum::enum_name(expected)) + ...);
-    msg_expected.at(ssize(msg_expected) - 2) = ';';
-    auto msg = fmt::format("Value type error. Expected: {}got: {} and {}.", msg_expected, magic_enum::enum_name(got1), magic_enum::enum_name(got2));
+    std::string msg = "Value type error. Expected: ";
+    (fmt::format_to(std::back_inserter(msg), "{}, ", magic_enum::enum_name(expected)), ...);
+    return std::move(msg);
+  }
+
+  template<typename ... Args> 
+  ValueTypeError exception_wrongtype_binop(Value::Type got1, Value::Type got2, Args ... expected) requires (std::same_as<Args, Value::Type> && ...)
+  {
+    std::string msg = wrongtype_msg_fmt(expected...);
+    fmt::format_to(std::back_inserter(msg), "got: {} and {}.", magic_enum::enum_name(got1), magic_enum::enum_name(got2));
     return ValueTypeError(msg.c_str());
   }
 
   template<typename ... Args> requires (std::same_as<Args, Value::Type> && ...)
   ValueTypeError exception_wrongtype(Value::Type got, Args ... expected)
   {
-    auto msg_expected = (fmt::format("{}, ", magic_enum::enum_name(expected)) + ...);
-    msg_expected.at(ssize(msg_expected) - 2) = ';';
-    auto msg = fmt::format("Value type error. Expected: {}got: {}.", msg_expected, magic_enum::enum_name(got));
+    std::string msg = wrongtype_msg_fmt(expected...);
+    fmt::format_to(std::back_inserter(msg), "got: {}.", magic_enum::enum_name(got));
     return ValueTypeError(msg.c_str());
   }
 

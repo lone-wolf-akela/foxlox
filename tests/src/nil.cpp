@@ -13,5 +13,5 @@ return nil;
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
   auto v = vm.interpret(chunk);
-  ASSERT_EQ(v.type, Value::NIL);
+  ASSERT_TRUE(v.is_nil());
 }

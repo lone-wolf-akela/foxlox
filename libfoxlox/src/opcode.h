@@ -36,6 +36,7 @@ namespace foxlox
     OP_BOOL,
     OP_TUPLE,
     OP_FUNC,
+    OP_CLASS,
 
     OP_LOAD_STACK,
     OP_STORE_STACK,
@@ -47,5 +48,8 @@ namespace foxlox
     OP_JUMP_IF_FALSE,
     OP_JUMP_IF_TRUE_NO_POP,
     OP_JUMP_IF_FALSE_NO_POP,
+
+    OP_SET_PROPERTY,
+    OP_GET_PROPERTY,
   };
 }

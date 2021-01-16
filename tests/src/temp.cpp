@@ -8,17 +8,25 @@ using namespace foxlox;
 TEST(temp_test, temp)
 {
   auto [res, chunk] = compile(R"(
-var a = 123;
-fun first(param) {
-  var b = param;
-  a = a + b;
+class CoffeeMaker {
+  __init__(coffee) {
+    this.coffee = coffee;
+  }
+
+  brew() {
+    println("Enjoy your cup of {}", this.coffee);
+
+    # No reusing the grounds!
+    this.coffee = nil;
+  }
 }
-first(234);
-return a;
+
+var maker = CoffeeMaker("coffee and chicory");
+maker.brew();
+maker.brew();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
   auto v = vm.interpret(chunk);
-  ASSERT_EQ(v.type, Value::I64);
-  ASSERT_EQ(v.get_int64(), 123 + 234);
+  ASSERT_TRUE(v.is_nil());
 }

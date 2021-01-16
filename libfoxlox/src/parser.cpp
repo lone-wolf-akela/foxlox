@@ -103,6 +103,13 @@ namespace foxlox
     consume(TokenType::RIGHT_PAREN, "Expect `)' after parameters.");
     consume(TokenType::LEFT_BRACE, fmt::format("Expect `{{' before {} body.", kind));
     auto body = block();
+    if (dynamic_cast<stmt::Return*>(body.back().get()) == nullptr)
+    {
+      // there's no return at the end of a function
+      // let's add one
+      auto ret = std::make_unique<stmt::Return>(Token(TokenType::RETURN, "", {}, name.line), nullptr);
+      body.emplace_back(std::move(ret));
+    }
     return std::make_unique<stmt::Function>(std::move(name), std::move(parameters), std::move(body));
   }
   std::unique_ptr<stmt::Stmt> Parser::var_declaration()

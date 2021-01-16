@@ -19,7 +19,7 @@ return "ok";
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
   auto v = vm.interpret(chunk);
-  ASSERT_EQ(v.type, Value::STR);
+  ASSERT_TRUE(v.is_str());
   ASSERT_EQ(v.get_strview(), "ok");
 }
 
@@ -37,11 +37,11 @@ return r + a;
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
   auto v = vm.interpret(chunk);
-  ASSERT_EQ(v.type, Value::TUPLE);
+  ASSERT_TRUE(v.is_tuple());
   auto s = v.get_tuplespan();
   ASSERT_EQ(s.size(), 2);
-  ASSERT_EQ(s[0].type, Value::STR);
+  ASSERT_TRUE(s[0].is_str());
   ASSERT_EQ(s[0].get_strview(), "inner");
-  ASSERT_EQ(s[1].type, Value::STR);
+  ASSERT_TRUE(s[1].is_str());
   ASSERT_EQ(s[1].get_strview(), "outer");
 }

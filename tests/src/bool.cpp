@@ -14,7 +14,7 @@ return true == true;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
   {
@@ -23,7 +23,7 @@ return true == false;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   {
@@ -32,7 +32,7 @@ return false == true;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   {
@@ -41,7 +41,7 @@ return false == false;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
   // Not equal to other types.
@@ -51,7 +51,7 @@ return true == 1;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   {
@@ -60,7 +60,7 @@ return false == 0;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   {
@@ -69,7 +69,7 @@ return true == 1.0;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   {
@@ -78,7 +78,7 @@ return false == 0.0;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   {
@@ -87,7 +87,7 @@ return true == "true";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   {
@@ -96,7 +96,7 @@ return false == "false";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   {
@@ -105,7 +105,7 @@ return false == "";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   {
@@ -114,7 +114,7 @@ return false == nil;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
 
@@ -124,7 +124,7 @@ return true != true;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   {
@@ -133,7 +133,7 @@ return true != false;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
   {
@@ -142,7 +142,7 @@ return false != true;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
   {
@@ -151,7 +151,7 @@ return false != false;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   // Not equal to other types.
@@ -161,7 +161,7 @@ return true != 1;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
   {
@@ -170,7 +170,7 @@ return false != 0;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
   {
@@ -179,7 +179,7 @@ return true != 1.0;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
   {
@@ -188,7 +188,7 @@ return false != 0.0;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
   {
@@ -197,7 +197,7 @@ return true != "true";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
   {
@@ -206,7 +206,7 @@ return false != "false";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
   {
@@ -215,7 +215,7 @@ return false != "";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
   {
@@ -224,7 +224,7 @@ return false != nil;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
 }
@@ -238,7 +238,7 @@ return !true;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   {
@@ -247,7 +247,7 @@ return !false;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
   {
@@ -256,7 +256,7 @@ return !!true;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
 }

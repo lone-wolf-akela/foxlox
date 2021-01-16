@@ -47,8 +47,8 @@ println("elapsed: {}", elapsed);
 println("equals: {}", elapsed - loopTime);
 )";
 
-//constexpr auto bench_to_run = fib;
-constexpr auto bench_to_run = equality;
+constexpr auto bench_to_run = fib;
+//constexpr auto bench_to_run = equality;
 
 int main()
 {

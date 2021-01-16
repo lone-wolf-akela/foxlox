@@ -1,3 +1,5 @@
+#include <foxlox/chunk.h>
+
 #include "object.h"
 
 namespace foxlox
@@ -32,5 +34,38 @@ namespace foxlox
   {
     GSL_SUPPRESS(bounds.3)
       return std::span{ data(), size() };
+  }
+  Class* Instance::get_class() const noexcept { return klass; }
+  Value Instance::get_property(std::string_view name, Chunk& chunk)
+  {
+    if (auto [got, func_idx] = klass->try_get_method_idx(name); got)
+    {
+      auto func = &chunk.get_subroutines()[func_idx];
+      return Value(this, func);
+    }
+    // TODO: error handling
+    return fields.at(name);
+  }
+  void Instance::set_property(std::string_view name, Value value)
+  {
+    // TODO: look at klass
+    // TODO: error handling
+    fields.emplace(name, value);
+  }
+  Class::Class(std::string_view name) : ObjBase(ObjType::CLASS), class_name(name)
+  {
+  }
+  void Class::add_method(std::string_view name, uint16_t func_idx)
+  {
+    methods[name] = func_idx;
+  }
+  std::pair<bool, uint16_t> Class::try_get_method_idx(std::string_view name)
+  {
+    const auto found = methods.find(name);
+    if (found == methods.end())
+    {
+      return std::make_pair(false, uint16_t{});
+    }
+    return std::make_pair(true, found->second);
   }
 }

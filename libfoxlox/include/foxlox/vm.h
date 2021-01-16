@@ -64,6 +64,7 @@ namespace foxlox
     // data pool
     std::vector<String*> string_pool;
     std::vector<Tuple*> tuple_pool;
+    std::vector<Instance*> instance_pool;
     std::vector<Value> static_value_pool;
 
     // mem manage related

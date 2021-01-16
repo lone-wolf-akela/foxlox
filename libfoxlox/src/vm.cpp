@@ -37,6 +37,7 @@ namespace foxlox
     p_calltrace = calltrace.begin() + std::distance(r.calltrace.begin(), r.p_calltrace);
     string_pool = std::move(r.string_pool);
     tuple_pool = std::move(r.tuple_pool);
+    instance_pool = std::move(r.instance_pool);
     static_value_pool = std::move(r.static_value_pool);
     current_heap_size = r.current_heap_size;
     next_gc_heap_size = r.next_gc_heap_size;
@@ -55,6 +56,7 @@ namespace foxlox
     p_calltrace = calltrace.begin() + std::distance(r.calltrace.begin(), r.p_calltrace);
     string_pool = std::move(r.string_pool);
     tuple_pool = std::move(r.tuple_pool);
+    instance_pool = std::move(r.instance_pool);
     static_value_pool = std::move(r.static_value_pool);
     current_heap_size = r.current_heap_size;
     next_gc_heap_size = r.next_gc_heap_size;
@@ -72,6 +74,10 @@ namespace foxlox
       for (const Tuple* p : tuple_pool)
       {
         Tuple::free(std::bind_front(&VM::deallocator, this), p);
+      }
+      for (const Instance* p : instance_pool)
+      {
+        Instance::free(std::bind_front(&VM::deallocator, this), p);
       }
     }
   }
@@ -96,13 +102,15 @@ namespace foxlox
   }
   Value VM::run()
   {
-#ifdef DEBUG_TRACE_EXECUTION
+#if defined(DEBUG_TRACE_STACK) || defined(DEBUG_TRACE_INST) || defined(DEBUG_TRACE_SRC)
     Debugger debugger(true);
 #endif
     while (true)
     {
-#ifdef DEBUG_TRACE_EXECUTION
+#ifdef DEBUG_TRACE_STACK
       debugger.print_vm_stack(*this);
+#endif
+#if defined(DEBUG_TRACE_INST) || defined(DEBUG_TRACE_SRC)
       debugger.disassemble_inst(*chunk, *current_subroutine, std::distance(current_subroutine->get_code().begin(), ip));
 #endif
 #ifdef DEBUG_STRESS_GC
@@ -173,12 +181,12 @@ namespace foxlox
         {
           const auto l = top(1);
           const auto r = top(0);
-          if (l->type == Value::STR && r->type == Value::STR)
+          if (l->is_str() && r->is_str())
           {
             *l = Value::strcat(std::bind_front(&VM::allocator, this), *l, *r);
             string_pool.push_back(l->v.str);
           }
-          else if (l->type == Value::TUPLE || r->type == Value::TUPLE)
+          else if (l->is_tuple() || r->is_tuple())
           {
             *l = Value::tuplecat(std::bind_front(&VM::allocator, this), *l, *r);
             tuple_pool.push_back(l->v.tuple);
@@ -288,6 +296,13 @@ namespace foxlox
           push();
           auto& subroutines = chunk->get_subroutines();
           *top() = &subroutines.at(read_uint16());
+          break;
+        }
+        case OP_CLASS:
+        {
+          push();
+          auto& classes = chunk->get_classes();
+          *top() = &classes.at(read_uint16());
           break;
         }
         case OP_STRING:
@@ -409,7 +424,9 @@ namespace foxlox
           const auto v = *top();
           const uint16_t num_of_params = read_uint16();
           pop();
-          if (v.type == Value::FUNC)
+          switch (v.type)
+          {
+          case ValueType::FUNC:
           {
             const auto func_to_call = v.v.func;
             p_calltrace->subroutine = current_subroutine;
@@ -420,8 +437,9 @@ namespace foxlox
             assert(func_to_call->get_arity() == num_of_params);
             current_subroutine = func_to_call;
             ip = current_subroutine->get_code().begin();
+            break;
           }
-          else if (v.type == Value::CPP_FUNC)
+          case ValueType::CPP_FUNC:
           {
             const auto func_to_call = v.v.cppfunc;
             const std::span<Value> params{ next(top(num_of_params)), next(top(0)) };
@@ -429,13 +447,88 @@ namespace foxlox
             pop(num_of_params);
             push();
             *top() = result;
+            break;
           }
-          else
+          case ValueType::METHOD:
           {
-            throw ValueTypeError(fmt::format("Value of type {} is not callable.", 
+            const auto func_to_call = v.get_method_func();
+            p_calltrace->subroutine = current_subroutine;
+            p_calltrace->ip = ip;
+            p_calltrace->stack_top = stack_top - num_of_params;
+            p_calltrace++;
+            
+            push();
+            *top() = v.v.instance; // `this'
+
+            assert(func_to_call->get_arity() == num_of_params);
+            current_subroutine = func_to_call;
+            ip = current_subroutine->get_code().begin();
+            break;
+          }
+          case ValueType::OBJ:
+          {
+            if (v.is_nil())
+            {
+              throw ValueTypeError("Value of type NIL is not callable.");
+            }
+            if (!v.is_class())
+            {
+              throw ValueTypeError(fmt::format("Value of type {} is not callable.",
+                magic_enum::enum_name(v.v.obj->type)).c_str());
+            }
+            const auto klass = v.v.klass;
+            const auto instance = Instance::alloc(
+              std::bind_front(&VM::allocator, this),
+              std::bind_front(&VM::deallocator, this),
+              klass);
+            instance_pool.push_back(instance);
+            if (auto [got, func_idx] = klass->try_get_method_idx("__init__"); got)
+            {
+              const auto func_to_call = &chunk->get_subroutines().at(func_idx);
+              p_calltrace->subroutine = current_subroutine;
+              p_calltrace->ip = ip;
+              p_calltrace->stack_top = stack_top - num_of_params;
+              p_calltrace++;
+
+              push();
+              *top() = instance; // `this'
+
+              assert(func_to_call->get_arity() == num_of_params);
+              current_subroutine = func_to_call;
+              ip = current_subroutine->get_code().begin();
+            }
+            else
+            {
+              assert(num_of_params == 0);
+              push();
+              *top() = instance;
+            }
+            break;
+          }
+          default:
+          {
+            throw ValueTypeError(fmt::format("Value of type {} is not callable.",
               magic_enum::enum_name(v.type)).c_str());
-          }    
+          }
+          }
           collect_garbage();
+          break;
+        }
+        case OP_GET_PROPERTY:
+        {
+          std::span strings = chunk->get_const_strings();
+          auto name = gsl::at(strings, read_uint16())->get_view();
+          auto instance = top()->get_instance();
+          *top() = instance->get_property(name, *chunk);
+          break;
+        }
+        case OP_SET_PROPERTY:
+        {
+          std::span strings = chunk->get_const_strings();
+          auto name = gsl::at(strings, read_uint16())->get_view();
+          auto instance = top()->get_instance();
+          pop();
+          instance->set_property(name, *top());
           break;
         }
         default:
@@ -447,7 +540,7 @@ namespace foxlox
       {
         const auto code_idx = std::distance(current_subroutine->get_code().begin(), ip);
         const auto line_num = current_subroutine->get_lines().get_line(code_idx);
-        const auto src = chunk->get_source(line_num - 1);
+        const auto src = chunk->get_source(line_num);
         throw RuntimeError(e.what(), line_num, src);
       }
     }
@@ -458,8 +551,7 @@ namespace foxlox
   }
   int16_t VM::read_int16() noexcept
   {
-    const struct { uint8_t a, b; } tmp{ read_uint8(), read_uint8() };
-    return std::bit_cast<int16_t>(tmp);
+    return std::bit_cast<int16_t>(read_uint16());
   }
   bool VM::read_bool() noexcept
   {
@@ -473,8 +565,9 @@ namespace foxlox
   }
   uint16_t VM::read_uint16() noexcept
   {
-    const struct { uint8_t a, b; } tmp{ read_uint8(), read_uint8() };
-    return std::bit_cast<uint16_t>(tmp);
+    uint16_t u = static_cast<uint16_t>(read_uint8()) << 8;
+    u |= read_uint8();
+    return u;
   }
   void VM::reset_stack() noexcept
   {
@@ -570,37 +663,34 @@ namespace foxlox
   void VM::mark_value(Value& v)
   {
 #ifdef DEBUG_LOG_GC
-    if (v.type == Value::STR)
+    if (v.is_str())
     {
-      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.str), v.v.str->get_mark() ? "is_marked" : "not_marked", v.to_string());
+      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.str), v.v.str->is_marked() ? "is_marked" : "not_marked", v.to_string());
     }
-    if (v.type == Value::TUPLE)
+    if (v.is_tuple())
     {
-      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.tuple), v.v.tuple->get_mark() ? "is_marked" : "not_marked", v.to_string());
+      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.tuple), v.v.tuple->is_marked() ? "is_marked" : "not_marked", v.to_string());
     }
-    if (v.type == Value::FUNC)
+    if (v.type == ValueType::FUNC)
     {
       std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.func), v.v.func->gc_mark ? "is_marked" : "not_marked", v.to_string());
     }
 #endif
-    switch (v.type)
+    if (v.is_str())
     {
-    case Value::STR:
       v.v.str->mark();
-      break;
-    case Value::TUPLE:
-      if (!v.v.tuple->get_mark())
+    }
+    else if (v.is_tuple())
+    {
+      if (!v.v.tuple->is_marked())
       {
         gray_stack.push(&v);
         v.v.tuple->mark();
       }
-      break;
-    case Value::FUNC:
+    }
+    else if (v.type == ValueType::FUNC)
+    {
       mark_subroutine(*v.v.func);
-      break;
-    default:
-      /*do nothing*/
-      break;
     }
   }
   void VM::trace_references()
@@ -609,7 +699,7 @@ namespace foxlox
     {
       Value* const v = gray_stack.top();
       gray_stack.pop();
-      if (v->type == Value::TUPLE)
+      if (v->is_tuple())
       {
         for (auto& tuple_elem : v->v.tuple->get_span())
         {
@@ -623,9 +713,9 @@ namespace foxlox
     // string_pool
     std::erase_if(string_pool, [this](String* str) {
 #ifdef DEBUG_LOG_GC
-      std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(str), str->get_mark() ? "is_marked" : "not_marked", str->get_view());
+      std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(str), str->is_marked() ? "is_marked" : "not_marked", str->get_view());
 #endif
-      if (!str->get_mark())
+      if (!str->is_marked())
       {
         String::free(std::bind_front(&VM::deallocator, this), str);
         return true;
@@ -636,9 +726,9 @@ namespace foxlox
     // tuple_pool
     std::erase_if(tuple_pool, [this](Tuple* tuple) {
 #ifdef DEBUG_LOG_GC
-      std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(tuple), tuple->get_mark() ? "is_marked" : "not_marked", tuple->get_mark() ? Value(tuple).to_string() : "<tuple elem may not avail>");
+      std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(tuple), tuple->is_marked() ? "is_marked" : "not_marked", tuple->is_marked() ? Value(tuple).to_string() : "<tuple elem may not avail>");
 #endif
-      if (!tuple->get_mark())
+      if (!tuple->is_marked())
       {
         Tuple::free(std::bind_front(&VM::deallocator, this), tuple);
         return true;

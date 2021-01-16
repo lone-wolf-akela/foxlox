@@ -64,6 +64,8 @@ namespace foxlox
     std::vector<gsl::index> break_stmts;
     std::vector<gsl::index> continue_stmts;
 
+    uint16_t gen_subroutine(gsl::not_null<stmt::Function*> stmt, stmt::Class* klass);
+
     void visit_binary_expr(gsl::not_null<expr::Binary*> expr) final;
     void visit_grouping_expr(gsl::not_null<expr::Grouping*> expr) final;
     void visit_tuple_expr(gsl::not_null<expr::Tuple*> expr) final;
@@ -73,9 +75,9 @@ namespace foxlox
     void visit_assign_expr(gsl::not_null<expr::Assign*> expr) final;
     void visit_logical_expr(gsl::not_null<expr::Logical*> expr) final;
     void visit_call_expr(gsl::not_null<expr::Call*> expr) final;
-    void visit_get_expr(gsl::not_null<expr::Get*> /*expr*/) final { throw UnimplementedError(); }
-    void visit_set_expr(gsl::not_null<expr::Set*> /*expr*/) final { throw UnimplementedError(); }
-    void visit_this_expr(gsl::not_null<expr::This*> /*expr*/) final { throw UnimplementedError(); }
+    void visit_get_expr(gsl::not_null<expr::Get*> expr) final;
+    void visit_set_expr(gsl::not_null<expr::Set*> expr) final;
+    void visit_this_expr(gsl::not_null<expr::This*> expr) final;
     void visit_super_expr(gsl::not_null<expr::Super*> /*expr*/) final { throw UnimplementedError(); }
 
     void visit_expression_stmt(gsl::not_null<stmt::Expression*> stmt) final;
@@ -87,7 +89,7 @@ namespace foxlox
     void visit_return_stmt(gsl::not_null<stmt::Return*> stmt) final;
     void visit_break_stmt(gsl::not_null<stmt::Break*> stmt) final;
     void visit_continue_stmt(gsl::not_null<stmt::Continue*> stmt) final;
-    void visit_class_stmt(gsl::not_null<stmt::Class*> /*stmt*/) final { throw UnimplementedError(); }
+    void visit_class_stmt(gsl::not_null<stmt::Class*> stmt) final;
     void visit_for_stmt(gsl::not_null<stmt::For*> stmt) final;
   };
 }

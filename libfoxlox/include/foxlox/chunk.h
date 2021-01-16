@@ -8,6 +8,7 @@
 #include <gsl/gsl>
 
 #include "../../src/value.h"
+#include "../../src/object.h"
 #include "../../src/opcode.h"
 
 namespace foxlox
@@ -26,7 +27,8 @@ namespace foxlox
     std::vector<LineNum> lines;
   };
 
-  class Subroutine
+  // need this alignas for Value to work correctly
+  class alignas(8) Subroutine
   {
   public:
     Subroutine(std::string_view func_name, int num_of_params);
@@ -36,6 +38,7 @@ namespace foxlox
     void add_code(int16_t c, int line_num);
     void add_code(uint16_t c, int line_num);
     void edit_code(gsl::index idx, int16_t c);
+    void edit_code(gsl::index idx, uint16_t c);
     void add_referenced_static_value(uint16_t idx);
     std::span<const uint16_t> get_referenced_static_values() const noexcept;
     gsl::index get_code_num() const noexcept;
@@ -68,6 +71,8 @@ namespace foxlox
 
     std::vector<Subroutine>& get_subroutines() noexcept;
     std::span<const Subroutine> get_subroutines() const noexcept;
+    std::vector<Class>& get_classes() noexcept;
+    std::span<const Class> get_classes() const noexcept;
     std::span<const Value> get_constants() const;
     std::span<const String* const> get_const_strings() const;
     std::span<String*> get_const_strings();
@@ -76,6 +81,7 @@ namespace foxlox
 
     uint16_t add_constant(Value v);
     uint16_t add_subroutine(std::string_view func_name, int num_of_params);
+    uint16_t add_class(Class&& klass);
     uint16_t add_string(std::string_view str);
     uint16_t add_static_value() noexcept;
     uint16_t get_static_value_num() const noexcept;
@@ -86,6 +92,7 @@ namespace foxlox
     std::vector<std::string> source;
 
     std::vector<Subroutine> subroutines;
+    std::vector<Class> classes;
 
     std::vector<Value> constants;
     std::vector<String*> const_strings;

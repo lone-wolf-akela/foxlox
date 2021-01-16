@@ -97,7 +97,8 @@ namespace foxlox
     if (vinfo != nullptr)
     {
       vinfo->declare = stmt;
-      stmt->store_type = stmt::VarStoreType::Stack;
+      stmt->name_store_type = stmt::VarStoreType::Stack;
+      stmt->this_store_type = stmt::VarStoreType::Stack;
     }
   }
   void Resolver::declare_from_functionname(stmt::Function* stmt)
@@ -137,7 +138,7 @@ namespace foxlox
           }
           else if (std::holds_alternative<stmt::Class*>(found->second.declare))
           {
-            std::get<stmt::Class*>(found->second.declare)->store_type = stmt::VarStoreType::Static;
+            std::get<stmt::Class*>(found->second.declare)->name_store_type = stmt::VarStoreType::Static;
           }
           else if (std::holds_alternative<stmt::Function*>(found->second.declare))
           {
@@ -147,6 +148,14 @@ namespace foxlox
           {
             auto at = std::get<VarDeclareAtFunc>(found->second.declare);
             at.func->param_store_types[at.param_index] = stmt::VarStoreType::Static;
+          }
+          else if (std::holds_alternative<VarDeclareAtClass>(found->second.declare))
+          {
+            if (current_function_level - this_scope.function_level >= 2)
+            {
+              error(name, "Capturing `this' in non-method function is not allowed.");
+              return{};
+            }
           }
           else
           {
@@ -165,15 +174,6 @@ namespace foxlox
     current_function = type;
 
     begin_scope(true);
-
-    if (current_class == ClassType::CLASS || current_class == ClassType::SUBCLASS)
-    {
-      scopes.back().vars["this"] = ValueInfo{ .is_ready = true, .declare = function };
-    }
-    if (current_class == ClassType::SUBCLASS)
-    {
-      scopes.back().vars["super"] = ValueInfo{ .is_ready = true, .declare = function };
-    }
 
     for (auto [index, param] : function->param | ranges::views::enumerate)
     {
@@ -336,6 +336,13 @@ namespace foxlox
       }
       resolve(stmt->value.get());
     }
+    else if(current_function == FunctionType::INITIALIZER)
+    {
+      // make the initializer return `this'
+      stmt->value = std::make_unique<expr::This>(
+        Token(TokenType::THIS, "this", {}, stmt->keyword.line));
+      resolve(stmt->value.get());
+    }      
   }
   void Resolver::visit_break_stmt(gsl::not_null<stmt::Break*> stmt)
   {
@@ -371,6 +378,15 @@ namespace foxlox
       resolve(stmt->superclass.get());
     }
 
+    begin_scope(true);
+    if (current_class == ClassType::CLASS || current_class == ClassType::SUBCLASS)
+    {
+      scopes.back().vars["this"] = ValueInfo{ .is_ready = true, .declare = VarDeclareAtClass{stmt} };
+    }
+    if (current_class == ClassType::SUBCLASS)
+    {
+      scopes.back().vars["super"] = ValueInfo{ .is_ready = true, .declare = VarDeclareAtClass{stmt} };
+    }
     for (auto& method : stmt->methods)
     {
       FunctionType declaration = FunctionType::METHOD;
@@ -380,6 +396,7 @@ namespace foxlox
       }
       resolve_function(method.get(), declaration);
     }
+    end_scope();
 
     current_class = enclosing_class;
   }

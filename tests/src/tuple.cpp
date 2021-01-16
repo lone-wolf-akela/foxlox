@@ -15,7 +15,7 @@ return ();
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 0);
   }
@@ -26,7 +26,7 @@ return ("a");
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "a");
   }
   // this is a tuple with 1 element
@@ -36,10 +36,10 @@ return ("a",);
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 1);
-    ASSERT_EQ(s[0].type, Value::STR);
+    ASSERT_TRUE(s[0].is_str());
     ASSERT_EQ(s[0].get_strview(), "a");
   }
   {
@@ -48,14 +48,14 @@ return ("a", "b", "c");
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 3);
-    ASSERT_EQ(s[0].type, Value::STR);
+    ASSERT_TRUE(s[0].is_str());
     ASSERT_EQ(s[0].get_strview(), "a");
-    ASSERT_EQ(s[1].type, Value::STR);
+    ASSERT_TRUE(s[1].is_str());
     ASSERT_EQ(s[1].get_strview(), "b");
-    ASSERT_EQ(s[2].type, Value::STR);
+    ASSERT_TRUE(s[2].is_str());
     ASSERT_EQ(s[2].get_strview(), "c");
   }
   {
@@ -64,14 +64,14 @@ return ("a", "b", "c",);
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 3);
-    ASSERT_EQ(s[0].type, Value::STR);
+    ASSERT_TRUE(s[0].is_str());
     ASSERT_EQ(s[0].get_strview(), "a");
-    ASSERT_EQ(s[1].type, Value::STR);
+    ASSERT_TRUE(s[1].is_str());
     ASSERT_EQ(s[1].get_strview(), "b");
-    ASSERT_EQ(s[2].type, Value::STR);
+    ASSERT_TRUE(s[2].is_str());
     ASSERT_EQ(s[2].get_strview(), "c");
   }
 }
@@ -85,14 +85,14 @@ return ("a", "b") + "c";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 3);
-    ASSERT_EQ(s[0].type, Value::STR);
+    ASSERT_TRUE(s[0].is_str());
     ASSERT_EQ(s[0].get_strview(), "a");
-    ASSERT_EQ(s[1].type, Value::STR);
+    ASSERT_TRUE(s[1].is_str());
     ASSERT_EQ(s[1].get_strview(), "b");
-    ASSERT_EQ(s[2].type, Value::STR);
+    ASSERT_TRUE(s[2].is_str());
     ASSERT_EQ(s[2].get_strview(), "c");
   }
   {
@@ -101,14 +101,14 @@ return "a" + ("b", "c");
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 3);
-    ASSERT_EQ(s[0].type, Value::STR);
+    ASSERT_TRUE(s[0].is_str());
     ASSERT_EQ(s[0].get_strview(), "a");
-    ASSERT_EQ(s[1].type, Value::STR);
+    ASSERT_TRUE(s[1].is_str());
     ASSERT_EQ(s[1].get_strview(), "b");
-    ASSERT_EQ(s[2].type, Value::STR);
+    ASSERT_TRUE(s[2].is_str());
     ASSERT_EQ(s[2].get_strview(), "c");
   }
   {
@@ -117,14 +117,14 @@ return ("a",) + ("b", "c");
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 3);
-    ASSERT_EQ(s[0].type, Value::STR);
+    ASSERT_TRUE(s[0].is_str());
     ASSERT_EQ(s[0].get_strview(), "a");
-    ASSERT_EQ(s[1].type, Value::STR);
+    ASSERT_TRUE(s[1].is_str());
     ASSERT_EQ(s[1].get_strview(), "b");
-    ASSERT_EQ(s[2].type, Value::STR);
+    ASSERT_TRUE(s[2].is_str());
     ASSERT_EQ(s[2].get_strview(), "c");
   }
 }

@@ -20,13 +20,18 @@ namespace foxlox::stmt
 
 namespace foxlox
 {
-  struct VarDeclareAtFunc
+  struct VarDeclareAtFunc // store function parameters ...
   {
     stmt::Function* func;
     int param_index;
     friend auto operator<=>(const VarDeclareAtFunc& l, const VarDeclareAtFunc& r) = default;
   };
-  using VarDeclareAt = std::variant<stmt::Var*, stmt::Class*, stmt::Function*, VarDeclareAtFunc>;
+  struct VarDeclareAtClass // store `this' ...
+  {
+    stmt::Class* klass;
+    friend auto operator<=>(const VarDeclareAtClass& l, const VarDeclareAtClass& r) = default;
+  };
+  using VarDeclareAt = std::variant<stmt::Var*, stmt::Class*, stmt::Function*, VarDeclareAtFunc, VarDeclareAtClass>;
 }
 
 namespace foxlox::expr
@@ -170,7 +175,7 @@ namespace foxlox::expr
     Token keyword;
 
     // to be filled by resolver 
-    // pointed to the corresponding method 
+    // pointed to the corresponding class 
     VarDeclareAt declare;
 
     virtual std::unique_ptr<Expr> clone() override;

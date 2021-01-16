@@ -41,16 +41,16 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 4);
-    ASSERT_EQ(s[0].type, Value::STR);
+    ASSERT_TRUE(s[0].is_str());
     ASSERT_EQ(s[0].get_strview(), "local");
-    ASSERT_EQ(s[1].type, Value::STR);
+    ASSERT_TRUE(s[1].is_str());
     ASSERT_EQ(s[1].get_strview(), "after f");
-    ASSERT_EQ(s[2].type, Value::STR);
+    ASSERT_TRUE(s[2].is_str());
     ASSERT_EQ(s[2].get_strview(), "after f");
-    ASSERT_EQ(s[3].type, Value::STR);
+    ASSERT_TRUE(s[3].is_str());
     ASSERT_EQ(s[3].get_strview(), "after g");
   }
 }
@@ -75,12 +75,12 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 2);
-    ASSERT_EQ(s[0].type, Value::STR);
+    ASSERT_TRUE(s[0].is_str());
     ASSERT_EQ(s[0].get_strview(), "inner");
-    ASSERT_EQ(s[1].type, Value::STR);
+    ASSERT_TRUE(s[1].is_str());
     ASSERT_EQ(s[1].get_strview(), "assigned");
   }
 }
@@ -104,7 +104,7 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "param");
   }
 }
@@ -134,12 +134,12 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 2);
-    ASSERT_EQ(s[0].type, Value::STR);
+    ASSERT_TRUE(s[0].is_str());
     ASSERT_EQ(s[0].get_strview(), "b");
-    ASSERT_EQ(s[1].type, Value::STR);
+    ASSERT_TRUE(s[1].is_str());
     ASSERT_EQ(s[1].get_strview(), "a");
   }
 }
@@ -163,7 +163,7 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "local");
   }
 }
@@ -201,14 +201,14 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 3);
-    ASSERT_EQ(s[0].type, Value::STR);
+    ASSERT_TRUE(s[0].is_str());
     ASSERT_EQ(s[0].get_strview(), "a");
-    ASSERT_EQ(s[1].type, Value::STR);
+    ASSERT_TRUE(s[1].is_str());
     ASSERT_EQ(s[1].get_strview(), "b");
-    ASSERT_EQ(s[2].type, Value::STR);
+    ASSERT_TRUE(s[2].is_str());
     ASSERT_EQ(s[2].get_strview(), "c");
   }
 }
@@ -230,7 +230,7 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "local");
   }
 }
@@ -257,12 +257,12 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 2);
-    ASSERT_EQ(s[0].type, Value::STR);
+    ASSERT_TRUE(s[0].is_str());
     ASSERT_EQ(s[0].get_strview(), "a");
-    ASSERT_EQ(s[1].type, Value::STR);
+    ASSERT_TRUE(s[1].is_str());
     ASSERT_EQ(s[1].get_strview(), "a");
   }
 }
@@ -292,7 +292,7 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "a");
   }
 }
@@ -319,14 +319,14 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 3);
-    ASSERT_EQ(s[0].type, Value::STR);
+    ASSERT_TRUE(s[0].is_str());
     ASSERT_EQ(s[0].get_strview(), "closure");
-    ASSERT_EQ(s[1].type, Value::STR);
+    ASSERT_TRUE(s[1].is_str());
     ASSERT_EQ(s[1].get_strview(), "shadow");
-    ASSERT_EQ(s[2].type, Value::STR);
+    ASSERT_TRUE(s[2].is_str());
     ASSERT_EQ(s[2].get_strview(), "closure");
   }
 }
@@ -351,7 +351,7 @@ return "ok";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "ok");
   }
 }
@@ -388,7 +388,7 @@ var closure;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "a");
   }
 }

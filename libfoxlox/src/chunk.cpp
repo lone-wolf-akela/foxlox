@@ -12,6 +12,10 @@
 
 namespace foxlox
 {
+
+  // need this for Value to work correctly
+  static_assert(std::alignment_of_v<Subroutine> >= (1u << Value::method_func_shift));
+
   Subroutine::Subroutine(std::string_view func_name, int num_of_params) :
     arity(num_of_params), name(func_name), gc_mark(false)
   {
@@ -60,26 +64,22 @@ namespace foxlox
   }
   void Subroutine::add_code(int16_t c, int line_num)
   {
-    lines.add_line(ssize(code), line_num);
-    struct Tmp { uint8_t a, b; };
-    const auto tmp = std::bit_cast<Tmp>(c);
-    code.push_back(tmp.a);
-    code.push_back(tmp.b);
+    add_code(std::bit_cast<uint16_t>(c), line_num);
   }
   void Subroutine::add_code(uint16_t c, int line_num)
   {
     lines.add_line(ssize(code), line_num);
-    struct Tmp { uint8_t a, b; };
-    const auto tmp = std::bit_cast<Tmp>(c);
-    code.push_back(tmp.a);
-    code.push_back(tmp.b);
+    code.push_back(gsl::narrow_cast<uint8_t>(c >> 8));
+    code.push_back(gsl::narrow_cast<uint8_t>(c & 0xff));
   }
   void Subroutine::edit_code(gsl::index idx, int16_t c)
   {
-    struct Tmp { uint8_t a, b; };
-    const auto tmp = std::bit_cast<Tmp>(c);
-    code.at(idx) = tmp.a;
-    code.at(idx + 1) = tmp.b;
+    edit_code(idx, std::bit_cast<uint16_t>(c));
+  }
+  void Subroutine::edit_code(gsl::index idx, uint16_t c)
+  {
+    code.at(idx) = gsl::narrow_cast<uint8_t>(c >> 8);
+    code.at(idx + 1) = gsl::narrow_cast<uint8_t>(c & 0xff);
   }
   gsl::index Subroutine::get_code_num() const noexcept
   {
@@ -98,7 +98,7 @@ namespace foxlox
   }
   uint16_t Chunk::add_constant(Value v)
   {
-    assert(v.type == Value::F64 || v.type == Value::I64 || v.type == Value::CPP_FUNC);
+    assert(v.type == ValueType::F64 || v.type == ValueType::I64 || v.type == ValueType::CPP_FUNC);
 
     constants.push_back(v);
     const auto index = constants.size() - 1;
@@ -114,6 +114,13 @@ namespace foxlox
   }
   uint16_t Chunk::add_string(std::string_view str)
   {
+    const auto it = std::ranges::find(const_strings, str, [](String* s) {return s->get_view(); });
+    if (it != const_strings.end())
+    {
+      const auto index = std::distance(const_strings.begin(), it);
+      return gsl::narrow_cast<uint16_t>(index);
+    }
+
     String* p = String::alloc([](auto l) {GSL_SUPPRESS(r.11) return new char[l]; }, str.size());
     GSL_SUPPRESS(stl.1) GSL_SUPPRESS(bounds.3)
     std::copy(str.begin(), str.end(), p->data());
@@ -144,6 +151,7 @@ namespace foxlox
   {
     is_moved = r.is_moved;
     source = std::move(r.source);
+    classes = std::move(r.classes);
     subroutines = std::move(r.subroutines);
     constants = std::move(r.constants);
     const_strings = std::move(r.const_strings);
@@ -156,6 +164,7 @@ namespace foxlox
     clean();
     is_moved = r.is_moved;
     source = std::move(r.source);
+    classes = std::move(r.classes);
     subroutines = std::move(r.subroutines);
     constants = std::move(r.constants);
     const_strings = std::move(r.const_strings);
@@ -182,9 +191,10 @@ namespace foxlox
   }
   std::string_view Chunk::get_source(gsl::index line_num) const
   {
-    if (line_num < 0) { return "<EOF>"; }
-    if (ssize(source) <= line_num) { return ""; }
-    return source.at(line_num);
+    if (line_num <= -1) { return "<EOF>"; }
+    if (line_num == 0) { return "<RUNTIME>"; }
+    if (ssize(source) < line_num) { return ""; }
+    return source.at(line_num - 1);
   }
   const LineInfo& Subroutine::get_lines() const noexcept
   {
@@ -204,5 +214,20 @@ namespace foxlox
       last_line_num = line.line_num;
     }
     return last_line_num;
+  }
+  uint16_t Chunk::add_class(Class&& klass)
+  {
+    classes.emplace_back(std::move(klass));
+    const auto index = classes.size() - 1;
+    assert(index <= std::numeric_limits<uint16_t>::max());
+    return gsl::narrow_cast<uint16_t>(index);
+  }
+  std::span<const Class> Chunk::get_classes() const noexcept
+  {
+    return classes;
+  }
+  std::vector<Class>& Chunk::get_classes() noexcept
+  {
+    return classes;
   }
 }

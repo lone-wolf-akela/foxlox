@@ -15,7 +15,7 @@ if (true) return "good";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "good");
   }
   {
@@ -24,7 +24,7 @@ if (false) return "bad";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::NIL);
+    ASSERT_TRUE(v.is_nil());
   }
   // Allow block body.
   {
@@ -33,7 +33,7 @@ if (true) { return "block"; }
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "block");
   }
   // Assignment in if condition.
@@ -44,7 +44,7 @@ if (a = true) return a;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
 }
@@ -59,7 +59,7 @@ if (true) return "good"; else return "bad";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "good");
   }
   {
@@ -68,7 +68,7 @@ if (false) return "bad"; else return "good";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "good");
   }
   // Allow block body.
@@ -78,7 +78,7 @@ if (false) nil; else { return "block"; }
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "block");
   }
 }
@@ -93,7 +93,7 @@ if (false) return "bad"; else return "false";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "false");
   }
   {
@@ -102,7 +102,7 @@ if (nil) return "bad"; else return "nil";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "nil");
   }
   // Everything else is true.
@@ -112,7 +112,7 @@ if (true) return true;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
   {
@@ -121,7 +121,7 @@ if (0) return 0;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 0);
   }
   {
@@ -130,7 +130,7 @@ if ("") return "empty";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "empty");
   }
 }

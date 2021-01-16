@@ -27,12 +27,12 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 2);
-    ASSERT_EQ(s[0].type, Value::I64);
+    ASSERT_EQ(s[0].type, ValueType::I64);
     ASSERT_EQ(s[0].get_int64(), 0);
-    ASSERT_EQ(s[1].type, Value::I64);
+    ASSERT_EQ(s[1].type, ValueType::I64);
     ASSERT_EQ(s[1].get_int64(), -1);
   }
   {
@@ -55,12 +55,12 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 2);
-    ASSERT_EQ(s[0].type, Value::STR);
+    ASSERT_TRUE(s[0].is_str());
     ASSERT_EQ(s[0].get_strview(), "after");
-    ASSERT_EQ(s[1].type, Value::I64);
+    ASSERT_EQ(s[1].type, ValueType::I64);
     ASSERT_EQ(s[1].get_int64(), 0);
   }
 }
@@ -77,12 +77,12 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 3);
     for (int i = 0; i < 3; i++)
     {
-      ASSERT_EQ(s[i].type, Value::I64);
+      ASSERT_EQ(s[i].type, ValueType::I64);
       ASSERT_EQ(s[i].get_int64(), i + 1);
     }
   }
@@ -97,12 +97,12 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 3);
     for (int i = 0; i < 3; i++)
     {
-      ASSERT_EQ(s[i].type, Value::I64);
+      ASSERT_EQ(s[i].type, ValueType::I64);
       ASSERT_EQ(s[i].get_int64(), i);
     }
   }
@@ -113,7 +113,7 @@ for (;;) return "done";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "done");
   }
   // No variable.
@@ -126,12 +126,12 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 2);
     for (int i = 0; i < 2; i++)
     {
-      ASSERT_EQ(s[i].type, Value::I64);
+      ASSERT_EQ(s[i].type, ValueType::I64);
       ASSERT_EQ(s[i].get_int64(), i);
     }
   }
@@ -146,12 +146,12 @@ for (var i = 0;; ++i) {
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 3);
     for (int i = 0; i < 3; i++)
     {
-      ASSERT_EQ(s[i].type, Value::I64);
+      ASSERT_EQ(s[i].type, ValueType::I64);
       ASSERT_EQ(s[i].get_int64(), i);
     }
   }
@@ -167,12 +167,12 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 2);
     for (int i = 0; i < 2; i++)
     {
-      ASSERT_EQ(s[i].type, Value::I64);
+      ASSERT_EQ(s[i].type, ValueType::I64);
       ASSERT_EQ(s[i].get_int64(), i);
     }
   }
@@ -185,7 +185,7 @@ for (; false;) for (;;) 1;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::NIL);
+    ASSERT_TRUE(v.is_nil());
   }
 }
 
@@ -200,7 +200,7 @@ return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 3);
   }
   {
@@ -215,7 +215,7 @@ return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 3);
   }
   // no init
@@ -231,7 +231,7 @@ return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 3);
   }
   // no cond
@@ -247,7 +247,7 @@ return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 3);
   }
   // no incre
@@ -264,7 +264,7 @@ return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 3);
   }
 }
@@ -285,7 +285,7 @@ return s;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 1 + 2 + 3 + 4 + 5 - 3);
   }
   // no init
@@ -303,7 +303,7 @@ return s;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 1 + 2 + 3 + 4 + 5 - 3);
   }
   // no cond
@@ -321,7 +321,7 @@ return s;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 1 + 2 + 3 + 4 + 5 - 3);
   }
   // no incre
@@ -339,7 +339,7 @@ return s;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 1 + 2 + 3 + 4 + 5 - 3);
   }
 }
@@ -360,7 +360,7 @@ return "outer";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "mid");
   }
   {
@@ -376,7 +376,7 @@ return "outer";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "mid");
   }
 }
@@ -399,7 +399,7 @@ return outer_sum;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 11*(1+3) + 12*(1+3) + 13*(1+3));
   }
   {
@@ -419,7 +419,7 @@ return outer_sum;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 11 * (1 + 3) + 12 * (1 + 3) + 13 * (1 + 3));
   }
 }

@@ -22,7 +22,7 @@ namespace
     else
     {
       assert(values.size() >= 1);
-      assert(values.front().type == Value::STR);
+      assert(values.front().is_str());
       fmt::dynamic_format_arg_store<fmt::format_context> store;
       for (auto& v : values | std::ranges::views::drop(1))
       {

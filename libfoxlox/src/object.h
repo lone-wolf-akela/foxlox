@@ -2,17 +2,21 @@
 #include <climits>
 #include <cassert>
 #include <version>
+#include <unordered_map>
 
 #include <gsl/gsl>
 
+#include "container_helper.h"
 #include "value.h"
 
 namespace foxlox
 {
   template<typename T>
-  class ObjBase
+  class SimpleObj : public ObjBase
   {
   public:
+    SimpleObj(ObjType t) : ObjBase(t) {}
+
     auto data() noexcept
     {
       return static_cast<T*>(this)->data_array;
@@ -21,7 +25,7 @@ namespace foxlox
     {
       return static_cast<const T*>(this)->data_array;
     }
-    bool get_mark() const noexcept
+    bool is_marked() const noexcept
     {
       return bool(real_length() & signbit_mask);
     }
@@ -50,31 +54,31 @@ namespace foxlox
       return static_cast<const T*>(this)->length;
     }
   };
-
-  class String : public ObjBase<String>
+  
+  class String : public SimpleObj<String>
   {
-    friend class ObjBase<String>;
+    friend class SimpleObj<String>;
   private:
     std::size_t length;
     char data_array[sizeof(length)];
   public:
+    String(size_t l) : SimpleObj(ObjType::STR), length(l) {}
+    ~String() = default;
+
     template<Allocator F>
     static gsl::not_null<String*> alloc(F allocator, std::size_t l)
     {
       assert(l <= max_length);
       const gsl::not_null<char*> data = l <= sizeof(String::data_array) ? allocator(sizeof(String)) :
         allocator(sizeof(String) + (l - sizeof(String::data_array)));
-
-      GSL_SUPPRESS(type.1)
-        gsl::not_null<String*> str = reinterpret_cast<String*>(data.get());
-      str->length = l;
-      return str;
+      return new(data) String(l);
     }
 
     template<Deallocator F>
     static void free(F deallocator, gsl::not_null<const String*> p)
     {
-      if (p->size() <= sizeof(String::data_array))
+      const auto size = p->size();
+      if (size <= sizeof(String::data_array))
       {
         GSL_SUPPRESS(type.1)
           deallocator(reinterpret_cast<const char*>(p.get()), sizeof(String));
@@ -82,7 +86,7 @@ namespace foxlox
       else
       {
         GSL_SUPPRESS(type.1)
-          deallocator(reinterpret_cast<const char*>(p.get()), sizeof(String) + (p->size() - sizeof(String::data_array)));
+          deallocator(reinterpret_cast<const char*>(p.get()), sizeof(String) + (size - sizeof(String::data_array)));
       }
     }
 
@@ -97,30 +101,31 @@ namespace foxlox
     friend bool operator==(const String& l, const String& r);
   };
 
-  class Tuple : public ObjBase<Tuple>
+  class Tuple : public SimpleObj<Tuple>
   {
-    friend class ObjBase<Tuple>;
+    friend class SimpleObj<Tuple>;
   private:
     std::size_t length;
     Value data_array[1];
   public:
+    Tuple(size_t l) : SimpleObj(ObjType::TUPLE), length(l) {}
+    ~Tuple() = default;
+
     template<Allocator F>
     static gsl::not_null<Tuple*> alloc(F allocator, size_t l)
     {
       assert(l <= max_length);
       const gsl::not_null<char*> data = (l == 0) ? allocator(sizeof(Tuple)) :
         allocator(sizeof(Tuple) + (l - 1) * sizeof(Value));
-
-      GSL_SUPPRESS(type.1)
-        gsl::not_null<Tuple*> tuple = reinterpret_cast<Tuple*>(data.get());
-      tuple->length = l;
-      return tuple;
+      return new(data) Tuple(l);
     }
 
     template<Deallocator F>
     static void free(F deallocator, gsl::not_null<const Tuple*> p)
     {
-      if (p->size() == 0)
+      const auto size = p->size();
+      p->~Tuple();
+      if (size == 0)
       {
         GSL_SUPPRESS(type.1)
           deallocator(reinterpret_cast<const char*>(p.get()), sizeof(Tuple));
@@ -128,7 +133,7 @@ namespace foxlox
       else
       {
         GSL_SUPPRESS(type.1)
-          deallocator(reinterpret_cast<const char*>(p.get()), sizeof(Tuple) + (p->size() - 1) * sizeof(Value));
+          deallocator(reinterpret_cast<const char*>(p.get()), sizeof(Tuple) + (size - 1) * sizeof(Value));
       }
     }
 
@@ -136,12 +141,69 @@ namespace foxlox
     std::span<Value> get_span() noexcept;
   };
 
+  class Class : public ObjBase
+  {
+  public:
+    Class(std::string_view name);
+    std::string_view get_name() const noexcept { return class_name; }
+    void add_method(std::string_view name, uint16_t func_idx);
+    std::pair<bool, uint16_t> try_get_method_idx(std::string_view name);
+  private:
+    std::string class_name;
+    std::unordered_map<std::string_view, uint16_t> methods;
+  };
 
+  class Instance : public ObjBase
+  {
+  public:
+    using Fields = std::unordered_map<
+      std::string_view, Value,
+      std::hash<std::string_view>,
+      std::equal_to<std::string_view>,
+      AllocatorWrapper<std::pair<const std::string_view, Value>>
+    >;
+
+    template<Allocator A, Deallocator D>
+    Instance(A allocator, D deallocator, Class* from_class) : 
+      ObjBase(ObjType::INSTANCE),
+      klass(from_class), 
+      fields(
+        0, //bucket_count
+        std::hash<std::string_view>{},
+        std::equal_to<std::string_view>{},
+        AllocatorWrapper<std::pair<const std::string_view, Value>>(allocator, deallocator)
+      )
+    {
+    }
+    ~Instance() = default;
+    Class* get_class() const noexcept;
+    Value get_property(std::string_view name, Chunk& chunk);
+    void set_property(std::string_view name, Value value);
+
+    template<Allocator A, Deallocator D>
+    static gsl::not_null<Instance*> alloc(A allocator, D deallocator, Class* klass)
+    {
+      const gsl::not_null<char*> data = allocator(sizeof(Instance));
+      return new(data) Instance(allocator, deallocator, klass);
+    }
+
+    template<Deallocator F>
+    static void free(F deallocator, gsl::not_null<const Instance*> p)
+    {
+      // call dtor to delete the map inside
+      p->~Instance();
+      GSL_SUPPRESS(type.1)
+      deallocator(reinterpret_cast<const char*>(p.get()), sizeof(Instance));
+    }
+  private:
+    Class* klass;
+    Fields fields;
+  };
 
   template<Allocator F>
   static String* Value::strcat(F allocator, const Value& l, const Value& r)
   {
-    assert(l.type == Value::STR && r.type == Value::STR);
+    assert(l.is_str() && r.is_str());
     const auto s1 = l.v.str->get_view();
     const auto s2 = r.v.str->get_view();
     String* p = String::alloc(allocator, s1.size() + s2.size());
@@ -154,7 +216,7 @@ namespace foxlox
   template<Allocator F>
   static Tuple* Value::tuplecat(F allocator, const Value& l, const Value& r)
   {
-    if (l.type == Value::TUPLE && r.type == Value::TUPLE)
+    if (l.is_tuple() && r.is_tuple())
     {
       const auto s1 = l.v.tuple->get_span();
       const auto s2 = r.v.tuple->get_span();
@@ -165,7 +227,7 @@ namespace foxlox
         std::copy(s2.begin(), s2.end(), it);
       return p;
     }
-    if (l.type == Value::TUPLE)
+    if (l.is_tuple())
     {
       const auto s1 = l.v.tuple->get_span();
       Tuple* p = Tuple::alloc(allocator, s1.size() + 1);
@@ -174,7 +236,7 @@ namespace foxlox
       *it = r;
       return p;
     }
-    assert(r.type == Value::TUPLE);
+    assert(r.is_tuple());
     {
       const auto s2 = r.v.tuple->get_span();
       Tuple* p = Tuple::alloc(allocator, 1 + s2.size());

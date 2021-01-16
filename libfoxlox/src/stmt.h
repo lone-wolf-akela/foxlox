@@ -109,8 +109,10 @@ namespace foxlox::stmt
     std::unique_ptr<expr::Variable> superclass;
     std::vector<std::unique_ptr<Function>> methods;
 
+    // to be filled by resolver, this is refer to the class name as a variable
+    VarStoreType name_store_type;
     // to be filled by resolver, this is refer to the `this' variable
-    VarStoreType store_type;
+    VarStoreType this_store_type;
   };
 
   class Break : public Stmt

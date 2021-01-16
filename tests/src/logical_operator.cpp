@@ -16,7 +16,7 @@ return false and 1;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   {
@@ -25,7 +25,7 @@ return true and 1;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 1);
   }
   {
@@ -34,7 +34,7 @@ return 1 and 2 and false;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   // Return the last argument if all are true.
@@ -44,7 +44,7 @@ return 1 and true;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
   {
@@ -53,7 +53,7 @@ return 1 and 2 and 3;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 3);
   }
   // Short-circuit at the first false argument.
@@ -69,12 +69,12 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 2);
-    ASSERT_EQ(s[0].type, Value::BOOL);
+    ASSERT_EQ(s[0].type, ValueType::BOOL);
     ASSERT_EQ(s[0].get_bool(), true);
-    ASSERT_EQ(s[1].type, Value::BOOL);
+    ASSERT_EQ(s[1].type, ValueType::BOOL);
     ASSERT_EQ(s[1].get_bool(), false);
   }
 }
@@ -89,7 +89,7 @@ return false and "bad";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   {
@@ -98,7 +98,7 @@ return nil and "bad";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::NIL);
+    ASSERT_TRUE(v.is_nil());
   }
   // Everything else is true.
   {
@@ -107,7 +107,7 @@ return true and "ok";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "ok");
   }
   {
@@ -116,7 +116,7 @@ return 0 and "ok";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "ok");
   }
   {
@@ -125,7 +125,7 @@ return "" and "ok";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "ok");
   }
 }
@@ -141,7 +141,7 @@ return 1 or true;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 1);
   }
   {
@@ -150,7 +150,7 @@ return false or 1;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 1);
   }
   {
@@ -159,7 +159,7 @@ return false or false or true;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
   // Return the last argument if all are false.
@@ -169,7 +169,7 @@ return false or false;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   {
@@ -178,7 +178,7 @@ return  false or false or false;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), false);
   }
   // Short-circuit at the first true argument.
@@ -194,12 +194,12 @@ return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::TUPLE);
+    ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
     ASSERT_EQ(s.size(), 2);
-    ASSERT_EQ(s[0].type, Value::BOOL);
+    ASSERT_EQ(s[0].type, ValueType::BOOL);
     ASSERT_EQ(s[0].get_bool(), false);
-    ASSERT_EQ(s[1].type, Value::BOOL);
+    ASSERT_EQ(s[1].type, ValueType::BOOL);
     ASSERT_EQ(s[1].get_bool(), true);
   }
 }
@@ -214,7 +214,7 @@ return false or "ok";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "ok");
   }
   {
@@ -223,7 +223,7 @@ return nil or "ok";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "ok");
   }
   // Everything else is true.
@@ -233,7 +233,7 @@ return true or "ok";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::BOOL);
+    ASSERT_EQ(v.type, ValueType::BOOL);
     ASSERT_EQ(v.get_bool(), true);
   }
   {
@@ -242,7 +242,7 @@ return 0 or "ok";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::I64);
+    ASSERT_EQ(v.type, ValueType::I64);
     ASSERT_EQ(v.get_int64(), 0);
   }
   {
@@ -251,7 +251,7 @@ return "s" or "ok";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, Value::STR);
+    ASSERT_TRUE(v.is_str());
     ASSERT_EQ(v.get_strview(), "s");
   }
 }

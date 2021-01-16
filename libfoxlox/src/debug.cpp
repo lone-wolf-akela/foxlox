@@ -7,6 +7,8 @@
 #include <magic_enum.hpp>
 
 #include <foxlox/vm.h>
+#include "object.h"
+
 #include <foxlox/debug.h>
 
 namespace foxlox

@@ -10,6 +10,7 @@
 #include "parser.h"
 #include "codegen.h"
 #include "resolver.h"
+#include "object.h"
 
 #include <foxlox/compiler.h>
 

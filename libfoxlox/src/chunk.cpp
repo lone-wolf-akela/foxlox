@@ -6,6 +6,8 @@
 
 #include <gsl/gsl>
 
+#include "object.h"
+
 #include <foxlox/chunk.h>
 
 namespace foxlox

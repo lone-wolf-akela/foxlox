@@ -8,6 +8,8 @@
 
 #include <foxlox/except.h>
 #include <foxlox/debug.h>
+#include "object.h"
+
 #include <foxlox/vm.h>
 
 namespace foxlox

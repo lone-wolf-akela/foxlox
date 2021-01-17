@@ -341,8 +341,20 @@ namespace foxlox
     const auto info = value_idxs.at(expr->declare);
     assert(info.type == stmt::VarStoreType::Stack);
     emit(OP_LOAD_STACK, idx_cast(info.idx));
-    
     push_stack();
+  }
+  void CodeGen::visit_super_expr(gsl::not_null<expr::Super*> expr)
+  {
+    current_line = expr->keyword.line;
+
+    const auto info = value_idxs.at(expr->declare);
+    assert(info.type == stmt::VarStoreType::Stack);
+
+    emit(OP_LOAD_STACK, idx_cast(info.idx));
+    push_stack();
+
+    const uint16_t str_index = chunk.add_string(expr->method.lexeme);
+    emit(OP_GET_SUPER_METHOD, str_index);
   }
   void CodeGen::visit_expression_stmt(gsl::not_null<stmt::Expression*> stmt)
   {
@@ -625,15 +637,22 @@ namespace foxlox
       const uint16_t str_idx = chunk.add_string(method->name.lexeme);
       klass.add_method(chunk.get_const_strings()[str_idx]->get_view() , subroutine_idx);
     }
-    // TODO: superclass
 
     current_line = stmt->name.line;
     const uint16_t klass_idx = chunk.add_class(std::move(klass));
+    push_stack();
     emit(OP_CLASS, klass_idx);
+
+    if (stmt->superclass.get() != nullptr)
+    {
+      compile(stmt->superclass.get());
+      emit(OP_INHERIT);
+      pop_stack();
+    }
+
     if (stmt->name_store_type == stmt::VarStoreType::Stack)
     {
       // no code here, just let it stays in stack
-      push_stack();
       value_idxs.insert_or_assign(
         stmt,
         ValueIdx{ stmt::VarStoreType::Stack, gsl::narrow_cast<uint16_t>(current_stack_size - 1) }
@@ -644,6 +663,7 @@ namespace foxlox
       const uint16_t alloc_idx = chunk.add_static_value();
       emit(OP_STORE_STATIC, alloc_idx);
       emit(OP_POP);
+      pop_stack();
       value_idxs.insert_or_assign(
         stmt,
         ValueIdx{ stmt::VarStoreType::Static, alloc_idx }

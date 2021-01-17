@@ -20,8 +20,13 @@ class CoffeeMaker {
     this.coffee = nil;
   }
 }
-
-var maker = CoffeeMaker("coffee and chicory");
+class Child : CoffeeMaker
+{
+  __init__() {
+    super.__init__("coffee and chicory");
+  }
+}
+var maker = Child();
 maker.brew();
 maker.brew();
 )");

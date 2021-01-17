@@ -82,6 +82,7 @@ namespace foxlox
     case OP_GE:
     case OP_LT:
     case OP_LE:
+    case OP_INHERIT:
     {
 #ifdef DEBUG_TRACE_INST
       std::cout << fmt::format("{}\n", magic_enum::enum_name(op));

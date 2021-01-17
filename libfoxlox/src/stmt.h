@@ -103,10 +103,10 @@ namespace foxlox::stmt
   class Class : public Stmt
   {
   public:
-    Class(Token&& tk, std::unique_ptr<expr::Variable>&& super, std::vector<std::unique_ptr<Function>>&& ms);
+    Class(Token&& tk, std::unique_ptr<expr::Expr>&& super, std::vector<std::unique_ptr<Function>>&& ms);
     // for error reporting
     Token name;
-    std::unique_ptr<expr::Variable> superclass;
+    std::unique_ptr<expr::Expr> superclass;
     std::vector<std::unique_ptr<Function>> methods;
 
     // to be filled by resolver, this is refer to the class name as a variable

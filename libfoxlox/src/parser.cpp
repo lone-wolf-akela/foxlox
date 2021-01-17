@@ -66,11 +66,10 @@ namespace foxlox
   std::unique_ptr<stmt::Stmt> Parser::class_declaration()
   {
     Token name = consume(TokenType::IDENTIFIER, "Expect class name.");
-    std::unique_ptr<expr::Variable> superclass;
+    std::unique_ptr<expr::Expr> superclass = nullptr;
     if (match(TokenType::COLON))
     {
-      consume(TokenType::IDENTIFIER, "Expect superclass name.");
-      superclass = std::make_unique<expr::Variable>(previous());
+      superclass = expression();
     }
     consume(TokenType::LEFT_BRACE, "Expect `{' before class body.");
 

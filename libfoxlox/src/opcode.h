@@ -51,5 +51,7 @@ namespace foxlox
 
     OP_SET_PROPERTY,
     OP_GET_PROPERTY,
+    OP_INHERIT,
+    OP_GET_SUPER_METHOD,
   };
 }

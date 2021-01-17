@@ -1,4 +1,7 @@
+#include <fmt/format.h>
+
 #include <foxlox/chunk.h>
+#include <foxlox/except.h>
 
 #include "object.h"
 
@@ -43,21 +46,61 @@ namespace foxlox
       auto func = &chunk.get_subroutines()[func_idx];
       return Value(this, func);
     }
-    // TODO: error handling
-    return fields.at(name);
+    if (auto found = fields.find(name); found != fields.end())
+    {
+      return found->second;
+    }
+    else
+    {
+      // return nil when the field is not found
+      return Value();
+    }
+  }
+  Value Instance::get_super_method(std::string_view name, Chunk& chunk)
+  {
+    if (auto [got, func_idx] = klass->get_super()->try_get_method_idx(name); got)
+    {
+      auto func = &chunk.get_subroutines()[func_idx];
+      return Value(this, func);
+    }
+    else
+    {
+      throw ValueError(fmt::format("Super class has no method with name `{}'", name).c_str());
+    }
   }
   void Instance::set_property(std::string_view name, Value value)
   {
-    // TODO: look at klass
-    // TODO: error handling
-    fields.emplace(name, value);
+    if (klass->has_method(name))
+    {
+      throw ValueError("Attempt to rewrite class method. This is not allowed");
+    }
+    fields.insert_or_assign(name, value);
   }
-  Class::Class(std::string_view name) : ObjBase(ObjType::CLASS), class_name(name)
+  Class::Class(std::string_view name) : 
+    ObjBase(ObjType::CLASS), superclass(nullptr), class_name(name)
   {
   }
   void Class::add_method(std::string_view name, uint16_t func_idx)
   {
-    methods[name] = func_idx;
+    methods.emplace(name, func_idx);
+  }
+  void Class::set_super(Class* super)
+  {
+    superclass = super;
+    for (auto& [key, val] : super->methods)
+    {
+      // if we already have a method with the same name,
+      // do nothing (to shadow the base class method)
+      methods.try_emplace(key, val);
+    }
+  }
+  Class* Class::get_super()
+  {
+    return superclass;
+  }
+  bool Class::has_method(std::string_view name)
+  {
+    return methods.contains(name);
   }
   std::pair<bool, uint16_t> Class::try_get_method_idx(std::string_view name)
   {

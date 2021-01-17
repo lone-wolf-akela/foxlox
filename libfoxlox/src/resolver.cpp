@@ -366,16 +366,10 @@ namespace foxlox
     declare_from_class(stmt);
     define(stmt->name);
 
-    if (stmt->superclass.get() != nullptr
-      && stmt->name.lexeme == stmt->superclass->name.lexeme)
-    {
-      error(stmt->superclass->name, "A class can't inherit from itself.");
-    }
-
     if (stmt->superclass.get() != nullptr)
     {
-      current_class = ClassType::SUBCLASS;
       resolve(stmt->superclass.get());
+      current_class = ClassType::SUBCLASS;
     }
 
     begin_scope(true);

@@ -78,7 +78,7 @@ namespace foxlox
     void visit_get_expr(gsl::not_null<expr::Get*> expr) final;
     void visit_set_expr(gsl::not_null<expr::Set*> expr) final;
     void visit_this_expr(gsl::not_null<expr::This*> expr) final;
-    void visit_super_expr(gsl::not_null<expr::Super*> /*expr*/) final { throw UnimplementedError(); }
+    void visit_super_expr(gsl::not_null<expr::Super*> expr) final;
 
     void visit_expression_stmt(gsl::not_null<stmt::Expression*> stmt) final;
     void visit_var_stmt(gsl::not_null<stmt::Var*> stmt) final;

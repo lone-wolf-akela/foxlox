@@ -11,7 +11,7 @@
 
 namespace foxlox
 {
-  class ValueTypeError : public std::exception 
+  class ValueError : public std::exception
   { 
   public:
     using std::exception::exception; 

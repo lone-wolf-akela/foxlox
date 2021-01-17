@@ -305,6 +305,18 @@ namespace foxlox
           *top() = &classes.at(read_uint16());
           break;
         }
+        case OP_INHERIT:
+        {
+          const auto derived = top(1);
+          const auto base = top(0);
+          if (!derived->is_class() || !base->is_class())
+          {
+            throw ValueError("Value is not a class.");
+          }
+          derived->v.klass->set_super(base->v.klass);
+          pop();
+          break;
+        }
         case OP_STRING:
         {
           push();
@@ -469,11 +481,11 @@ namespace foxlox
           {
             if (v.is_nil())
             {
-              throw ValueTypeError("Value of type NIL is not callable.");
+              throw ValueError("Value of type NIL is not callable.");
             }
             if (!v.is_class())
             {
-              throw ValueTypeError(fmt::format("Value of type {} is not callable.",
+              throw ValueError(fmt::format("Value of type {} is not callable.",
                 magic_enum::enum_name(v.v.obj->type)).c_str());
             }
             const auto klass = v.v.klass;
@@ -507,17 +519,25 @@ namespace foxlox
           }
           default:
           {
-            throw ValueTypeError(fmt::format("Value of type {} is not callable.",
+            throw ValueError(fmt::format("Value of type {} is not callable.",
               magic_enum::enum_name(v.type)).c_str());
           }
           }
           collect_garbage();
           break;
         }
+        case OP_GET_SUPER_METHOD:
+        {
+          std::span strings = chunk->get_const_strings();
+          const auto name = gsl::at(strings, read_uint16())->get_view();
+          auto instance = top()->get_instance();
+          *top() = instance->get_super_method(name, *chunk);
+          break;
+        }
         case OP_GET_PROPERTY:
         {
           std::span strings = chunk->get_const_strings();
-          auto name = gsl::at(strings, read_uint16())->get_view();
+          const auto name = gsl::at(strings, read_uint16())->get_view();
           auto instance = top()->get_instance();
           *top() = instance->get_property(name, *chunk);
           break;
@@ -536,7 +556,7 @@ namespace foxlox
           break;
         }
       }
-      catch(const ValueTypeError& e)
+      catch(const ValueError& e)
       {
         const auto code_idx = std::distance(current_subroutine->get_code().begin(), ip);
         const auto line_num = current_subroutine->get_lines().get_line(code_idx);

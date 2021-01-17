@@ -24,24 +24,24 @@ namespace
   }
 
   template<typename T1, typename T2, typename ... Args>
-  ValueTypeError exception_wrongtype_binop(T1 got1, T2 got2, Args ... expected)
+  ValueError exception_wrongtype_binop(T1 got1, T2 got2, Args ... expected)
     requires (std::same_as<T1, ValueType> || std::same_as<T1, ObjType>) &&
     (std::same_as<T2, ValueType> || std::same_as<T2, ObjType>) &&
     ((std::same_as<Args, ValueType> || std::same_as<Args, ObjType>) && ...)
   {
     std::string msg = wrongtype_msg_fmt(expected...);
     fmt::format_to(std::back_inserter(msg), "got: {} and {}.", magic_enum::enum_name(got1), magic_enum::enum_name(got2));
-    return ValueTypeError(msg.c_str());
+    return ValueError(msg.c_str());
   }
 
   template<typename T, typename ... Args> 
-  ValueTypeError exception_wrongtype(T got, Args ... expected)
+  ValueError exception_wrongtype(T got, Args ... expected)
     requires (std::same_as<T, ValueType> || std::same_as<T, ObjType>) &&
     ((std::same_as<Args, ValueType> || std::same_as<Args, ObjType>) && ...)
   {
     std::string msg = wrongtype_msg_fmt(expected...);
     fmt::format_to(std::back_inserter(msg), "got: {}.", magic_enum::enum_name(got));
-    return ValueTypeError(msg.c_str());
+    return ValueError(msg.c_str());
   }
 
   constexpr void type_check(const Value& got, ValueType expected)

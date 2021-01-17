@@ -147,8 +147,12 @@ namespace foxlox
     Class(std::string_view name);
     std::string_view get_name() const noexcept { return class_name; }
     void add_method(std::string_view name, uint16_t func_idx);
+    void set_super(Class* super);
+    Class* get_super();
+    bool has_method(std::string_view name);
     std::pair<bool, uint16_t> try_get_method_idx(std::string_view name);
   private:
+    Class* superclass;
     std::string class_name;
     std::unordered_map<std::string_view, uint16_t> methods;
   };
@@ -178,6 +182,7 @@ namespace foxlox
     ~Instance() = default;
     Class* get_class() const noexcept;
     Value get_property(std::string_view name, Chunk& chunk);
+    Value get_super_method(std::string_view name, Chunk& chunk);
     void set_property(std::string_view name, Value value);
 
     template<Allocator A, Deallocator D>

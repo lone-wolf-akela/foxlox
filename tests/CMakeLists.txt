@@ -23,7 +23,10 @@ target_sources(${PROJECT_NAME} PRIVATE
    "src/for.cpp" 
    "src/logical_operator.cpp" 
    "src/tuple.cpp"
-   "src/closure.cpp")
+   "src/closure.cpp" 
+   "src/basic.cpp" 
+   "src/class.cpp" 
+   "src/regression.cpp")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE libfoxlox)
 

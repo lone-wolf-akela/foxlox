@@ -39,11 +39,10 @@ namespace foxlox
       return std::span{ data(), size() };
   }
   Class* Instance::get_class() const noexcept { return klass; }
-  Value Instance::get_property(std::string_view name, Chunk& chunk)
+  Value Instance::get_property(String* name)
   {
-    if (auto [got, func_idx] = klass->try_get_method_idx(name); got)
+    if (auto [got, func] = klass->try_get_method_idx(name); got)
     {
-      auto func = &chunk.get_subroutines()[func_idx];
       return Value(this, func);
     }
     if (auto found = fields.find(name); found != fields.end())
@@ -56,23 +55,22 @@ namespace foxlox
       return Value();
     }
   }
-  Value Instance::get_super_method(std::string_view name, Chunk& chunk)
+  Value Instance::get_super_method(String* name)
   {
-    if (auto [got, func_idx] = klass->get_super()->try_get_method_idx(name); got)
+    if (auto [got, func] = klass->get_super()->try_get_method_idx(name); got)
     {
-      auto func = &chunk.get_subroutines()[func_idx];
       return Value(this, func);
     }
     else
     {
-      throw ValueError(fmt::format("Super class has no method with name `{}'", name).c_str());
+      throw ValueError(fmt::format("Super class has no method with name `{}'", name->get_view()).c_str());
     }
   }
   Instance::Fields& Instance::get_all_fields()
   {
     return fields;
   }
-  void Instance::set_property(std::string_view name, Value value)
+  void Instance::set_property(String* name, Value value)
   {
     if (klass->has_method(name))
     {
@@ -96,9 +94,9 @@ namespace foxlox
     ObjBase(ObjType::CLASS), superclass(nullptr), class_name(name), gc_mark(false)
   {
   }
-  void Class::add_method(std::string_view name, uint16_t func_idx)
+  void Class::add_method(String* name, Subroutine* func)
   {
-    methods.emplace(name, func_idx);
+    methods.emplace(name, func);
   }
   void Class::set_super(Class* super)
   {
@@ -114,20 +112,20 @@ namespace foxlox
   {
     return superclass;
   }
-  bool Class::has_method(std::string_view name)
+  bool Class::has_method(String* name)
   {
     return methods.contains(name);
   }
-  std::pair<bool, uint16_t> Class::try_get_method_idx(std::string_view name)
+  std::pair<bool, Subroutine*> Class::try_get_method_idx(String* name)
   {
     const auto found = methods.find(name);
     if (found == methods.end())
     {
-      return std::make_pair(false, uint16_t{});
+      return std::make_pair(false, nullptr);
     }
     return std::make_pair(true, found->second);
   }
-  std::unordered_map<std::string_view, uint16_t>& Class::get_all_methods()
+  std::unordered_map<String*, Subroutine*>& Class::get_all_methods()
   {
     return methods;
   }

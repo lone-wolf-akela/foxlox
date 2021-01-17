@@ -11,11 +11,7 @@ add_executable(${PROJECT_NAME})
 add_dependencies(${PROJECT_NAME} libfoxlox)
 
 target_sources(${PROJECT_NAME} PRIVATE
-  "src/mimalloc-new-delete.cpp"
   "src/foxlox.cpp")
-
-find_package(mimalloc 1.6 CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC mimalloc)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE libfoxlox)
 

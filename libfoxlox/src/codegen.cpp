@@ -283,6 +283,7 @@ namespace foxlox
     }
     else
     {
+      current_subroutine().add_referenced_static_value(info.idx);
       emit(OP_STORE_STATIC, info.idx);
     }
   }
@@ -393,6 +394,7 @@ namespace foxlox
         stmt,
         ValueIdx{ stmt::VarStoreType::Static, alloc_idx }
       );
+      current_subroutine().add_referenced_static_value(alloc_idx);
     }
   }
   void CodeGen::visit_block_stmt(gsl::not_null<stmt::Block*> stmt)
@@ -417,7 +419,6 @@ namespace foxlox
     
     if (stmt->else_branch.get() != nullptr)
     {
-      emit(OP_JUMP);
       const auto else_jump_ip = emit_jump(OP_JUMP);
 
       patch_jump(then_jump_ip, stmt->right_paren);
@@ -480,6 +481,7 @@ namespace foxlox
           VarDeclareAtFunc{ stmt, gsl::narrow_cast<int>(i) },
           ValueIdx{ stmt::VarStoreType::Static, alloc_idx }
         );
+        current_subroutine().add_referenced_static_value(alloc_idx);
       }
     }
 
@@ -503,9 +505,11 @@ namespace foxlox
     {
       if (store_type == stmt::VarStoreType::Static)
       {
+        const uint16_t idx = value_idxs.at(VarDeclareAtFunc{ stmt, gsl::narrow_cast<int>(i) }).idx;
         emit(OP_LOAD_STACK, gsl::narrow_cast<uint16_t>(stmt->param.size() - i - 1));
-        emit(OP_STORE_STATIC, value_idxs.at(VarDeclareAtFunc{ stmt, gsl::narrow_cast<int>(i) }).idx);
+        emit(OP_STORE_STATIC, idx);
         emit(OP_POP);
+        current_subroutine().add_referenced_static_value(idx);
       }
     }
     for (auto& s : stmt->body)
@@ -542,6 +546,7 @@ namespace foxlox
         stmt,
         ValueIdx{ stmt::VarStoreType::Static, alloc_idx }
       );
+      current_subroutine().add_referenced_static_value(alloc_idx);
     }
 
     const uint16_t subroutine_idx = gen_subroutine(stmt, nullptr);
@@ -630,12 +635,31 @@ namespace foxlox
   void CodeGen::visit_class_stmt(gsl::not_null<stmt::Class*> stmt)
   {
     current_line = stmt->name.line;
-    Class klass(stmt->name.lexeme);
+
+    uint16_t alloc_idx{};
+    if (stmt->name_store_type == stmt::VarStoreType::Stack)
+    {
+      value_idxs.insert_or_assign(
+        stmt,
+        ValueIdx{ stmt::VarStoreType::Stack, gsl::narrow_cast<uint16_t>(current_stack_size) }
+      );
+    }
+    else
+    {
+      alloc_idx = chunk.add_static_value();
+      value_idxs.insert_or_assign(
+        stmt,
+        ValueIdx{ stmt::VarStoreType::Static, alloc_idx }
+      );
+      current_subroutine().add_referenced_static_value(alloc_idx);
+    }
+
+    CompiletimeClass klass(stmt->name.lexeme);
     for (auto& method : stmt->methods)
     {
       const uint16_t subroutine_idx = gen_subroutine(method.get(), stmt);
       const uint16_t str_idx = chunk.add_string(method->name.lexeme);
-      klass.add_method(chunk.get_const_strings()[str_idx]->get_view() , subroutine_idx);
+      klass.add_method(str_idx, subroutine_idx);
     }
 
     current_line = stmt->name.line;
@@ -653,21 +677,12 @@ namespace foxlox
     if (stmt->name_store_type == stmt::VarStoreType::Stack)
     {
       // no code here, just let it stays in stack
-      value_idxs.insert_or_assign(
-        stmt,
-        ValueIdx{ stmt::VarStoreType::Stack, gsl::narrow_cast<uint16_t>(current_stack_size - 1) }
-      );
     }
     else
     {
-      const uint16_t alloc_idx = chunk.add_static_value();
       emit(OP_STORE_STATIC, alloc_idx);
       emit(OP_POP);
       pop_stack();
-      value_idxs.insert_or_assign(
-        stmt,
-        ValueIdx{ stmt::VarStoreType::Static, alloc_idx }
-      );
     }
   }
 }

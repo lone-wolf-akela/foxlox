@@ -102,7 +102,7 @@ namespace foxlox
     consume(TokenType::RIGHT_PAREN, "Expect `)' after parameters.");
     consume(TokenType::LEFT_BRACE, fmt::format("Expect `{{' before {} body.", kind));
     auto body = block();
-    if (dynamic_cast<stmt::Return*>(body.back().get()) == nullptr)
+    if (body.empty() || dynamic_cast<stmt::Return*>(body.back().get()) == nullptr)
     {
       // there's no return at the end of a function
       // let's add one

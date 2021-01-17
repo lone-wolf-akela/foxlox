@@ -139,7 +139,7 @@ namespace foxlox
     return v.str->get_view();
   }
 
-  std::span<const Value> Value::get_tuplespan() const
+  std::span<Value> Value::get_tuplespan() const
   {
     type_check(*this, ObjType::TUPLE);
     return v.tuple->get_span();

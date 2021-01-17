@@ -44,11 +44,7 @@ namespace foxlox
   {
     return constants;
   }
-  std::span<const String* const> Chunk::get_const_strings() const
-  {
-    return const_strings;
-  }
-  std::span<String*> Chunk::get_const_strings()
+  std::span<const std::string> Chunk::get_const_strings() const
   {
     return const_strings;
   }
@@ -126,17 +122,14 @@ namespace foxlox
   }
   uint16_t Chunk::add_string(std::string_view str)
   {
-    const auto it = std::ranges::find(const_strings, str, [](String* s) {return s->get_view(); });
+    const auto it = std::ranges::find(const_strings, str);
     if (it != const_strings.end())
     {
       const auto index = std::distance(const_strings.begin(), it);
       return gsl::narrow_cast<uint16_t>(index);
     }
 
-    String* p = String::alloc([](auto l) {GSL_SUPPRESS(r.11) return new char[l]; }, str.size());
-    GSL_SUPPRESS(stl.1) GSL_SUPPRESS(bounds.3)
-    std::copy(str.begin(), str.end(), p->data());
-    const_strings.push_back(p);
+    const_strings.emplace_back(str);
     const auto index = const_strings.size() - 1;
     assert(index <= std::numeric_limits<uint16_t>::max());
     return gsl::narrow_cast<uint16_t>(index);
@@ -155,48 +148,7 @@ namespace foxlox
     static_value_num = 0;
     is_moved = false;
   }
-  Chunk::~Chunk()
-  {
-    clean();
-  }
-  Chunk::Chunk(Chunk&& r) noexcept
-  {
-    is_moved = r.is_moved;
-    source = std::move(r.source);
-    classes = std::move(r.classes);
-    subroutines = std::move(r.subroutines);
-    constants = std::move(r.constants);
-    const_strings = std::move(r.const_strings);
-    static_value_num = r.static_value_num;
-    r.is_moved = true;
-  }
-  Chunk& Chunk::operator=(Chunk&& r) noexcept
-  {
-    if (this == &r) { return *this; }
-    clean();
-    is_moved = r.is_moved;
-    source = std::move(r.source);
-    classes = std::move(r.classes);
-    subroutines = std::move(r.subroutines);
-    constants = std::move(r.constants);
-    const_strings = std::move(r.const_strings);
-    static_value_num = r.static_value_num;
-    r.is_moved = true;
-    return *this;
-  }
-  void Chunk::clean()
-  {
-    if (!is_moved)
-    {
-      for (const String* p : const_strings)
-      {
-        String::free([](auto p, auto) { 
-          GSL_SUPPRESS(r.11) GSL_SUPPRESS(i.11) 
-            delete[] p; 
-          }, p);
-      }
-    }
-  }
+
   void Chunk::set_source(std::vector<std::string>&& src) noexcept
   {
     source = std::move(src);
@@ -227,19 +179,32 @@ namespace foxlox
     }
     return last_line_num;
   }
-  uint16_t Chunk::add_class(Class&& klass)
+  uint16_t Chunk::add_class(CompiletimeClass&& klass)
   {
     classes.emplace_back(std::move(klass));
     const auto index = classes.size() - 1;
     assert(index <= std::numeric_limits<uint16_t>::max());
     return gsl::narrow_cast<uint16_t>(index);
   }
-  std::span<const Class> Chunk::get_classes() const noexcept
+  std::span<const CompiletimeClass> Chunk::get_classes() const noexcept
   {
     return classes;
   }
-  std::vector<Class>& Chunk::get_classes() noexcept
+
+  CompiletimeClass::CompiletimeClass(std::string_view name) :
+    classname(name) 
   {
-    return classes;
+  }
+  void CompiletimeClass::add_method(uint16_t name_idx, uint16_t subroutine_idx)
+  {
+    methods.emplace_back(name_idx, subroutine_idx);
+  }
+  std::string_view CompiletimeClass::get_name() const noexcept
+  {
+    return classname;
+  }
+  std::span<const std::pair<uint16_t, uint16_t>> CompiletimeClass::get_methods() const noexcept
+  {
+    return methods;
   }
 }

@@ -8,6 +8,7 @@
 #include <foxlox/debug.h>
 #include "../../src/config.h"
 #include "../../src/value.h"
+#include "../../src/string_pool.h"
 
 namespace foxlox
 {
@@ -24,9 +25,9 @@ namespace foxlox
     Value interpret(Chunk& c);
 
     // stack ops
-    using Stack = std::array<Value, STACK_MAX>;
+    using Stack = std::vector<Value>;
     size_t get_stack_size();
-    static size_t get_stack_capacity() noexcept;
+    size_t get_stack_capacity() noexcept;
     Stack::iterator top(int from_top = 0) noexcept;
     void push() noexcept;
     void pop(uint16_t n = 1) noexcept;
@@ -57,17 +58,24 @@ namespace foxlox
       IP ip{};
       Stack::iterator stack_top{};
     };
-    using CallTrace = std::array<CallFrame, CALLTRACE_MAX>;
+    using CallTrace = std::vector<CallFrame>;
     CallTrace calltrace;
     CallTrace::iterator p_calltrace;
 
     // data pool
-    std::vector<String*> string_pool;
+    StringPool string_pool;
     std::vector<Tuple*> tuple_pool;
     std::vector<Instance*> instance_pool;
     
     // note: we don't need sweep static_value_pool during gc
     std::vector<Value> static_value_pool;
+    // this pool is generated during chunk loading
+    std::vector<Class> class_pool;
+    // this pool is generated during chunk loading; do not gc this
+    // also need mark all of elem in it during gc marking
+    std::vector<String*> const_string_pool;
+    // special strings
+    String* str__init__;
 
     // mem manage related
     char* allocator(size_t l) noexcept;

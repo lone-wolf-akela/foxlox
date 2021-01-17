@@ -122,15 +122,13 @@ namespace foxlox
     bool get_bool() const;
     Instance* get_instance() const;
     std::string_view get_strview() const;
-    std::span<const Value> get_tuplespan() const;
+    std::span<Value> get_tuplespan() const;
     Subroutine* get_method_func() const;
 
     friend double operator/(const Value& l, const Value& r);
     friend Value operator*(const Value& l, const Value& r);
     friend Value operator+(const Value& l, const Value& r);
 
-    template<Allocator F>
-    static String* strcat(F allocator, const Value& l, const Value& r);
     template<Allocator F>
     static Tuple* tuplecat(F allocator, const Value& l, const Value& r);
 

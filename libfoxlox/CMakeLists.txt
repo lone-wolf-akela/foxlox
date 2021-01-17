@@ -30,7 +30,8 @@ target_sources(${PROJECT_NAME} PRIVATE
   "src/runtimelib.h" 
   "src/runtimelib.cpp" 
   "src/container_helper.cpp" 
-  "src/cppinterop.cpp")
+  "src/cppinterop.cpp" 
+  "src/string_pool.cpp")
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
@@ -62,7 +63,7 @@ find_package(magic_enum CONFIG REQUIRED)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 if(MSVC)
-  target_compile_options(${PROJECT_NAME} PRIVATE /utf-8)
+  target_compile_options(${PROJECT_NAME} PRIVATE /nologo /utf-8)
   target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic -Werror)

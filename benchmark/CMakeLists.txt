@@ -14,12 +14,15 @@ add_dependencies(${PROJECT_NAME} libfoxlox)
 
 target_sources(${PROJECT_NAME} PRIVATE
   "src/main.cpp"
-  "src/mimalloc-new-delete.cpp")
+  )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE libfoxlox)
 
-find_package(mimalloc 1.6 CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC mimalloc)
+find_package(fmt CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
+
+find_package(range-v3 CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE range-v3)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 if(MSVC)

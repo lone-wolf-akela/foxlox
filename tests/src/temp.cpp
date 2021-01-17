@@ -2,11 +2,13 @@
 
 #include <foxlox/vm.h>
 #include <foxlox/compiler.h>
+#include <foxlox/cppinterop.h>
 
 using namespace foxlox;
 
 TEST(temp_test, temp)
 {
+  VM vm;
   auto [res, chunk] = compile(R"(
 class CoffeeMaker {
   __init__(coffee) {
@@ -31,7 +33,6 @@ maker.brew();
 maker.brew();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  VM vm;
-  auto v = vm.interpret(chunk);
-  ASSERT_TRUE(v.is_nil());
+  auto v = to_variant(vm.interpret(chunk));
+  ASSERT_EQ(v, FoxValue(nil));
 }

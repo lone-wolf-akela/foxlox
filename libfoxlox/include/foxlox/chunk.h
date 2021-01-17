@@ -62,29 +62,39 @@ namespace foxlox
     bool gc_mark;
   };
 
+  class CompiletimeClass
+  {
+  public:
+    CompiletimeClass(std::string_view name);
+    void add_method(uint16_t name_idx, uint16_t subroutine_idx);
+    std::string_view get_name() const noexcept;
+    std::span<const std::pair<uint16_t, uint16_t>> get_methods() const noexcept;
+  private:
+    std::string classname;
+    std::vector<std::pair<uint16_t, uint16_t>> methods; // store the name str idx & subroutine idx
+  };
+
   class Chunk
   {
   public:
     Chunk() noexcept;
-    ~Chunk();
+    ~Chunk() = default;
     Chunk(const Chunk&) = delete;
     Chunk& operator=(const Chunk&) = delete;
-    Chunk(Chunk&& r) noexcept;
-    Chunk& operator=(Chunk&& r) noexcept;
+    Chunk(Chunk&& r) noexcept = default;
+    Chunk& operator=(Chunk&& r) noexcept = default;
 
     std::vector<Subroutine>& get_subroutines() noexcept;
     std::span<const Subroutine> get_subroutines() const noexcept;
-    std::vector<Class>& get_classes() noexcept;
-    std::span<const Class> get_classes() const noexcept;
+    std::span<const CompiletimeClass> get_classes() const noexcept;
     std::span<const Value> get_constants() const;
-    std::span<const String* const> get_const_strings() const;
-    std::span<String*> get_const_strings();
+    std::span<const std::string> get_const_strings() const;
     void set_source(std::vector<std::string>&& src) noexcept;
     std::string_view get_source(gsl::index line_num) const;
 
     uint16_t add_constant(Value v);
     uint16_t add_subroutine(std::string_view func_name, int num_of_params);
-    uint16_t add_class(Class&& klass);
+    uint16_t add_class(CompiletimeClass&& klass);
     uint16_t add_string(std::string_view str);
     uint16_t add_static_value() noexcept;
     uint16_t get_static_value_num() const noexcept;
@@ -95,10 +105,10 @@ namespace foxlox
     std::vector<std::string> source;
 
     std::vector<Subroutine> subroutines;
-    std::vector<Class> classes;
+    std::vector<CompiletimeClass> classes;
 
     std::vector<Value> constants;
-    std::vector<String*> const_strings;
+    std::vector<std::string> const_strings;
 
     uint16_t static_value_num;
   };

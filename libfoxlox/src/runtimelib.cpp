@@ -15,21 +15,37 @@ namespace
   using namespace foxlox;
   Value print(VM& /*vm*/, std::span<Value> values)
   {
-    if (values.size() == 1)
+    assert(values.size() >= 1);
+    bool multi_args = (values.size()) > 1;
+    assert(!multi_args || values.front().is_str());
+
+    fmt::dynamic_format_arg_store<fmt::format_context> store;
+    for (auto& v : values | std::ranges::views::drop(multi_args ? 1 : 0))
     {
-      std::cout << values.front().to_string();
-    }
-    else
-    {
-      assert(values.size() >= 1);
-      assert(values.front().is_str());
-      fmt::dynamic_format_arg_store<fmt::format_context> store;
-      for (auto& v : values | std::ranges::views::drop(1))
+      switch (v.type)
       {
-        store.push_back(v.to_string());
+      case ValueType::I64:
+        store.push_back(v.v.i64);
+        break;
+      case ValueType::F64:
+        store.push_back(v.v.f64);
+        break;
+      case ValueType::BOOL:
+        store.push_back(v.v.b);
+        break;
+      default:
+        if (v.is_str())
+        {
+          store.push_back(v.v.str->get_view());
+        }
+        else
+        {
+          store.push_back(v.to_string());
+        }
+        break;
       }
-      std::cout << fmt::vformat(values.front().v.str->get_view(), store);
     }
+    std::cout << fmt::vformat(multi_args ? values.front().v.str->get_view() : "{}", store);
     return Value();
   }
   Value println(VM& vm, std::span<Value> values)

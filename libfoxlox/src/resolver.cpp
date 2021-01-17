@@ -363,14 +363,15 @@ namespace foxlox
     const auto enclosing_class = current_class;
     current_class = ClassType::CLASS;
 
-    declare_from_class(stmt);
-    define(stmt->name);
-
+    // we should resolve super class name [before] defined the class
     if (stmt->superclass.get() != nullptr)
     {
       resolve(stmt->superclass.get());
       current_class = ClassType::SUBCLASS;
     }
+
+    declare_from_class(stmt);
+    define(stmt->name);
 
     begin_scope(true);
     if (current_class == ClassType::CLASS || current_class == ClassType::SUBCLASS)

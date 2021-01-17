@@ -14,7 +14,10 @@
 
 namespace foxlox
 {
-  VM::VM() noexcept
+  VM::VM() noexcept :
+    stack(STACK_MAX),
+    calltrace(CALLTRACE_MAX),
+    string_pool(std::bind_front(&VM::allocator, this), std::bind_front(&VM::deallocator, this))
   {
     chunk = nullptr;
     is_moved = false;
@@ -26,19 +29,21 @@ namespace foxlox
   {
     clean();
   }
-  VM::VM(VM&& r) noexcept
+  VM::VM(VM&& r) noexcept :
+    string_pool(std::move(r.string_pool))
   {
     is_moved = r.is_moved;
     current_subroutine = r.current_subroutine;
     ip = r.ip;
     chunk = r.chunk;
-    stack = r.stack;
+    stack = std::move(r.stack);
     stack_top = stack.begin() + std::distance(r.stack.begin(), r.stack_top);
+    calltrace = std::move(r.calltrace);
     p_calltrace = calltrace.begin() + std::distance(r.calltrace.begin(), r.p_calltrace);
-    string_pool = std::move(r.string_pool);
     tuple_pool = std::move(r.tuple_pool);
     instance_pool = std::move(r.instance_pool);
     static_value_pool = std::move(r.static_value_pool);
+    class_pool = std::move(class_pool);
     current_heap_size = r.current_heap_size;
     next_gc_heap_size = r.next_gc_heap_size;
     r.is_moved = true;
@@ -51,13 +56,15 @@ namespace foxlox
     current_subroutine = r.current_subroutine;
     ip = r.ip;
     chunk = r.chunk;
-    stack = r.stack;
+    stack = std::move(r.stack);
     stack_top = stack.begin() + std::distance(r.stack.begin(), r.stack_top);
+    calltrace = std::move(r.calltrace);
     p_calltrace = calltrace.begin() + std::distance(r.calltrace.begin(), r.p_calltrace);
     string_pool = std::move(r.string_pool);
     tuple_pool = std::move(r.tuple_pool);
     instance_pool = std::move(r.instance_pool);
     static_value_pool = std::move(r.static_value_pool);
+    class_pool = std::move(class_pool);
     current_heap_size = r.current_heap_size;
     next_gc_heap_size = r.next_gc_heap_size;
     r.is_moved = true;
@@ -67,10 +74,6 @@ namespace foxlox
   {
     if (!is_moved)
     {
-      for (const String* p : string_pool)
-      {
-        String::free(std::bind_front(&VM::deallocator, this), p);
-      }
       for (const Tuple* p : tuple_pool)
       {
         Tuple::free(std::bind_front(&VM::deallocator, this), p);
@@ -89,6 +92,21 @@ namespace foxlox
     ip = current_subroutine->get_code().begin();
     static_value_pool.resize(chunk->get_static_value_num());
     static_value_pool.shrink_to_fit();
+
+    for (auto& str : c.get_const_strings())
+    {
+      const_string_pool.push_back(string_pool.add_string(str));
+    }
+    for (auto& compiletime_class : c.get_classes())
+    {
+      class_pool.emplace_back(compiletime_class.get_name());
+      for (auto [name_idx, subroutine_idx] : compiletime_class.get_methods())
+      {
+        class_pool.back().add_method(
+          const_string_pool.at(name_idx), &chunk->get_subroutines().at(subroutine_idx));
+      }
+    }
+
     reset_stack();
     return run();
   }
@@ -98,7 +116,7 @@ namespace foxlox
   }
   size_t VM::get_stack_capacity() noexcept
   {
-    return std::tuple_size_v<decltype(VM::stack)>;
+    return stack.size();
   }
   Value VM::run()
   {
@@ -110,11 +128,11 @@ namespace foxlox
 #ifdef DEBUG_TRACE_STACK
       debugger.print_vm_stack(*this);
 #endif
-#if defined(DEBUG_TRACE_INST) || defined(DEBUG_TRACE_SRC)
-      debugger.disassemble_inst(*chunk, *current_subroutine, std::distance(current_subroutine->get_code().begin(), ip));
-#endif
 #ifdef DEBUG_STRESS_GC
       collect_garbage();
+#endif
+#if defined(DEBUG_TRACE_INST) || defined(DEBUG_TRACE_SRC)
+      debugger.disassemble_inst(*chunk, *current_subroutine, std::distance(current_subroutine->get_code().begin(), ip));
 #endif
       try
       {
@@ -183,8 +201,7 @@ namespace foxlox
           const auto r = top(0);
           if (l->is_str() && r->is_str())
           {
-            *l = Value::strcat(std::bind_front(&VM::allocator, this), *l, *r);
-            string_pool.push_back(l->v.str);
+            *l = string_pool.add_str_cat(l->get_strview(), r->get_strview());
           }
           else if (l->is_tuple() || r->is_tuple())
           {
@@ -301,8 +318,7 @@ namespace foxlox
         case OP_CLASS:
         {
           push();
-          auto& classes = chunk->get_classes();
-          *top() = &classes.at(read_uint16());
+          *top() = &class_pool.at(read_uint16());
           break;
         }
         case OP_INHERIT:
@@ -320,8 +336,7 @@ namespace foxlox
         case OP_STRING:
         {
           push();
-          std::span strings = chunk->get_const_strings();
-          *top() = gsl::at(strings, read_uint16());
+          *top() = const_string_pool.at(read_uint16());
           break;
         }
         case OP_BOOL:
@@ -494,9 +509,8 @@ namespace foxlox
               std::bind_front(&VM::deallocator, this),
               klass);
             instance_pool.push_back(instance);
-            if (auto [got, func_idx] = klass->try_get_method_idx("__init__"); got)
+            if (auto [got, func_to_call] = klass->try_get_method_idx(str__init__); got)
             {
-              const auto func_to_call = &chunk->get_subroutines().at(func_idx);
               p_calltrace->subroutine = current_subroutine;
               p_calltrace->ip = ip;
               p_calltrace->stack_top = stack_top - num_of_params;
@@ -528,24 +542,21 @@ namespace foxlox
         }
         case OP_GET_SUPER_METHOD:
         {
-          std::span strings = chunk->get_const_strings();
-          const auto name = gsl::at(strings, read_uint16())->get_view();
+          const auto name = const_string_pool.at(read_uint16());
           auto instance = top()->get_instance();
-          *top() = instance->get_super_method(name, *chunk);
+          *top() = instance->get_super_method(name);
           break;
         }
         case OP_GET_PROPERTY:
         {
-          std::span strings = chunk->get_const_strings();
-          const auto name = gsl::at(strings, read_uint16())->get_view();
+          const auto name = const_string_pool.at(read_uint16());
           auto instance = top()->get_instance();
-          *top() = instance->get_property(name, *chunk);
+          *top() = instance->get_property(name);
           break;
         }
         case OP_SET_PROPERTY:
         {
-          std::span strings = chunk->get_const_strings();
-          auto name = gsl::at(strings, read_uint16())->get_view();
+          const auto name = const_string_pool.at(read_uint16());
           auto instance = top()->get_instance();
           pop();
           instance->set_property(name, *top());
@@ -670,6 +681,11 @@ namespace foxlox
     }
     // current function
     mark_subroutine(*current_subroutine);
+    // const strings
+    for (auto str : const_string_pool)
+    {
+      str->mark();
+    }
   }
   void VM::mark_subroutine(Subroutine& s)
   {
@@ -683,10 +699,10 @@ namespace foxlox
   void VM::mark_class(Class& c)
   {
     if (c.is_marked()) { return; }
-    for (auto& [name, func_idx] : c.get_all_methods())
+    for (auto& [name, func] : c.get_all_methods())
     {
       std::ignore = name;
-      mark_subroutine(chunk->get_subroutines().at(func_idx));
+      mark_subroutine(*func);
     }
     if (c.get_super() != nullptr)
     {
@@ -772,7 +788,7 @@ namespace foxlox
           mark_value(tuple_elem);
         }
       }
-      else if (v->is_instance())
+      else if (v->is_instance() || v->type == ValueType::METHOD)
       {
         for (auto& [name, value] : v->v.instance->get_all_fields())
         {
@@ -783,25 +799,14 @@ namespace foxlox
       }
       else
       {
-        assert(false); // only tuple and instance should be put into graystack
+        assert(false); // only tuple, instance, and method should be put into graystack
       }
     }
   }
   void VM::sweep()
   {
     // string_pool
-    std::erase_if(string_pool, [this](String* str) {
-#ifdef DEBUG_LOG_GC
-      std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(str), str->is_marked() ? "is_marked" : "not_marked", str->get_view());
-#endif
-      if (!str->is_marked())
-      {
-        String::free(std::bind_front(&VM::deallocator, this), str);
-        return true;
-      }
-      str->unmark();
-      return false;
-      });
+    string_pool.sweep();
     // tuple_pool
     std::erase_if(tuple_pool, [this](Tuple* tuple) {
 #ifdef DEBUG_LOG_GC
@@ -834,7 +839,7 @@ namespace foxlox
       s.unmark();
     }
     // whiten all classes
-    for (auto& c : chunk->get_classes())
+    for (auto& c : class_pool)
     {
       c.unmark();
     }

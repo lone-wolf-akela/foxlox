@@ -673,11 +673,24 @@ namespace foxlox
   }
   void VM::mark_subroutine(Subroutine& s)
   {
-    if (s.gc_mark) { return; }
-    s.gc_mark = true;
+    if (s.is_marked()) { return; }
+    s.mark();
     for (auto idx : s.get_referenced_static_values())
     {
       mark_value(static_value_pool.at(idx));
+    }
+  }
+  void VM::mark_class(Class& c)
+  {
+    if (c.is_marked()) { return; }
+    for (auto& [name, func_idx] : c.get_all_methods())
+    {
+      std::ignore = name;
+      mark_subroutine(chunk->get_subroutines().at(func_idx));
+    }
+    if (c.get_super() != nullptr)
+    {
+      mark_class(*c.get_super());
     }
   }
   void VM::mark_value(Value& v)
@@ -691,9 +704,21 @@ namespace foxlox
     {
       std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.tuple), v.v.tuple->is_marked() ? "is_marked" : "not_marked", v.to_string());
     }
+    if (v.is_class())
+    {
+      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.klass), v.v.klass->is_marked() ? "is_marked" : "not_marked", v.to_string());
+    }
+    if (v.is_instance())
+    {
+      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.instance), v.v.instance->is_marked() ? "is_marked" : "not_marked", v.to_string());
+    }
     if (v.type == ValueType::FUNC)
     {
-      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.func), v.v.func->gc_mark ? "is_marked" : "not_marked", v.to_string());
+      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.func), v.v.func->is_marked() ? "is_marked" : "not_marked", v.to_string());
+    }
+    if (v.type == ValueType::METHOD)
+    {
+      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.get_method_func()), v.get_method_func()->is_marked() ? "is_marked" : "not_marked", v.to_string());
     }
 #endif
     if (v.is_str())
@@ -708,9 +733,30 @@ namespace foxlox
         v.v.tuple->mark();
       }
     }
+    else if (v.is_instance())
+    {
+      if (!v.v.instance->is_marked())
+      {
+        gray_stack.push(&v);
+        v.v.instance->mark();
+      }
+    }
+    else if (v.is_class())
+    {
+      mark_class(*v.v.klass);
+    }
     else if (v.type == ValueType::FUNC)
     {
       mark_subroutine(*v.v.func);
+    }
+    else if (v.type == ValueType::METHOD)
+    {
+      if (!v.v.instance->is_marked())
+      {
+        gray_stack.push(&v);
+        v.v.instance->mark();
+      }
+      mark_subroutine(*v.get_method_func());
     }
   }
   void VM::trace_references()
@@ -725,6 +771,19 @@ namespace foxlox
         {
           mark_value(tuple_elem);
         }
+      }
+      else if (v->is_instance())
+      {
+        for (auto& [name, value] : v->v.instance->get_all_fields())
+        {
+          std::ignore = name;
+          mark_value(value);
+        }
+        mark_class(*v->v.instance->get_class());
+      }
+      else
+      {
+        assert(false); // only tuple and instance should be put into graystack
       }
     }
   }
@@ -756,10 +815,28 @@ namespace foxlox
       tuple->unmark();
       return false;
       });
+    // instance_pool
+    std::erase_if(instance_pool, [this](Instance* instance) {
+#ifdef DEBUG_LOG_GC
+      std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(instance), instance->is_marked() ? "is_marked" : "not_marked", Value(instance).to_string());
+#endif
+      if (!instance->is_marked())
+      {
+        Instance::free(std::bind_front(&VM::deallocator, this), instance);
+        return true;
+      }
+      instance->unmark();
+      return false;
+      });
     // whiten all subroutines
     for (auto& s : chunk->get_subroutines())
     {
-      s.gc_mark = false;
+      s.unmark();
+    }
+    // whiten all classes
+    for (auto& c : chunk->get_classes())
+    {
+      c.unmark();
     }
   }
 }

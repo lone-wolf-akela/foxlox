@@ -45,8 +45,10 @@ namespace foxlox
     const LineInfo& get_lines() const noexcept;
     int get_arity() const noexcept;
     std::string_view get_funcname() const noexcept;
-
-    bool gc_mark;
+ 
+    bool is_marked();
+    void mark();
+    void unmark();
   private:
     const int arity;
     std::vector<uint8_t> code;
@@ -57,6 +59,7 @@ namespace foxlox
     
     // for memory management
     std::vector<uint16_t> referenced_static_values;
+    bool gc_mark;
   };
 
   class Chunk

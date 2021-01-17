@@ -96,6 +96,18 @@ namespace foxlox
   {
     return referenced_static_values;
   }
+  bool Subroutine::is_marked()
+  {
+    return gc_mark;
+  }
+  void Subroutine::mark()
+  {
+    gc_mark = true;
+  }
+  void Subroutine::unmark()
+  {
+    gc_mark = false;
+  }
   uint16_t Chunk::add_constant(Value v)
   {
     assert(v.type == ValueType::F64 || v.type == ValueType::I64 || v.type == ValueType::CPP_FUNC);

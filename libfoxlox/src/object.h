@@ -151,10 +151,16 @@ namespace foxlox
     Class* get_super();
     bool has_method(std::string_view name);
     std::pair<bool, uint16_t> try_get_method_idx(std::string_view name);
+    std::unordered_map<std::string_view, uint16_t>& get_all_methods();
+
+    bool is_marked();
+    void mark();
+    void unmark();
   private:
     Class* superclass;
     std::string class_name;
     std::unordered_map<std::string_view, uint16_t> methods;
+    bool gc_mark;
   };
 
   class Instance : public ObjBase
@@ -168,22 +174,27 @@ namespace foxlox
     >;
 
     template<Allocator A, Deallocator D>
-    Instance(A allocator, D deallocator, Class* from_class) : 
+    Instance(A allocator, D deallocator, Class* from_class) :
       ObjBase(ObjType::INSTANCE),
-      klass(from_class), 
+      klass(from_class),
       fields(
         0, //bucket_count
         std::hash<std::string_view>{},
         std::equal_to<std::string_view>{},
         AllocatorWrapper<std::pair<const std::string_view, Value>>(allocator, deallocator)
-      )
+      ),
+      gc_mark(false)
     {
     }
     ~Instance() = default;
     Class* get_class() const noexcept;
     Value get_property(std::string_view name, Chunk& chunk);
     Value get_super_method(std::string_view name, Chunk& chunk);
+    Fields& get_all_fields();
     void set_property(std::string_view name, Value value);
+    bool is_marked();
+    void mark();
+    void unmark();
 
     template<Allocator A, Deallocator D>
     static gsl::not_null<Instance*> alloc(A allocator, D deallocator, Class* klass)
@@ -203,6 +214,7 @@ namespace foxlox
   private:
     Class* klass;
     Fields fields;
+    bool gc_mark;
   };
 
   template<Allocator F>

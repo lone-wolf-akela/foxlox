@@ -8,7 +8,7 @@ namespace foxlox
 {
   CompiletimeValue::CompiletimeValue()
   {
-    v = std::monostate();
+    v = nullptr;
   }
   CompiletimeValue::CompiletimeValue(double f64)
   {
@@ -32,7 +32,7 @@ namespace foxlox
   }
   std::string CompiletimeValue::to_string() const
   {
-    if (std::holds_alternative<std::monostate>(v))
+    if (std::holds_alternative<nullptr_t>(v))
     {
       return "nil";
     }

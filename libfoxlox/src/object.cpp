@@ -68,6 +68,10 @@ namespace foxlox
       throw ValueError(fmt::format("Super class has no method with name `{}'", name).c_str());
     }
   }
+  Instance::Fields& Instance::get_all_fields()
+  {
+    return fields;
+  }
   void Instance::set_property(std::string_view name, Value value)
   {
     if (klass->has_method(name))
@@ -76,8 +80,20 @@ namespace foxlox
     }
     fields.insert_or_assign(name, value);
   }
+  bool Instance::is_marked() 
+  { 
+    return gc_mark;
+  }
+  void Instance::mark()
+  {
+    gc_mark = true;
+  }
+  void Instance::unmark()
+  {
+    gc_mark = false;
+  }
   Class::Class(std::string_view name) : 
-    ObjBase(ObjType::CLASS), superclass(nullptr), class_name(name)
+    ObjBase(ObjType::CLASS), superclass(nullptr), class_name(name), gc_mark(false)
   {
   }
   void Class::add_method(std::string_view name, uint16_t func_idx)
@@ -110,5 +126,21 @@ namespace foxlox
       return std::make_pair(false, uint16_t{});
     }
     return std::make_pair(true, found->second);
+  }
+  std::unordered_map<std::string_view, uint16_t>& Class::get_all_methods()
+  {
+    return methods;
+  }
+  bool Class::is_marked()
+  {
+    return gc_mark;
+  }
+  void Class::mark()
+  {
+    gc_mark = true;
+  }
+  void Class::unmark()
+  {
+    gc_mark = false;
   }
 }

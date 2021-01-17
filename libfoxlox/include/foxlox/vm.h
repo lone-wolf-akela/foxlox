@@ -65,6 +65,8 @@ namespace foxlox
     std::vector<String*> string_pool;
     std::vector<Tuple*> tuple_pool;
     std::vector<Instance*> instance_pool;
+    
+    // note: we don't need sweep static_value_pool during gc
     std::vector<Value> static_value_pool;
 
     // mem manage related
@@ -75,6 +77,7 @@ namespace foxlox
     void collect_garbage();
     void mark_roots();
     void mark_value(Value& v);
+    void mark_class(Class& c);
     void mark_subroutine(Subroutine& s);
     std::stack<Value*> gray_stack;
     void trace_references();

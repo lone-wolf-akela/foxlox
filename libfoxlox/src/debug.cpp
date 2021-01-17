@@ -90,7 +90,8 @@ namespace foxlox
       return 1;
     }
     case OP_SET_PROPERTY:
-    case  OP_GET_PROPERTY:
+    case OP_GET_PROPERTY:
+    case OP_GET_SUPER_METHOD:
     {
 #ifdef DEBUG_TRACE_INST
       const uint16_t str = get_uint16();

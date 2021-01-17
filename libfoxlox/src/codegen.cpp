@@ -203,7 +203,7 @@ namespace foxlox
   void CodeGen::visit_literal_expr(gsl::not_null<expr::Literal*> expr)
   {
     auto& v = expr->value.v;
-    if (std::holds_alternative<std::monostate>(v))
+    if (std::holds_alternative<nullptr_t>(v))
     {
       emit(OP_NIL);
     }

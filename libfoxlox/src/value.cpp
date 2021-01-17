@@ -93,7 +93,7 @@ namespace foxlox
     return (type == ValueType::OBJ) && (v.obj != nullptr) && (v.obj->type == ObjType::CLASS);
   }
 
-  inline bool Value::is_instance() const noexcept
+  bool Value::is_instance() const noexcept
   {
     return (type == ValueType::OBJ) && (v.obj != nullptr) && (v.obj->type == ObjType::INSTANCE);
   }

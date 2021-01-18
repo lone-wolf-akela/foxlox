@@ -16,6 +16,16 @@ namespace foxlox
   public:
     using std::exception::exception;
   };
+  class InternalRuntimeError : public std::exception
+  {
+  public:
+    using std::exception::exception;
+  };
+  class RuntimeLibError : public std::exception
+  {
+  public:
+    using std::exception::exception;
+  };
   class RuntimeError : public std::exception
   {
   public:

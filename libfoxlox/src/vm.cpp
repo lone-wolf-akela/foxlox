@@ -125,16 +125,16 @@ namespace foxlox
 #endif
       try
       {
-        const OpCode inst = read_inst();
+        const OP inst = read_inst();
         switch (inst)
         {
           // N
-        case OP_NOP:
+        case OP::NOP:
         {
           /* do nothing */
           break;
         }
-        case OP_RETURN:
+        case OP::RETURN:
         {
           if (p_calltrace == calltrace.begin()) { return Value(); }
           p_calltrace--;
@@ -148,7 +148,7 @@ namespace foxlox
           collect_garbage();
           break;
         }
-        case OP_RETURN_V:
+        case OP::RETURN_V:
         {
           const auto v = *top();
 
@@ -164,27 +164,27 @@ namespace foxlox
           collect_garbage();
           break;
         }
-        case OP_POP:
+        case OP::POP:
         {
           pop();
           break;
         }
-        case OP_POP_N:
+        case OP::POP_N:
         {
           pop(read_uint16());
           break;
         }
-        case OP_NEGATE:
+        case OP::NEGATE:
         {
           *top() = -*top();
           break;
         }
-        case OP_NOT:
+        case OP::NOT:
         {
           *top() = !*top();
           break;
         }
-        case OP_ADD:
+        case OP::ADD:
         {
           const auto l = top(1);
           const auto r = top(0);
@@ -204,7 +204,7 @@ namespace foxlox
           pop();
           break;
         }
-        case OP_SUBTRACT:
+        case OP::SUBTRACT:
         {
           const auto l = top(1);
           const auto r = top(0);
@@ -212,7 +212,7 @@ namespace foxlox
           pop();
           break;
         }
-        case OP_MULTIPLY:
+        case OP::MULTIPLY:
         {
           const auto l = top(1);
           const auto r = top(0);
@@ -220,7 +220,7 @@ namespace foxlox
           pop();
           break;
         }
-        case OP_DIVIDE:
+        case OP::DIVIDE:
         {
           const auto l = top(1);
           const auto r = top(0);
@@ -228,7 +228,7 @@ namespace foxlox
           pop();
           break;
         }
-        case OP_INTDIV:
+        case OP::INTDIV:
         {
           const auto l = top(1);
           const auto r = top(0);
@@ -236,7 +236,7 @@ namespace foxlox
           pop();
           break;
         }
-        case OP_EQ:
+        case OP::EQ:
         {
           const auto l = top(1);
           const auto r = top(0);
@@ -244,7 +244,7 @@ namespace foxlox
           pop();
           break;
         }
-        case OP_NE:
+        case OP::NE:
         {
           const auto l = top(1);
           const auto r = top(0);
@@ -252,7 +252,7 @@ namespace foxlox
           pop();
           break;
         }
-        case OP_GT:
+        case OP::GT:
         {
           const auto l = top(1);
           const auto r = top(0);
@@ -260,7 +260,7 @@ namespace foxlox
           pop();
           break;
         }
-        case OP_GE:
+        case OP::GE:
         {
           const auto l = top(1);
           const auto r = top(0);
@@ -268,7 +268,7 @@ namespace foxlox
           pop();
           break;
         }
-        case OP_LT:
+        case OP::LT:
         {
           const auto l = top(1);
           const auto r = top(0);
@@ -276,7 +276,7 @@ namespace foxlox
           pop();
           break;
         }
-        case OP_LE:
+        case OP::LE:
         {
           const auto l = top(1);
           const auto r = top(0);
@@ -284,33 +284,33 @@ namespace foxlox
           pop();
           break;
         }
-        case OP_NIL:
+        case OP::NIL:
         {
           push();
           *top() = Value();
           break;
         }
-        case OP_CONSTANT:
+        case OP::CONSTANT:
         {
           push();
           const std::span constants = chunk->get_constants();
           *top() = gsl::at(constants, read_uint16());
           break;
         }
-        case OP_FUNC:
+        case OP::FUNC:
         {
           push();
           auto& subroutines = chunk->get_subroutines();
           *top() = &subroutines.at(read_uint16());
           break;
         }
-        case OP_CLASS:
+        case OP::CLASS:
         {
           push();
           *top() = &class_pool.at(read_uint16());
           break;
         }
-        case OP_INHERIT:
+        case OP::INHERIT:
         {
           const auto derived = top(1);
           const auto base = top(0);
@@ -322,19 +322,19 @@ namespace foxlox
           pop();
           break;
         }
-        case OP_STRING:
+        case OP::STRING:
         {
           push();
           *top() = const_string_pool.at(read_uint16());
           break;
         }
-        case OP_BOOL:
+        case OP::BOOL:
         {
           push();
           *top() = Value(read_bool());
           break;
         }
-        case OP_TUPLE:
+        case OP::TUPLE:
         {
           // note: n can be 0
           const auto n = read_uint16();
@@ -350,7 +350,7 @@ namespace foxlox
           *top() = p;
           break;
         }
-        case OP_LOAD_STACK:
+        case OP::LOAD_STACK:
         {
           const auto idx = read_uint16();
           const auto v = *top(idx);
@@ -358,28 +358,28 @@ namespace foxlox
           *top() = v;
           break;
         }
-        case OP_STORE_STACK:
+        case OP::STORE_STACK:
         {
           const auto idx = read_uint16();
           const auto r = top();
           *top(idx) = *r;
           break;
         }
-        case OP_LOAD_STATIC:
+        case OP::LOAD_STATIC:
         {
           const auto idx = read_uint16();
           push();
           *top() = static_value_pool.at(idx);
           break;
         }
-        case OP_STORE_STATIC:
+        case OP::STORE_STATIC:
         {
           const auto idx = read_uint16();
           const auto r = top();
           static_value_pool.at(idx) = *r;
           break;
         }
-        case OP_JUMP:
+        case OP::JUMP:
         {
           const int16_t offset = read_int16();
           ip += offset;
@@ -389,7 +389,7 @@ namespace foxlox
           }
           break;
         }
-        case OP_JUMP_IF_TRUE:
+        case OP::JUMP_IF_TRUE:
         {
           const int16_t offset = read_int16();
           if (top()->get_bool() == true)
@@ -403,7 +403,7 @@ namespace foxlox
           }
           break;
         }
-        case OP_JUMP_IF_FALSE:
+        case OP::JUMP_IF_FALSE:
         {
           const int16_t offset = read_int16();
           if (top()->get_bool() == false)
@@ -417,7 +417,7 @@ namespace foxlox
           }
           break;
         }
-        case OP_JUMP_IF_TRUE_NO_POP:
+        case OP::JUMP_IF_TRUE_NO_POP:
         {
           const int16_t offset = read_int16();
           if (top()->get_bool() == true)
@@ -426,7 +426,7 @@ namespace foxlox
           }
           break;
         }
-        case OP_JUMP_IF_FALSE_NO_POP:
+        case OP::JUMP_IF_FALSE_NO_POP:
         {
           const int16_t offset = read_int16();
           if (top()->get_bool() == false)
@@ -435,7 +435,7 @@ namespace foxlox
           }
           break;
         }
-        case OP_CALL:
+        case OP::CALL:
         {
           const auto v = *top();
           const uint16_t num_of_params = read_uint16();
@@ -450,7 +450,10 @@ namespace foxlox
             p_calltrace->stack_top = stack_top - num_of_params;
             p_calltrace++;
 
-            assert(func_to_call->get_arity() == num_of_params);
+            if (func_to_call->get_arity() != num_of_params)
+            {
+              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params).c_str());
+            }
             current_subroutine = func_to_call;
             ip = current_subroutine->get_code().begin();
             break;
@@ -476,7 +479,10 @@ namespace foxlox
             push();
             *top() = v.v.instance; // `this'
 
-            assert(func_to_call->get_arity() == num_of_params);
+            if (func_to_call->get_arity() != num_of_params)
+            {
+              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params).c_str());
+            }
             current_subroutine = func_to_call;
             ip = current_subroutine->get_code().begin();
             break;
@@ -508,13 +514,19 @@ namespace foxlox
               push();
               *top() = instance; // `this'
 
-              assert(func_to_call->get_arity() == num_of_params);
+              if (func_to_call->get_arity() != num_of_params)
+              {
+                throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params).c_str());
+              }
               current_subroutine = func_to_call;
               ip = current_subroutine->get_code().begin();
             }
             else
             {
-              assert(num_of_params == 0);
+              if (num_of_params != 0)
+              {
+                throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", 0, num_of_params).c_str());
+              }
               push();
               *top() = instance;
             }
@@ -529,21 +541,21 @@ namespace foxlox
           collect_garbage();
           break;
         }
-        case OP_GET_SUPER_METHOD:
+        case OP::GET_SUPER_METHOD:
         {
           const auto name = const_string_pool.at(read_uint16());
           auto instance = top()->get_instance();
           *top() = instance->get_super_method(name);
           break;
         }
-        case OP_GET_PROPERTY:
+        case OP::GET_PROPERTY:
         {
           const auto name = const_string_pool.at(read_uint16());
           auto instance = top()->get_instance();
           *top() = instance->get_property(name);
           break;
         }
-        case OP_SET_PROPERTY:
+        case OP::SET_PROPERTY:
         {
           const auto name = const_string_pool.at(read_uint16());
           auto instance = top()->get_instance();
@@ -552,11 +564,10 @@ namespace foxlox
           break;
         }
         default:
-          assert(false);
-          break;
+          throw InternalRuntimeError(fmt::format("Unknown instruction: {}.", magic_enum::enum_name(inst)).c_str());
         }
       }
-      catch(const ValueError& e)
+      catch(const std::exception& e)
       {
         const auto code_idx = std::distance(current_subroutine->get_code().begin(), ip);
         const auto line_num = current_subroutine->get_lines().get_line(code_idx);
@@ -565,9 +576,9 @@ namespace foxlox
       }
     }
   }
-  OpCode VM::read_inst() noexcept
+  OP VM::read_inst() noexcept
   {
-    return static_cast<OpCode>(read_uint8());
+    return static_cast<OP>(read_uint8());
   }
   int16_t VM::read_int16() noexcept
   {
@@ -580,7 +591,7 @@ namespace foxlox
   uint8_t VM::read_uint8() noexcept
   {
     const auto v = *(ip++);
-    assert(ip <= current_subroutine->get_code().end());
+    Ensures(ip <= current_subroutine->get_code().end());
     return v;
   }
   uint16_t VM::read_uint16() noexcept
@@ -619,7 +630,7 @@ namespace foxlox
 #ifdef DEBUG_LOG_GC
     std::cout << fmt::format("free size={} at {}; heap size: {} -> {}\n", l, static_cast<const void*>(p), current_heap_size, current_heap_size -l);
 #endif
-    assert(l <= current_heap_size);
+    Ensures(l <= current_heap_size);
     current_heap_size -= l;
     GSL_SUPPRESS(r.11) GSL_SUPPRESS(i.11)
     delete[] p;
@@ -765,6 +776,7 @@ namespace foxlox
     {
       Value* const v = gray_stack.top();
       gray_stack.pop();
+      // only tuple, instance, and method should be put into graystack
       if (v->is_tuple())
       {
         for (auto& tuple_elem : v->v.tuple->get_span())
@@ -772,7 +784,7 @@ namespace foxlox
           mark_value(tuple_elem);
         }
       }
-      else if (v->is_instance() || v->type == ValueType::METHOD)
+      else // if (v->is_instance() || v->type == ValueType::METHOD)
       {
         for (auto& [name, value] : v->v.instance->get_all_fields())
         {
@@ -780,10 +792,6 @@ namespace foxlox
           mark_value(value);
         }
         mark_class(*v->v.instance->get_class());
-      }
-      else
-      {
-        assert(false); // only tuple, instance, and method should be put into graystack
       }
     }
   }

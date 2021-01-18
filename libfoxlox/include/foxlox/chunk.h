@@ -35,6 +35,7 @@ namespace foxlox
     Subroutine(std::string_view func_name, int num_of_params);
     std::span<const uint8_t> get_code() const noexcept;
     void add_code(bool c, int line_num);
+    void add_code(OP c, int line_num);
     void add_code(uint8_t c, int line_num);
     void add_code(int16_t c, int line_num);
     void add_code(uint16_t c, int line_num);
@@ -47,9 +48,9 @@ namespace foxlox
     int get_arity() const noexcept;
     std::string_view get_funcname() const noexcept;
  
-    bool is_marked();
-    void mark();
-    void unmark();
+    bool is_marked() const noexcept;
+    void mark() noexcept;
+    void unmark() noexcept;
   private:
     const int arity;
     std::vector<uint8_t> code;
@@ -61,6 +62,12 @@ namespace foxlox
     // for memory management
     std::vector<uint16_t> referenced_static_values;
     bool gc_mark;
+  };
+
+  class ChunkOperationError : public std::exception
+  {
+  public:
+    using std::exception::exception;
   };
 
   class Chunk
@@ -78,7 +85,7 @@ namespace foxlox
     uint16_t add_subroutine(std::string_view func_name, int num_of_params);
     uint16_t add_class(CompiletimeClass&& klass);
     uint16_t add_string(std::string_view str);
-    uint16_t add_static_value() noexcept;
+    uint16_t add_static_value();
     uint16_t get_static_value_num() const noexcept;
   private:
     std::vector<std::string> source;

@@ -1,6 +1,4 @@
 #pragma once
-
-#include <cassert>
 #include <cstdint>
 #include <charconv>
 #include <string_view>

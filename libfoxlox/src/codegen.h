@@ -54,11 +54,11 @@ namespace foxlox
         emit(std::forward<Args>(args)...);
       }
     }
-    gsl::index emit_jump(OpCode c);
+    gsl::index emit_jump(OP c);
     void patch_jump(gsl::index ip, Token tk);
     void patch_jumps(std::vector<gsl::index>& ips, Token tk);
     gsl::index prepare_loop();
-    void emit_loop(gsl::index ip, OpCode c, Token tk);    
+    void emit_loop(gsl::index ip, OP c, Token tk);
     void emit_pop_to(uint16_t stack_size_before);
     void pop_stack_to(uint16_t stack_size_before);
     std::vector<gsl::index> break_stmts;

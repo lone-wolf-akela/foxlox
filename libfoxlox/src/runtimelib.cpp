@@ -15,9 +15,15 @@ namespace
   using namespace foxlox;
   Value print(VM& /*vm*/, std::span<Value> values)
   {
-    assert(values.size() >= 1);
+    if (values.empty())
+    {
+      throw RuntimeLibError("[print]: Requires at least one parameter to print.");
+    }
     bool multi_args = (values.size()) > 1;
-    assert(!multi_args || values.front().is_str());
+    if (multi_args && !values.front().is_str())
+    {
+      throw RuntimeLibError("[print]: When print multiple values, the first parameter must be a format string.");
+    }
 
     fmt::dynamic_format_arg_store<fmt::format_context> store;
     for (auto& v : values | std::ranges::views::drop(multi_args ? 1 : 0))
@@ -56,7 +62,10 @@ namespace
   }
   Value clock(VM& /*vm*/, [[maybe_unused]] std::span<Value> values)
   {
-    assert(values.size() == 0);
+    if (values.size() != 0)
+    {
+      throw RuntimeLibError("[clock]: This function does not need any paramters.");
+    }
     using namespace std::chrono;
     const auto ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
     return double(ms.count()) / 1000.;

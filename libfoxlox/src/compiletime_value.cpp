@@ -1,4 +1,4 @@
-#include <cassert>
+#include <foxlox/except.h>
 
 #include "util.h"
 
@@ -6,15 +6,15 @@
 
 namespace foxlox
 {
-  CompiletimeValue::CompiletimeValue()
+  CompiletimeValue::CompiletimeValue() noexcept
   {
     v = nullptr;
   }
-  CompiletimeValue::CompiletimeValue(double f64)
+  CompiletimeValue::CompiletimeValue(double f64) noexcept
   {
     v = f64;
   }
-  CompiletimeValue::CompiletimeValue(int64_t i64)
+  CompiletimeValue::CompiletimeValue(int64_t i64) noexcept
   {
     v = i64;
   }
@@ -22,11 +22,11 @@ namespace foxlox
   {
     v = std::string(str);
   }
-  CompiletimeValue::CompiletimeValue(bool b)
+  CompiletimeValue::CompiletimeValue(bool b) noexcept
   {
     v = b;
   }
-  CompiletimeValue::CompiletimeValue(CppFunc* cppfunc)
+  CompiletimeValue::CompiletimeValue(CppFunc* cppfunc) noexcept
   {
     v = cppfunc;
   }
@@ -52,8 +52,7 @@ namespace foxlox
     {
       return std::get<bool>(v) ? "true" : "false";
     }
-    assert(false);
-    return "";
+    throw FatalError("Unknown value type.");
   }
 
   CompiletimeClass::CompiletimeClass(std::string_view name) :

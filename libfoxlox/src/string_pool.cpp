@@ -1,8 +1,11 @@
 #include <algorithm>
 #include <bit>
+#include <iostream>
 
 #include <gsl/gsl>
+#include <fmt/format.h>
 
+#include <foxlox/except.h>
 #include "config.h"
 
 #include "string_pool.h"
@@ -150,6 +153,10 @@ namespace foxlox
   }
   void StringPool::grow_capacity()
   {
+    if (count > std::bit_floor(std::numeric_limits<decltype(count)>::max()) / 2)
+    {
+      throw InternalRuntimeError("Too many strings. String pool is full.");
+    }
     size_t new_count = 0;
     // make sure use this std::bit_ceil
     // other wise capacity_mask will be broken
@@ -179,7 +186,7 @@ namespace foxlox
   }
   void StringPool::delete_entry(StringPoolEntry& e)
   {
-    assert(e.str != nullptr && !e.tombstone);
+    Expects(e.str != nullptr && !e.tombstone);
     String::free(deallocator, e.str);
     e.tombstone = true;
     // tombstone still counts in count, so we do not count-- here

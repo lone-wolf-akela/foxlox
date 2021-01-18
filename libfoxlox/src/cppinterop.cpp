@@ -1,3 +1,5 @@
+#include <foxlox/except.h>
+
 #include <foxlox/cppinterop.h>
 
 namespace foxlox
@@ -35,13 +37,24 @@ namespace foxlox
       case ObjType::INSTANCE:
         return v.v.instance;
       default:
-        assert(false);
-        return {};
+        throw FatalError("Unknown object type.");
       }
     }
     default:
-      assert(false);
-      return{};
+      throw FatalError("Unknown value type.");
     }
   }
+
+  bool operator==(const nil_t&, const nil_t&) noexcept 
+  { 
+    return true; 
+  }
+  TupleSpan::TupleSpan(const std::span<Value>& r) noexcept : std::span<Value>(r) {}
+  TupleSpan::TupleSpan(std::span<Value>&& r) noexcept : std::span<Value>(std::move(r)) {}
+  bool operator==(const TupleSpan& l, const TupleSpan& r) noexcept
+  {
+    return (l.data() == r.data()) && (l.size() == r.size());
+  }
+  FoxValue::FoxValue(const std::string& s) noexcept : FoxValueBase(std::string_view(s)) {}
+  FoxValue::FoxValue(const char* s) noexcept : FoxValueBase(std::string_view(s)) {}
 }

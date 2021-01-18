@@ -11,7 +11,7 @@ namespace foxlox
       token.type == TokenType::TKEOF ? " at end" :
       token.type == TokenType::TKERROR ? "" :
       fmt::format(" at `{}'", token.lexeme),
-      message
+      token.type == TokenType::TKERROR ? token.lexeme : message
     );
   }
 }

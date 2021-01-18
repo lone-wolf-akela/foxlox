@@ -159,7 +159,7 @@ namespace foxlox
           }
           else
           {
-            assert(false);
+            throw FatalError("Unknown var declaration info type.");
           }
         }
         return found->second.declare;

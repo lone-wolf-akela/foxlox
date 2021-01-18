@@ -40,13 +40,19 @@ namespace foxlox::expr
   {
   public:
     virtual std::unique_ptr<Expr> clone() = 0;
+
+    Expr() = default;
+    Expr(const Expr&) = delete;
+    Expr(Expr&&) = delete;
+    Expr& operator=(const Expr&) = delete;
+    Expr& operator=(Expr&&) = delete;
     virtual ~Expr() = default;
   };
 
   class Assign : public Expr
   {
   public:
-    Assign(Token&& tk, std::unique_ptr<Expr>&& v);
+    Assign(Token&& tk, std::unique_ptr<Expr>&& v) noexcept;
     Token name;
     std::unique_ptr<Expr> value;
 
@@ -54,111 +60,114 @@ namespace foxlox::expr
     // pointed to where the value is declared
     VarDeclareAt declare;
 
-    virtual std::unique_ptr<Expr> clone() override;
+    std::unique_ptr<Expr> clone() final;
   };
 
   class Binary : public Expr
   {
   public:
-    Binary(std::unique_ptr<Expr>&& l, Token&& tk, std::unique_ptr<Expr>&& r);
+    Binary(std::unique_ptr<Expr>&& l, Token&& tk, std::unique_ptr<Expr>&& r) noexcept;
     std::unique_ptr<Expr> left;
     Token op;
     std::unique_ptr<Expr> right;
 
-    virtual std::unique_ptr<Expr> clone() override;
+    std::unique_ptr<Expr> clone() final;
   };
 
   class Logical : public Expr
   {
   public:
-    Logical(std::unique_ptr<Expr>&& l, Token&& tk, std::unique_ptr<Expr>&& r);
+    Logical(std::unique_ptr<Expr>&& l, Token&& tk, std::unique_ptr<Expr>&& r) noexcept;
     std::unique_ptr<Expr> left;
     Token op;
     std::unique_ptr<Expr> right;
 
-    virtual std::unique_ptr<Expr> clone() override;
+    std::unique_ptr<Expr> clone() final;
   };
   class Tuple : public Expr
   {
   public:
-    Tuple(std::vector<std::unique_ptr<Expr>>&& es);
+    Tuple(std::vector<std::unique_ptr<Expr>>&& es) noexcept;
     std::vector<std::unique_ptr<Expr>> exprs;
 
-    virtual std::unique_ptr<Expr> clone() override;
+    std::unique_ptr<Expr> clone() final;
   };
   class Grouping : public Expr
   {
   public:
-    Grouping(std::unique_ptr<Expr>&& expr);
+    Grouping(std::unique_ptr<Expr>&& expr) noexcept;
     std::unique_ptr<Expr> expression;
 
-    virtual std::unique_ptr<Expr> clone() override;
+    std::unique_ptr<Expr> clone() final;
   };
   class Literal : public Expr
   {
   public:
-    Literal(CompiletimeValue&& v);
-    Literal(const CompiletimeValue& v);
+    Literal(CompiletimeValue&& v, Token&& tk) noexcept;
+    Literal(const CompiletimeValue& v, Token tk) noexcept;
     CompiletimeValue value;
 
-    virtual std::unique_ptr<Expr> clone() override;
+    // for error reporting
+    Token token;
+
+    std::unique_ptr<Expr> clone() final;
   };
   class Unary : public Expr
   {
   public:
-    Unary(Token&& tk, std::unique_ptr<Expr>&& r);
+    Unary(Token&& tk, std::unique_ptr<Expr>&& r) noexcept;
     Token op;
     std::unique_ptr<Expr> right;
 
-    virtual std::unique_ptr<Expr> clone() override;
+    std::unique_ptr<Expr> clone() final;
   };
   class Call : public Expr
   {
   public:
-    Call(std::unique_ptr<Expr>&& ce, Token&& tk, std::vector<std::unique_ptr<Expr>>&& augs);
+    Call(std::unique_ptr<Expr>&& ce, Token&& tk, std::vector<std::unique_ptr<Expr>>&& augs) noexcept;
     std::unique_ptr<Expr> callee;
       // stores the token for the closing parenthesis.
       // its location is used when we report a runtime error caused by a function call.
     Token paren;
     std::vector<std::unique_ptr<Expr>> arguments;
 
-    virtual std::unique_ptr<Expr> clone() override;
+    std::unique_ptr<Expr> clone() final;
   };
   class Variable : public Expr
   {
   public:
-    Variable(Token&& tk);
+    Variable(Token&& tk) noexcept;
     Token name;
 
     // to be filled by resolver 
     // pointed to where the value is declared
     VarDeclareAt declare;
 
-    virtual std::unique_ptr<Expr> clone() override;
+    std::unique_ptr<Expr> clone() final;
   };
   class Get : public Expr
   {
   public:
-    Get(std::unique_ptr<Expr>&& o, Token&& tk);
+    Get(std::unique_ptr<Expr>&& o, Token&& tk) noexcept;
     std::unique_ptr<Expr> obj;
     Token name;
 
-    virtual std::unique_ptr<Expr> clone() override;
+    std::unique_ptr<Expr> clone() final;
   };
   class Set : public Expr
   {
   public:
-    Set(std::unique_ptr<Expr>&& o, Token&& tk, std::unique_ptr<Expr>&& v);
+    Set(std::unique_ptr<Expr>&& o, Token&& tk, std::unique_ptr<Expr>&& v) noexcept;
     std::unique_ptr<Expr> obj;
     Token name;
     std::unique_ptr<Expr> value;
 
-    virtual std::unique_ptr<Expr> clone() override;
+    std::unique_ptr<Expr> clone() final;
   };
   class Super : public Expr
   {
   public:
-    Super(Token&& key, Token&& mthd);
+    Super(Token&& key, Token&& mthd) noexcept;
     Token keyword;
     Token method;
 
@@ -166,19 +175,19 @@ namespace foxlox::expr
     // pointed to the corresponding method 
     VarDeclareAt declare;
 
-    virtual std::unique_ptr<Expr> clone() override;
+    std::unique_ptr<Expr> clone() final;
   };
   class This : public Expr
   {
   public:
-    This(Token&& tk);
+    This(Token&& tk) noexcept;
     Token keyword;
 
     // to be filled by resolver 
     // pointed to the corresponding class 
     VarDeclareAt declare;
 
-    virtual std::unique_ptr<Expr> clone() override;
+    std::unique_ptr<Expr> clone() final;
   };
 
   template<typename R>
@@ -199,6 +208,7 @@ namespace foxlox::expr
     virtual R visit_this_expr(gsl::not_null<This*> expr) = 0;
     virtual R visit_super_expr(gsl::not_null<Super*> expr) = 0;
 
+    GSL_SUPPRESS(c.21)
     virtual ~IVisitor() = default;
 
     R visit(Expr* expr)

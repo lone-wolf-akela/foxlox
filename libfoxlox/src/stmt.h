@@ -3,8 +3,6 @@
 #include <memory>
 #include <vector>
 
-#include <cassert>
-
 #include <gsl/gsl>
 
 #include <foxlox/except.h>
@@ -22,20 +20,25 @@ namespace foxlox::stmt
   class Stmt
   {
   public:
+    Stmt() = default;
+    Stmt(const Stmt&) = delete;
+    Stmt(Stmt&&) = delete;
+    Stmt& operator=(const Stmt&) = delete;
+    Stmt& operator=(Stmt&&) = delete;
     virtual ~Stmt() = default;
   };
 
   class Expression : public Stmt
   {
   public:
-    Expression(std::unique_ptr<expr::Expr>&& expr);
+    Expression(std::unique_ptr<expr::Expr>&& expr) noexcept;
     std::unique_ptr<expr::Expr> expression;
   };
   
   class Var : public Stmt
   {
   public:
-    Var(Token&& tk, std::unique_ptr<expr::Expr>&& init);
+    Var(Token&& tk, std::unique_ptr<expr::Expr>&& init) noexcept;
     Token name;
     std::unique_ptr<expr::Expr> initializer;
 
@@ -46,7 +49,7 @@ namespace foxlox::stmt
   class While : public Stmt
   {
   public:
-    While(std::unique_ptr<expr::Expr>&& cond, std::unique_ptr<Stmt>&& bd, Token&& r_paren);
+    While(std::unique_ptr<expr::Expr>&& cond, std::unique_ptr<Stmt>&& bd, Token&& r_paren) noexcept;
     std::unique_ptr<expr::Expr> condition;
     std::unique_ptr<Stmt> body;
 
@@ -57,7 +60,7 @@ namespace foxlox::stmt
   class Block : public Stmt
   {
   public:
-    Block(std::vector<std::unique_ptr<Stmt>>&& stmts);
+    Block(std::vector<std::unique_ptr<Stmt>>&& stmts) noexcept;
     std::vector<std::unique_ptr<Stmt>> statements;
   };
 
@@ -69,7 +72,7 @@ namespace foxlox::stmt
       std::unique_ptr<Stmt>&& thenb, 
       std::unique_ptr<Stmt>&& elseb,
       Token&& r_paren
-    );
+    ) noexcept;
     std::unique_ptr<expr::Expr> condition;
     std::unique_ptr<Stmt> then_branch;
     std::unique_ptr<Stmt> else_branch;
@@ -81,7 +84,7 @@ namespace foxlox::stmt
   class Function : public Stmt
   {
   public:
-    Function(Token&& tk, std::vector<Token>&& par, std::vector<std::unique_ptr<Stmt>>&& bd);
+    Function(Token&& tk, std::vector<Token>&& par, std::vector<std::unique_ptr<Stmt>>&& bd) noexcept;
     Token name;
     std::vector<Token> param;
     std::vector<std::unique_ptr<Stmt>> body;
@@ -94,7 +97,7 @@ namespace foxlox::stmt
   class Return : public Stmt
   {
   public:
-    Return(Token&& tk, std::unique_ptr<expr::Expr>&& v);
+    Return(Token&& tk, std::unique_ptr<expr::Expr>&& v) noexcept;
     // for error reporting
     Token keyword;
     std::unique_ptr<expr::Expr> value;
@@ -103,7 +106,7 @@ namespace foxlox::stmt
   class Class : public Stmt
   {
   public:
-    Class(Token&& tk, std::unique_ptr<expr::Expr>&& super, std::vector<std::unique_ptr<Function>>&& ms);
+    Class(Token&& tk, std::unique_ptr<expr::Expr>&& super, std::vector<std::unique_ptr<Function>>&& ms) noexcept;
     // for error reporting
     Token name;
     std::unique_ptr<expr::Expr> superclass;
@@ -118,7 +121,7 @@ namespace foxlox::stmt
   class Break : public Stmt
   {
   public:
-    Break(Token&& tk);
+    Break(Token&& tk) noexcept;
     // for error reporting
     Token keyword;
   };
@@ -126,7 +129,7 @@ namespace foxlox::stmt
   class Continue : public Stmt
   {
   public:
-    Continue(Token&& tk);
+    Continue(Token&& tk) noexcept;
     // for error reporting
     Token keyword;
   };
@@ -140,7 +143,7 @@ namespace foxlox::stmt
       std::unique_ptr<expr::Expr>&& incre, 
       std::unique_ptr<Stmt>&& bd,
       Token&& r_paren
-    );
+    ) noexcept;
     std::unique_ptr<Stmt> initializer;
     std::unique_ptr<expr::Expr> condition;
     std::unique_ptr<expr::Expr> increment;
@@ -166,6 +169,7 @@ namespace foxlox::stmt
     virtual R visit_class_stmt(gsl::not_null<Class*> stmt) = 0;
     virtual R visit_for_stmt(gsl::not_null<For*> stmt) = 0;
 
+    GSL_SUPPRESS(c.21)
     virtual ~IVisitor() = default;
 
     R visit(Stmt* stmt)

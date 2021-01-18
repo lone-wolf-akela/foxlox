@@ -30,7 +30,7 @@ namespace foxlox
   void Parser::define(std::string_view name, CppFunc* func)
   {
     Token tk_name(TokenType::IDENTIFIER, name, {}, 0);
-    auto initializer = std::make_unique<expr::Literal>(CompiletimeValue(func));
+    auto initializer = std::make_unique<expr::Literal>(CompiletimeValue(func), tk_name);
     auto var_stmt = std::make_unique<stmt::Var>(std::move(tk_name), std::move(initializer));
     ast.emplace_back(std::move(var_stmt));
   }
@@ -326,7 +326,7 @@ namespace foxlox
       Token op = previous();
       //de-sugarlize
       std::unique_ptr<expr::Expr> right = unary();
-      auto literal_one = std::make_unique<expr::Literal>(CompiletimeValue(int64_t(1)));
+      auto literal_one = std::make_unique<expr::Literal>(CompiletimeValue(int64_t(1)), op);
       Token tk(
         op.type == TokenType::PLUS_PLUS ? TokenType::PLUS : TokenType::MINUS,
         op.lexeme, 
@@ -389,19 +389,19 @@ namespace foxlox
   {
     if (match(TokenType::FALSE))
     {
-      return std::make_unique<expr::Literal>(false);
+      return std::make_unique<expr::Literal>(false, previous());
     }
     if (match(TokenType::TRUE))
     {
-      return std::make_unique<expr::Literal>(true);
+      return std::make_unique<expr::Literal>(true, previous());
     }
     if (match(TokenType::NIL))
     {
-      return std::make_unique<expr::Literal>(CompiletimeValue());
+      return std::make_unique<expr::Literal>(CompiletimeValue(), previous());
     }
     if (match(TokenType::INT, TokenType::DOUBLE, TokenType::STRING))
     {
-      return std::make_unique<expr::Literal>(std::move(previous().literal));
+      return std::make_unique<expr::Literal>(std::move(previous().literal), previous());
     }
     if (match(TokenType::LEFT_PAREN))
     {

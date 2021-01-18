@@ -7,6 +7,10 @@
 
 namespace foxlox
 {
+  String::String(size_t l) noexcept :
+    SimpleObj(ObjType::STR, l), m_data{}
+  {
+  }
   String::TStrViewComp operator<=>(const String& l, const String& r)
   {
 #if __cpp_lib_three_way_comparison >= 201907L
@@ -27,6 +31,10 @@ namespace foxlox
   std::string_view String::get_view() const noexcept
   {
     return std::string_view(data(), size());
+  }
+  Tuple::Tuple(size_t l) noexcept : 
+    SimpleObj(ObjType::TUPLE, l), m_data{} 
+  {
   }
   std::span<const Value> Tuple::get_span() const noexcept
   {

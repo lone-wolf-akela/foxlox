@@ -13,12 +13,12 @@ namespace foxlox
   struct CompiletimeValue
   {
     std::variant<nullptr_t, double, int64_t, std::string, bool, CppFunc*> v;
-    CompiletimeValue();
-    CompiletimeValue(double f64);
-    CompiletimeValue(int64_t i64);
+    CompiletimeValue() noexcept;
+    CompiletimeValue(double f64) noexcept;
+    CompiletimeValue(int64_t i64) noexcept;
     CompiletimeValue(std::string_view str);
-    CompiletimeValue(bool b);
-    CompiletimeValue(CppFunc* cppfunc);
+    CompiletimeValue(bool b) noexcept;
+    CompiletimeValue(CppFunc* cppfunc) noexcept;
 
     std::string to_string() const;
   };

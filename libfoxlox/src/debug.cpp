@@ -6,6 +6,7 @@
 #include <range/v3/all.hpp>
 #include <magic_enum.hpp>
 
+#include <foxlox/except.h>
 #include <foxlox/vm.h>
 #include "object.h"
 #include "config.h"
@@ -61,37 +62,37 @@ namespace foxlox
       return std::bit_cast<int16_t>(get_uint16());
     };
 
-    OpCode op = static_cast<OpCode>(codes[index]);
+    OP op = static_cast<OP>(codes[index]);
     switch (op)
     {
-    case OP_NOP:
-    case OP_NIL:
-    case OP_RETURN:
-    case OP_RETURN_V:
-    case OP_POP:
-    case OP_NEGATE:
-    case OP_NOT:
-    case OP_ADD:
-    case OP_SUBTRACT:
-    case OP_MULTIPLY:
-    case OP_DIVIDE:
-    case OP_INTDIV:
-    case OP_EQ:
-    case OP_NE:
-    case OP_GT:
-    case OP_GE:
-    case OP_LT:
-    case OP_LE:
-    case OP_INHERIT:
+    case OP::NOP:
+    case OP::NIL:
+    case OP::RETURN:
+    case OP::RETURN_V:
+    case OP::POP:
+    case OP::NEGATE:
+    case OP::NOT:
+    case OP::ADD:
+    case OP::SUBTRACT:
+    case OP::MULTIPLY:
+    case OP::DIVIDE:
+    case OP::INTDIV:
+    case OP::EQ:
+    case OP::NE:
+    case OP::GT:
+    case OP::GE:
+    case OP::LT:
+    case OP::LE:
+    case OP::INHERIT:
     {
 #ifdef DEBUG_TRACE_INST
       std::cout << fmt::format("{}\n", magic_enum::enum_name(op));
 #endif
       return 1;
     }
-    case OP_SET_PROPERTY:
-    case OP_GET_PROPERTY:
-    case OP_GET_SUPER_METHOD:
+    case OP::SET_PROPERTY:
+    case OP::GET_PROPERTY:
+    case OP::GET_SUPER_METHOD:
     {
 #ifdef DEBUG_TRACE_INST
       const uint16_t str = get_uint16();
@@ -99,71 +100,71 @@ namespace foxlox
 #endif
       return 2;
     }
-    case OP_CONSTANT:
+    case OP::CONSTANT:
     {
 #ifdef DEBUG_TRACE_INST
       const uint16_t constant = get_uint16();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_CONSTANT", constant, vm.chunk->get_constants()[constant].to_string());
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "CONSTANT", constant, vm.chunk->get_constants()[constant].to_string());
 #endif
       return 3;
     }
-    case OP_FUNC:
+    case OP::FUNC:
     {
 #ifdef DEBUG_TRACE_INST
       const uint16_t constant = get_uint16();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_FUNC", constant, vm.chunk->get_subroutines()[constant].get_funcname());
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "FUNC", constant, vm.chunk->get_subroutines()[constant].get_funcname());
 #endif
       return 3;
     }
-    case OP_CLASS:
+    case OP::CLASS:
     {
 #ifdef DEBUG_TRACE_INST
       const uint16_t constant = get_uint16();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_CLASS", constant, vm.class_pool.at(constant).get_name());
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "CLASS", constant, vm.class_pool.at(constant).get_name());
 #endif
       return 3;
     }
-    case OP_STRING:
+    case OP::STRING:
     {
 #ifdef DEBUG_TRACE_INST
       const uint16_t str = get_uint16();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_STRING", str, vm.const_string_pool.at(str)->get_view());
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "STRING", str, vm.const_string_pool.at(str)->get_view());
 #endif
       return 3;
     }
-    case OP_BOOL:
+    case OP::BOOL:
     {
 #ifdef DEBUG_TRACE_INST
       bool b = static_cast<bool>(get_uint8());
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_BOOL", "", b ? "true" : "false");
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "BOOL", "", b ? "true" : "false");
 #endif
       return 2;
     }
-    case OP_CALL:
+    case OP::CALL:
     {
 #ifdef DEBUG_TRACE_INST
       const uint16_t arity = get_uint16();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_CALL", "", arity);
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "CALL", "", arity);
 #endif
       return 3;
     }
-    case OP_LOAD_STACK:
-    case OP_STORE_STACK:
-    case OP_LOAD_STATIC:
-    case OP_STORE_STATIC:
-    case OP_POP_N:
-    case OP_TUPLE:
+    case OP::LOAD_STACK:
+    case OP::STORE_STACK:
+    case OP::LOAD_STATIC:
+    case OP::STORE_STATIC:
+    case OP::POP_N:
+    case OP::TUPLE:
     {
 #ifdef DEBUG_TRACE_INST
       std::cout << fmt::format("{:<16} {:>4}\n", magic_enum::enum_name(op), get_uint16());
 #endif
       return 3;
     }
-    case OP_JUMP:
-    case OP_JUMP_IF_TRUE:
-    case OP_JUMP_IF_FALSE:
-    case OP_JUMP_IF_TRUE_NO_POP:
-    case OP_JUMP_IF_FALSE_NO_POP:
+    case OP::JUMP:
+    case OP::JUMP_IF_TRUE:
+    case OP::JUMP_IF_FALSE:
+    case OP::JUMP_IF_TRUE_NO_POP:
+    case OP::JUMP_IF_FALSE_NO_POP:
     {
 #ifdef DEBUG_TRACE_INST
       std::cout << fmt::format("{:<16} {:>4}\n", magic_enum::enum_name(op), get_int16());
@@ -171,10 +172,8 @@ namespace foxlox
       return 3;
     }
     default:
-      assert(false);
+      throw FatalError("Unknown OpCode.");
     }
-    assert(false);
-    return 0;
   }
   void Debugger::disassemble_chunk(const VM& vm, const Subroutine& subroutine, std::string_view name)
   {

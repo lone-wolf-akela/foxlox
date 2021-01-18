@@ -1,6 +1,5 @@
 #pragma once
 #include <climits>
-#include <cassert>
 #include <version>
 #include <unordered_map>
 
@@ -19,10 +18,10 @@ namespace foxlox
     bool gc_mark;
     uint32_t m_size;
   public:
-    SimpleObj(ObjType t, size_t l) : 
+    SimpleObj(ObjType t, size_t l) noexcept :
       ObjBase(t), gc_mark(false), m_size(gsl::narrow_cast<uint32_t>(l))
     {
-      assert(l <= std::numeric_limits<decltype(m_size)>::max());
+      Expects(l <= std::numeric_limits<decltype(m_size)>::max());
     }
     SimpleObj(const SimpleObj&) = delete;
     SimpleObj(SimpleObj&&) = delete;
@@ -63,7 +62,7 @@ namespace foxlox
     char m_data[0];
 #pragma warning(default:4200)
   public:
-    String(size_t l) : SimpleObj(ObjType::STR, l) {}
+    String(size_t l) noexcept;
     ~String() = default;
 
     template<Allocator F>
@@ -101,7 +100,7 @@ namespace foxlox
     Value m_data[0];
 #pragma warning(default:4200)
   public:
-    Tuple(size_t l) : SimpleObj(ObjType::TUPLE, l) {}
+    Tuple(size_t l) noexcept;
     ~Tuple() = default;
 
     template<Allocator F>
@@ -202,6 +201,7 @@ namespace foxlox
   template<Allocator F>
   static Tuple* Value::tuplecat(F allocator, const Value& l, const Value& r)
   {
+    Expects(l.is_tuple() || r.is_tuple());
     if (l.is_tuple() && r.is_tuple())
     {
       const auto s1 = l.v.tuple->get_span();
@@ -213,7 +213,7 @@ namespace foxlox
         std::copy(s2.begin(), s2.end(), it);
       return p;
     }
-    if (l.is_tuple())
+    else if (l.is_tuple())
     {
       const auto s1 = l.v.tuple->get_span();
       Tuple* p = Tuple::alloc(allocator, s1.size() + 1);
@@ -222,7 +222,7 @@ namespace foxlox
       *it = r;
       return p;
     }
-    assert(r.is_tuple());
+    else
     {
       const auto s2 = r.v.tuple->get_span();
       Tuple* p = Tuple::alloc(allocator, 1 + s2.size());

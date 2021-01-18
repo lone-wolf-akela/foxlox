@@ -1,4 +1,4 @@
-#include <cassert>
+#include <iostream>
 #include <vector>
 
 #ifdef _WIN32
@@ -28,7 +28,10 @@ namespace foxlox
         gsl::narrow_cast<int32_t>(ssize(in)),
         &err
       );
-      assert(!U_FAILURE(err));
+      if (U_FAILURE(err))
+      {
+        std::cerr << "String encoding conversion failed.\n";
+      }
       buffer.resize(u16_len);
     }
     std::string result(in.size() * 4, '\0');
@@ -43,7 +46,10 @@ namespace foxlox
         gsl::narrow_cast<int32_t>(ssize(buffer)),
         &err
       );
-      assert(!U_FAILURE(err));
+      if (U_FAILURE(err))
+      {
+        std::cerr << "String encoding conversion failed.\n";
+      }
       result.resize(u8_len);
     }
     return result;
@@ -66,7 +72,10 @@ namespace foxlox
         gsl::narrow_cast<int32_t>(ssize(in)),
         &err
       );
-      assert(!U_FAILURE(err));
+      if (U_FAILURE(err))
+      {
+        std::cerr << "String encoding conversion failed.\n";
+      }
       buffer.resize(u16_len);
     }
     std::u32string result(in.size(), U'\0');
@@ -81,7 +90,10 @@ namespace foxlox
         gsl::narrow_cast<int32_t>(ssize(buffer)),
         &err
       );
-      assert(!U_FAILURE(err));
+      if (U_FAILURE(err))
+      {
+        std::cerr << "String encoding conversion failed.\n";
+      }
       result.resize(u32_len);
     }
     return result;

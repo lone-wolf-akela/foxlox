@@ -51,7 +51,7 @@ namespace foxlox
     void pop(uint16_t n = 1) noexcept;
   private:
     Value run();
-    OpCode read_inst() noexcept;
+    OP read_inst() noexcept;
     int16_t read_int16() noexcept;
     bool read_bool() noexcept;
     uint8_t read_uint8() noexcept;

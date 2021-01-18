@@ -255,15 +255,27 @@ namespace foxlox
     {
       double f64;
       const auto r = std::from_chars(u8substr.data(), u8substr.data() + u8substr.size(), f64);
-      assert(r.ptr == u8substr.data() + u8substr.size());
-      add_token(TokenType::DOUBLE, f64);
+      if(r.ptr == u8substr.data() + u8substr.size())
+      {
+        add_token(TokenType::DOUBLE, f64);
+      }
+      else
+      {
+        add_error("Wrong number format.");
+      }
     }
     else
     {
       int64_t i64;
       const auto r = std::from_chars(u8substr.data(), u8substr.data() + u8substr.size(), i64);
-      assert(r.ptr == u8substr.data() + u8substr.size());
-      add_token(TokenType::INT, i64);
+      if(r.ptr == u8substr.data() + u8substr.size())
+      {
+        add_token(TokenType::INT, i64);
+      }
+      else
+      {
+        add_error("Wrong number format.");
+      }
     }
   }
 

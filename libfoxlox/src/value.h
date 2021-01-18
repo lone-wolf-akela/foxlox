@@ -49,7 +49,7 @@ namespace foxlox
   class ObjBase
   {
   public:
-    ObjBase(ObjType t) : type(t) {}
+    ObjBase(ObjType t) noexcept;
     ObjType type;
   };
 

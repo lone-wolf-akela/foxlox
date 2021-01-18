@@ -73,6 +73,11 @@ namespace foxlox
 {
   static_assert(sizeof(Value) == 16);
 
+  ObjBase::ObjBase(ObjType t) noexcept : 
+    type(t) 
+  {
+  }
+
   bool Value::is_nil() const noexcept
   {
     return (type == ValueType::OBJ) && (v.obj == nullptr);

@@ -1,4 +1,3 @@
-#include <cassert>
 #include <string_view>
 #include <algorithm>
 #include <limits>
@@ -6,6 +5,7 @@
 
 #include <gsl/gsl>
 
+#include <foxlox/except.h>
 #include "object.h"
 
 #include <foxlox/chunk.h>
@@ -53,6 +53,11 @@ namespace foxlox
     lines.add_line(ssize(code), line_num);
     code.push_back(c ? uint8_t{ 1 } : uint8_t{ 0 });
   }
+  void Subroutine::add_code(OP c, int line_num)
+  {
+    lines.add_line(ssize(code), line_num);
+    code.push_back(uint8_t{ c });
+  }
   void Subroutine::add_code(uint8_t c, int line_num)
   {
     lines.add_line(ssize(code), line_num);
@@ -92,32 +97,41 @@ namespace foxlox
   {
     return referenced_static_values;
   }
-  bool Subroutine::is_marked()
+  bool Subroutine::is_marked() const noexcept
   {
     return gc_mark;
   }
-  void Subroutine::mark()
+  void Subroutine::mark() noexcept
   {
     gc_mark = true;
   }
-  void Subroutine::unmark()
+  void Subroutine::unmark() noexcept
   {
     gc_mark = false;
   }
   uint16_t Chunk::add_constant(Value v)
   {
-    assert(v.type == ValueType::F64 || v.type == ValueType::I64 || v.type == ValueType::CPP_FUNC);
+    if (v.type != ValueType::F64 && v.type != ValueType::I64 && v.type != ValueType::CPP_FUNC)
+    {
+      throw FatalError("Wrong constant type.");
+    }
 
     constants.push_back(v);
     const auto index = constants.size() - 1;
-    assert(index <= std::numeric_limits<uint16_t>::max());
+    if (index > std::numeric_limits<uint16_t>::max())
+    {
+      throw ChunkOperationError("Too many constants. Chunk constant table is full.");
+    }
     return gsl::narrow_cast<uint16_t>(index);
   }
   uint16_t Chunk::add_subroutine(std::string_view func_name, int num_of_params)
   {
     subroutines.emplace_back(func_name, num_of_params);
     const auto index = subroutines.size() - 1;
-    assert(index <= std::numeric_limits<uint16_t>::max());
+    if (index > std::numeric_limits<uint16_t>::max())
+    {
+      throw ChunkOperationError("Too many subroutines. Chunk subroutine table is full.");
+    }
     return gsl::narrow_cast<uint16_t>(index);
   }
   uint16_t Chunk::add_string(std::string_view str)
@@ -131,12 +145,18 @@ namespace foxlox
 
     const_strings.emplace_back(str);
     const auto index = const_strings.size() - 1;
-    assert(index <= std::numeric_limits<uint16_t>::max());
+    if (index > std::numeric_limits<uint16_t>::max())
+    {
+      throw ChunkOperationError("Too many strings. Chunk string table is full.");
+    }
     return gsl::narrow_cast<uint16_t>(index);
   }
-  uint16_t Chunk::add_static_value() noexcept
+  uint16_t Chunk::add_static_value()
   {
-    assert(uint32_t(static_value_num) + 1 <= std::numeric_limits<uint16_t>::max());
+    if (uint32_t(static_value_num) + 1 > std::numeric_limits<uint16_t>::max())
+    {
+      throw ChunkOperationError("Too many static values. Chunk static table is full.");
+    }
     return static_value_num++;
   }
   uint16_t Chunk::get_static_value_num() const noexcept
@@ -178,7 +198,10 @@ namespace foxlox
   {
     classes.emplace_back(std::move(klass));
     const auto index = classes.size() - 1;
-    assert(index <= std::numeric_limits<uint16_t>::max());
+    if (index > std::numeric_limits<uint16_t>::max())
+    {
+      throw ChunkOperationError("Too many classes. Chunk class table is full.");
+    }
     return gsl::narrow_cast<uint16_t>(index);
   }
   std::span<const CompiletimeClass> Chunk::get_classes() const noexcept

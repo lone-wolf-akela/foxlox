@@ -70,7 +70,7 @@ namespace foxlox
       grow_capacity();
     }
     const auto hash = str_hash(str);
-    gsl::index idx = hash % entries.size();
+    gsl::index idx = hash & capacity_mask;
     StringPoolEntry* first_tombstone = nullptr;
     while (true)
     {
@@ -94,7 +94,7 @@ namespace foxlox
       {
         return entries.at(idx).str;
       }
-      idx = (idx + 1) % entries.size();
+      idx = (idx + 1) & capacity_mask;
     }
   }
   String* StringPool::add_str_cat(std::string_view lhs, std::string_view rhs)
@@ -104,7 +104,7 @@ namespace foxlox
       grow_capacity();
     }
     const auto hash = str_hash(lhs, rhs);
-    gsl::index idx = hash % entries.size();
+    gsl::index idx = hash & capacity_mask;
     StringPoolEntry* first_tombstone = nullptr;
     while (true)
     {
@@ -129,7 +129,7 @@ namespace foxlox
       {
         return entries.at(idx).str;
       }
-      idx = (idx + 1) % entries.size();
+      idx = (idx + 1) & capacity_mask;
     }
   }
   void StringPool::sweep()
@@ -151,7 +151,10 @@ namespace foxlox
   void StringPool::grow_capacity()
   {
     size_t new_count = 0;
-    const size_t new_capacity = std::max<size_t>(HASH_TABLE_START_BUCKET, count * 2);
+    // make sure use this std::bit_ceil
+    // other wise capacity_mask will be broken
+    const size_t new_capacity = std::max<size_t>(HASH_TABLE_START_BUCKET, std::bit_ceil(count * 2));
+    capacity_mask = new_capacity - 1;
     std::vector<StringPoolEntry> new_entries(new_capacity);
     for (auto& e : entries)
     {
@@ -160,7 +163,7 @@ namespace foxlox
         continue;
       }
       new_count++;
-      gsl::index idx = e.hash % new_capacity;
+      gsl::index idx = e.hash & capacity_mask;
       while (true)
       {
         if (new_entries.at(idx).str == nullptr)
@@ -168,7 +171,7 @@ namespace foxlox
           new_entries.at(idx) = e;
           break;
         }
-        idx = (idx + 1) % new_capacity;
+        idx = (idx + 1) & capacity_mask;
       }
     }
     entries.swap(new_entries);

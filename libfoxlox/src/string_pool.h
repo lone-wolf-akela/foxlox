@@ -23,8 +23,12 @@ namespace foxlox
       allocator(alloc), 
       deallocator(dealloc), 
       count(0), 
+      capacity_mask(HASH_TABLE_START_BUCKET - 1),
       entries(HASH_TABLE_START_BUCKET)
     {
+      // make sure HASH_TABLE_START_BUCKET is power of 2
+      // otherwise capacity_mask won't work
+      static_assert((HASH_TABLE_START_BUCKET & (HASH_TABLE_START_BUCKET - 1)) == 0);
     }
 
     ~StringPool();
@@ -38,6 +42,7 @@ namespace foxlox
     std::function<char* (size_t)> allocator;
     std::function<void(const char*, size_t)> deallocator;
     size_t count;
+    size_t capacity_mask;
     std::vector<StringPoolEntry> entries;
   };
 }

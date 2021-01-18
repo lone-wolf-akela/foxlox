@@ -197,7 +197,7 @@ namespace foxlox
       statements.emplace_back(declaration());
     }
     consume(TokenType::RIGHT_BRACE, "Expect `}' after block.");
-    return std::move(statements);
+    return statements;
   }
   std::unique_ptr<stmt::Stmt> Parser::expression_statement()
   {
@@ -245,7 +245,7 @@ namespace foxlox
       }
       error(equals, "Invalid assignment target.");
     }
-    return std::move(expr);
+    return expr;
   }
   std::unique_ptr<expr::Expr> Parser::or_expr()
   {
@@ -256,7 +256,7 @@ namespace foxlox
       auto right = and_expr();
       expr = std::make_unique<expr::Logical>(std::move(expr), std::move(op), std::move(right));
     }
-    return std::move(expr);
+    return expr;
   }
   std::unique_ptr<expr::Expr> Parser::and_expr()
   {
@@ -267,7 +267,7 @@ namespace foxlox
       auto right = equality();
       expr = std::make_unique<expr::Logical>(std::move(expr), std::move(op), std::move(right));
     }
-    return std::move(expr);
+    return expr;
   }
   std::unique_ptr<expr::Expr> Parser::equality()
   {
@@ -278,7 +278,7 @@ namespace foxlox
       auto right = comparison();
       expr = std::make_unique<expr::Binary>(std::move(expr), std::move(op), std::move(right));
     }
-    return std::move(expr);
+    return expr;
   }
   std::unique_ptr<expr::Expr> Parser::comparison()
   {
@@ -289,7 +289,7 @@ namespace foxlox
       auto right = term();
       expr = std::make_unique<expr::Binary>(std::move(expr), std::move(op), std::move(right));
     }
-    return std::move(expr);
+    return expr;
   }
   std::unique_ptr<expr::Expr> Parser::term()
   {
@@ -300,7 +300,7 @@ namespace foxlox
       auto right = factor();
       expr = std::make_unique<expr::Binary>(std::move(expr), std::move(op), std::move(right));
     }
-    return std::move(expr);
+    return expr;
   }
   std::unique_ptr<expr::Expr> Parser::factor()
   {
@@ -311,7 +311,7 @@ namespace foxlox
       auto right = unary();
       expr = std::make_unique<expr::Binary>(std::move(expr), std::move(op), std::move(right));
     }
-    return std::move(expr);
+    return expr;
   }
   std::unique_ptr<expr::Expr> Parser::unary()
   {
@@ -364,7 +364,7 @@ namespace foxlox
       }
       else { break; }
     }
-    return std::move(expr);
+    return expr;
   }
 
   std::unique_ptr<expr::Expr> Parser::finish_call(std::unique_ptr<expr::Expr>&& callee)
@@ -479,7 +479,7 @@ namespace foxlox
       }
       else
       {
-        return std::move(tk);
+        return tk;
       }
     }
   }
@@ -534,6 +534,8 @@ namespace foxlox
       case TokenType::WHILE:
       case TokenType::RETURN:
         return;
+      default:
+        break;
       }
 
       advance();

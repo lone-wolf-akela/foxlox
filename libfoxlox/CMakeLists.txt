@@ -61,10 +61,14 @@ target_link_libraries(${PROJECT_NAME} PRIVATE range-v3)
 
 find_package(magic_enum CONFIG REQUIRED)
 
+find_package(ICU REQUIRED COMPONENTS uc)
+target_link_libraries(${PROJECT_NAME} PRIVATE ICU::uc)
+
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 if(MSVC)
   target_compile_options(${PROJECT_NAME} PRIVATE /nologo /utf-8)
-  target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
+  target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX /Ob3)
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic -Werror)
+  target_compile_options(${PROJECT_NAME} PUBLIC -Wno-unknown-pragmas -Wno-pedantic)
 endif()

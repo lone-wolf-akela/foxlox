@@ -1,3 +1,4 @@
+#include <cassert>
 #include <span>
 #include <functional>
 #include <utility>
@@ -15,7 +16,38 @@
 
 namespace foxlox
 {
-  VM_GC_Index::VM_GC_Index(VM* v) : 
+  VM_Allocator::VM_Allocator(size_t* heap_sz) noexcept :
+    heap_size(heap_sz)
+  {
+  }
+  char* VM_Allocator::operator()(size_t l)
+  {
+    *heap_size += l;
+    GSL_SUPPRESS(r.11)
+#ifdef DEBUG_LOG_GC
+      std::cout << fmt::format("alloc size={} ", l);
+#endif
+    char* const data = new char[l];
+#ifdef DEBUG_LOG_GC
+    std::cout << fmt::format("at {}; heap size: {} -> {}\n", static_cast<const void*>(data), current_heap_size - l, current_heap_size);
+#endif
+    return data;
+  }
+  VM_Deallocator::VM_Deallocator(size_t* heap_sz) noexcept :
+    heap_size(heap_sz)
+  {
+  }
+  void VM_Deallocator::operator()(const char* p, size_t l)
+  {
+#ifdef DEBUG_LOG_GC
+    std::cout << fmt::format("free size={} at {}; heap size: {} -> {}\n", l, static_cast<const void*>(p), current_heap_size, current_heap_size - l);
+#endif
+    Ensures(l <= *heap_size);
+    *heap_size -= l;
+    GSL_SUPPRESS(r.11) GSL_SUPPRESS(i.11)
+      delete[] p;
+  }
+  VM_GC_Index::VM_GC_Index(VM* v) noexcept :
     vm(v) 
   {
   }
@@ -23,11 +55,11 @@ namespace foxlox
   {
     for (const Tuple* p : tuple_pool)
     {
-      Tuple::free(std::bind_front(&VM::deallocator, vm), p);
+      Tuple::free(vm->deallocator, p);
     }
     for (const Instance* p : instance_pool)
     {
-      Instance::free(std::bind_front(&VM::deallocator, vm), p);
+      Instance::free(vm->deallocator, p);
     }
   }
   VM_GC_Index::~VM_GC_Index()
@@ -59,8 +91,10 @@ namespace foxlox
   VM::VM() noexcept :
     stack(STACK_MAX),
     calltrace(CALLTRACE_MAX),
+    allocator(&current_heap_size),
+    deallocator(&current_heap_size),
     gc_index(this),
-    string_pool(std::bind_front(&VM::allocator, this), std::bind_front(&VM::deallocator, this))
+    string_pool(allocator, deallocator)
   {
     chunk = nullptr;
     current_heap_size = 0;
@@ -194,7 +228,7 @@ namespace foxlox
           }
           else if (l->is_tuple() || r->is_tuple())
           {
-            *l = Value::tuplecat(std::bind_front(&VM::allocator, this), *l, *r);
+            *l = Value::tuplecat(allocator, *l, *r);
             gc_index.tuple_pool.push_back(l->v.tuple);
           }
           else
@@ -338,7 +372,7 @@ namespace foxlox
         {
           // note: n can be 0
           const auto n = read_uint16();
-          const auto p = Tuple::alloc(std::bind_front(&VM::allocator, this), n);
+          const auto p = Tuple::alloc(allocator, n);
           for (gsl::index i = 0; i < n; i++)
           {
             GSL_SUPPRESS(bounds.4) GSL_SUPPRESS(bounds.2)
@@ -452,7 +486,7 @@ namespace foxlox
 
             if (func_to_call->get_arity() != num_of_params)
             {
-              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params).c_str());
+              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
             }
             current_subroutine = func_to_call;
             ip = current_subroutine->get_code().begin();
@@ -481,7 +515,7 @@ namespace foxlox
 
             if (func_to_call->get_arity() != num_of_params)
             {
-              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params).c_str());
+              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
             }
             current_subroutine = func_to_call;
             ip = current_subroutine->get_code().begin();
@@ -496,13 +530,10 @@ namespace foxlox
             if (!v.is_class())
             {
               throw ValueError(fmt::format("Value of type {} is not callable.",
-                magic_enum::enum_name(v.v.obj->type)).c_str());
+                magic_enum::enum_name(v.v.obj->type)));
             }
             const auto klass = v.v.klass;
-            const auto instance = Instance::alloc(
-              std::bind_front(&VM::allocator, this),
-              std::bind_front(&VM::deallocator, this),
-              klass);
+            const auto instance = Instance::alloc(allocator, deallocator, klass);
             gc_index.instance_pool.push_back(instance);
             if (auto [got, func_to_call] = klass->try_get_method_idx(str__init__); got)
             {
@@ -516,7 +547,7 @@ namespace foxlox
 
               if (func_to_call->get_arity() != num_of_params)
               {
-                throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params).c_str());
+                throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
               }
               current_subroutine = func_to_call;
               ip = current_subroutine->get_code().begin();
@@ -525,7 +556,7 @@ namespace foxlox
             {
               if (num_of_params != 0)
               {
-                throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", 0, num_of_params).c_str());
+                throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", 0, num_of_params));
               }
               push();
               *top() = instance;
@@ -535,7 +566,7 @@ namespace foxlox
           default:
           {
             throw ValueError(fmt::format("Value of type {} is not callable.",
-              magic_enum::enum_name(v.type)).c_str());
+              magic_enum::enum_name(v.type)));
           }
           }
           collect_garbage();
@@ -564,7 +595,7 @@ namespace foxlox
           break;
         }
         default:
-          throw InternalRuntimeError(fmt::format("Unknown instruction: {}.", magic_enum::enum_name(inst)).c_str());
+          throw InternalRuntimeError(fmt::format("Unknown instruction: {}.", magic_enum::enum_name(inst)));
         }
       }
       catch(const std::exception& e)
@@ -582,7 +613,7 @@ namespace foxlox
   }
   int16_t VM::read_int16() noexcept
   {
-    return std::bit_cast<int16_t>(read_uint16());
+    return static_cast<int16_t>(read_uint16());
   }
   bool VM::read_bool() noexcept
   {
@@ -591,7 +622,9 @@ namespace foxlox
   uint8_t VM::read_uint8() noexcept
   {
     const auto v = *(ip++);
-    Ensures(ip <= current_subroutine->get_code().end());
+    // this check is too time consuming so we use a assert here
+    // which means we will not do this check in a release build
+    assert(ip <= current_subroutine->get_code().end());
     return v;
   }
   uint16_t VM::read_uint16() noexcept
@@ -611,29 +644,6 @@ namespace foxlox
   void VM::pop(uint16_t n) noexcept
   {
     stack_top -= n;
-  }
-  char* VM::allocator(size_t l)
-  {
-    current_heap_size += l;
-    GSL_SUPPRESS(r.11)
-#ifdef DEBUG_LOG_GC
-      std::cout << fmt::format("alloc size={} ", l);
-#endif
-    char* const data = new char[l];
-#ifdef DEBUG_LOG_GC
-      std::cout << fmt::format("at {}; heap size: {} -> {}\n", static_cast<const void*>(data), current_heap_size - l, current_heap_size);
-#endif
-    return data;
-  }
-  void VM::deallocator(const char* p, size_t l)
-  {
-#ifdef DEBUG_LOG_GC
-    std::cout << fmt::format("free size={} at {}; heap size: {} -> {}\n", l, static_cast<const void*>(p), current_heap_size, current_heap_size -l);
-#endif
-    Ensures(l <= current_heap_size);
-    current_heap_size -= l;
-    GSL_SUPPRESS(r.11) GSL_SUPPRESS(i.11)
-    delete[] p;
   }
   void VM::collect_garbage()
   {
@@ -806,7 +816,7 @@ namespace foxlox
 #endif
       if (!tuple->is_marked())
       {
-        Tuple::free(std::bind_front(&VM::deallocator, this), tuple);
+        Tuple::free(deallocator, tuple);
         return true;
       }
       tuple->unmark();
@@ -819,7 +829,7 @@ namespace foxlox
 #endif
       if (!instance->is_marked())
       {
-        Instance::free(std::bind_front(&VM::deallocator, this), instance);
+        Instance::free(deallocator, instance);
         return true;
       }
       instance->unmark();

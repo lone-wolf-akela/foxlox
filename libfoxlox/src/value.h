@@ -1,5 +1,6 @@
 #pragma once
-
+#include <climits>
+#include <stdexcept>
 #include <cstdint>
 #include <string>
 #include <compare>
@@ -11,10 +12,10 @@
 
 namespace foxlox
 {
-  class ValueError : public std::exception
+  class ValueError : public std::runtime_error
   { 
   public:
-    using std::exception::exception; 
+    using std::runtime_error::runtime_error;
   };
 
   template<typename T1, typename T2>

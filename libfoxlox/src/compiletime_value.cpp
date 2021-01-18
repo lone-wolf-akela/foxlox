@@ -32,7 +32,7 @@ namespace foxlox
   }
   std::string CompiletimeValue::to_string() const
   {
-    if (std::holds_alternative<nullptr_t>(v))
+    if (std::holds_alternative<std::nullptr_t>(v))
     {
       return "nil";
     }

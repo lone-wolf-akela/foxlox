@@ -10,8 +10,6 @@ enable_testing()
 # 将源代码添加到此项目的可执行文件。
 add_executable(${PROJECT_NAME})
 
-add_dependencies(${PROJECT_NAME} libfoxlox)
-
 target_sources(${PROJECT_NAME} PRIVATE
    "src/temp.cpp" 
    "src/variable.cpp" 
@@ -40,7 +38,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 if(MSVC)
-  target_compile_options(${PROJECT_NAME} PRIVATE /utf-8)
+  target_compile_options(${PROJECT_NAME} PRIVATE /nologo /utf-8)
   target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic -Werror)

@@ -64,10 +64,10 @@ namespace foxlox
     bool gc_mark;
   };
 
-  class ChunkOperationError : public std::exception
+  class ChunkOperationError : public std::runtime_error
   {
   public:
-    using std::exception::exception;
+    using std::runtime_error::runtime_error;
   };
 
   class Chunk

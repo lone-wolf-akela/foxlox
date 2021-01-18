@@ -6,27 +6,27 @@
 
 namespace foxlox
 {
-  class FatalError : public std::exception
+  class FatalError : public std::runtime_error
   {
   public:
-    using std::exception::exception;
+    using std::runtime_error::runtime_error;
   };
-  class UnimplementedError : public std::exception
+  class UnimplementedError : public std::runtime_error
   {
   public:
-    using std::exception::exception;
+    using std::runtime_error::runtime_error;
   };
-  class InternalRuntimeError : public std::exception
+  class InternalRuntimeError : public std::runtime_error
   {
   public:
-    using std::exception::exception;
+    using std::runtime_error::runtime_error;
   };
-  class RuntimeLibError : public std::exception
+  class RuntimeLibError : public std::runtime_error
   {
   public:
-    using std::exception::exception;
+    using std::runtime_error::runtime_error;
   };
-  class RuntimeError : public std::exception
+  class RuntimeError : public std::runtime_error
   {
   public:
     RuntimeError(std::string_view message, int line_num, std::string_view src_code);

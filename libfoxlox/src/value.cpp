@@ -20,7 +20,7 @@ namespace
   {
     std::string msg = "Value type error. Expected: ";
     (fmt::format_to(std::back_inserter(msg), "{}, ", magic_enum::enum_name(expected)), ...);
-    return std::move(msg);
+    return msg;
   }
 
   template<typename T1, typename T2, typename ... Args>
@@ -31,7 +31,7 @@ namespace
   {
     std::string msg = wrongtype_msg_fmt(expected...);
     fmt::format_to(std::back_inserter(msg), "got: {} and {}.", magic_enum::enum_name(got1), magic_enum::enum_name(got2));
-    return ValueError(msg.c_str());
+    return ValueError(msg);
   }
 
   template<typename T, typename ... Args> 
@@ -41,7 +41,7 @@ namespace
   {
     std::string msg = wrongtype_msg_fmt(expected...);
     fmt::format_to(std::back_inserter(msg), "got: {}.", magic_enum::enum_name(got));
-    return ValueError(msg.c_str());
+    return ValueError(msg);
   }
 
   constexpr void type_check(const Value& got, ValueType expected)
@@ -275,7 +275,6 @@ namespace foxlox
 
   std::string Value::to_string() const
   {
-    
     switch (type)
     {
     case ValueType::BOOL:
@@ -287,7 +286,7 @@ namespace foxlox
     case ValueType::FUNC:
       return fmt::format("<fn {}>", v.func->get_funcname());
     case ValueType::CPP_FUNC:
-      return fmt::format("<native fn {}>", static_cast<void*>(v.cppfunc));
+      return fmt::format("<native fn {}>", reinterpret_cast<void*>(v.cppfunc));
     case ValueType::METHOD:
       return fmt::format("<class {} method {}>", v.instance->get_class()->get_name(), get_method_func()->get_funcname());
     case ValueType::OBJ:
@@ -313,11 +312,11 @@ namespace foxlox
       case ObjType::INSTANCE:
         return fmt::format("<{} instance>", v.instance->get_class()->get_name());
       default:
-        throw FatalError(fmt::format("Unknown ObjType: {}", magic_enum::enum_name(v.obj->type)).c_str());
+        throw FatalError(fmt::format("Unknown ObjType: {}", magic_enum::enum_name(v.obj->type)));
       }
     }
     default:
-      throw FatalError(fmt::format("Unknown ValueType: {}", magic_enum::enum_name(type)).c_str());
+      throw FatalError(fmt::format("Unknown ValueType: {}", magic_enum::enum_name(type)));
     }
   } 
 }

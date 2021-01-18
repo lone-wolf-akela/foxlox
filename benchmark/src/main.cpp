@@ -1,4 +1,3 @@
-#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <filesystem>
@@ -7,17 +6,26 @@
 #include <chrono>
 
 #include <fmt/format.h>
+
 #include <range/v3/all.hpp>
 
 #include <foxlox/vm.h>
 #include <foxlox/compiler.h>
 
-
 int main()
 {
   while (true)
   {
-    const auto bench_path = std::filesystem::path(__FILE__).parent_path() / "bench";
+    auto bench_path = std::filesystem::path(CMAKE_CURRENT_SOURCE_DIR) / "src" /"bench";
+    if (!is_directory(bench_path))
+    {
+      bench_path = std::filesystem::current_path() / "bench";
+    }
+    if (!is_directory(bench_path))
+    {
+      std::cerr << "Cannot find bench folder.\n";
+      return 1;
+    }
     std::vector<std::string> bench_names;
     std::vector<std::filesystem::path> bench_files;
 
@@ -40,11 +48,12 @@ int main()
     std::cout << "Please select: ";
     int selected;
     std::cin >> selected;
-    if (selected == bench_names.size() + 1)
+    if (selected == ssize(bench_names) + 1)
     {
+      // exit
       return 0;
     }
-    if (selected < 0 || selected >= bench_names.size() + 2)
+    if (selected < 0 || selected >= ssize(bench_names) + 2)
     {
       continue;
     }
@@ -86,7 +95,7 @@ int main()
         std::cout << "Compilation failed.\n";
         return 0;
       }
-    } while (run_all && ++selected <= bench_files.size());
+    } while (run_all && ++selected <= ssize(bench_files));
     const auto time_end = std::chrono::system_clock::now().time_since_epoch();
     const long long total_time = std::chrono::duration_cast<std::chrono::milliseconds>(
       time_end - time_start).count();

@@ -56,7 +56,7 @@ namespace foxlox
   void Subroutine::add_code(OP c, int line_num)
   {
     lines.add_line(ssize(code), line_num);
-    code.push_back(uint8_t{ c });
+    code.push_back(static_cast<uint8_t>(c));
   }
   void Subroutine::add_code(uint8_t c, int line_num)
   {
@@ -65,7 +65,7 @@ namespace foxlox
   }
   void Subroutine::add_code(int16_t c, int line_num)
   {
-    add_code(std::bit_cast<uint16_t>(c), line_num);
+    add_code(static_cast<uint16_t>(c), line_num);
   }
   void Subroutine::add_code(uint16_t c, int line_num)
   {
@@ -75,7 +75,7 @@ namespace foxlox
   }
   void Subroutine::edit_code(gsl::index idx, int16_t c)
   {
-    edit_code(idx, std::bit_cast<uint16_t>(c));
+    edit_code(idx, static_cast<uint16_t>(c));
   }
   void Subroutine::edit_code(gsl::index idx, uint16_t c)
   {

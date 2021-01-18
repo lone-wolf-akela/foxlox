@@ -212,7 +212,7 @@ namespace foxlox
     auto& v = expr->value.v;
     try
     {
-      if (std::holds_alternative<nullptr_t>(v))
+      if (std::holds_alternative<std::nullptr_t>(v))
       {
         emit(OP::NIL);
       }

@@ -25,6 +25,7 @@ namespace foxlox
     const int this_line_num = subroutine.get_lines().get_line(index);
     const auto formated_funcname = fmt::format("<{}>", subroutine.get_funcname());
 
+    [[maybe_unused]]
     bool print_line_num_before_inst = this_line_num != last_line_num;
 
 #ifdef DEBUG_TRACE_SRC
@@ -51,15 +52,17 @@ namespace foxlox
 #endif
     const auto codes = subroutine.get_code();
 
+    [[maybe_unused]]
     const auto get_uint8 = [&]() -> uint8_t {
       return codes[index + 1];
     };
+    [[maybe_unused]]
     const auto get_uint16 = [&]() -> uint16_t {
       return (static_cast<uint16_t>(codes[index + 1]) << 8) | codes[index + 2];
     };
+    [[maybe_unused]]
     const auto get_int16 = [&]() -> int16_t {
-      const struct { uint8_t a, b; } tmp{ codes[index + 1], codes[index + 2] };
-      return std::bit_cast<int16_t>(get_uint16());
+      return static_cast<int16_t>(get_uint16());
     };
 
     OP op = static_cast<OP>(codes[index]);

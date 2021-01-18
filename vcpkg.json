@@ -6,6 +6,7 @@
     "ms-gsl",
     "range-v3",
     "magic-enum",
-    "gtest"
+    "gtest",
+    "icu"
   ]
 }

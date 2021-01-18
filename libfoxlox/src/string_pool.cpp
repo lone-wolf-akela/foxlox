@@ -32,7 +32,7 @@ namespace
     uint32_t hash = 2166136261u;
     for(auto c: str)
     {
-      hash ^= std::bit_cast<uint8_t>(c);
+      hash ^= static_cast<uint8_t>(c);
       hash *= 16777619u;
     }
     return hash;
@@ -43,12 +43,12 @@ namespace
     uint32_t hash = 2166136261u;
     for (auto c : str1)
     {
-      hash ^= std::bit_cast<uint8_t>(c);
+      hash ^= static_cast<uint8_t>(c);
       hash *= 16777619u;
     }
     for (auto c : str2)
     {
-      hash ^= std::bit_cast<uint8_t>(c);
+      hash ^= static_cast<uint8_t>(c);
       hash *= 16777619u;
     }
     return hash;

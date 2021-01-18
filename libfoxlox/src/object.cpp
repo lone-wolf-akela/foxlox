@@ -71,7 +71,7 @@ namespace foxlox
     }
     else
     {
-      throw ValueError(fmt::format("Super class has no method with name `{}'", name->get_view()).c_str());
+      throw ValueError(fmt::format("Super class has no method with name `{}'", name->get_view()));
     }
   }
   Instance::Fields& Instance::get_all_fields()

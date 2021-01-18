@@ -199,7 +199,7 @@ namespace foxlox
   };
 
   template<Allocator F>
-  static Tuple* Value::tuplecat(F allocator, const Value& l, const Value& r)
+  Tuple* Value::tuplecat(F allocator, const Value& l, const Value& r)
   {
     Expects(l.is_tuple() || r.is_tuple());
     if (l.is_tuple() && r.is_tuple())

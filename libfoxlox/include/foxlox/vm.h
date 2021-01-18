@@ -1,5 +1,5 @@
 #pragma once
-
+#include <stdexcept>
 #include <array>
 #include <vector>
 #include <stack>
@@ -12,6 +12,33 @@
 namespace foxlox
 {
   class VM;
+
+  class VM_Allocator
+  {
+  public:
+    VM_Allocator(size_t* heap_sz) noexcept;
+    VM_Allocator(const VM_Allocator&) noexcept = default;
+    VM_Allocator(VM_Allocator&&) noexcept = default;
+    VM_Allocator& operator=(const VM_Allocator&) noexcept = default;
+    VM_Allocator& operator=(VM_Allocator&&) noexcept = default;
+    char* operator()(size_t l);
+  private:
+    size_t *heap_size;
+  };
+
+  class VM_Deallocator
+  {
+  public:
+    VM_Deallocator(size_t* heap_sz) noexcept;
+    VM_Deallocator(const VM_Deallocator&) noexcept = default;
+    VM_Deallocator(VM_Deallocator&&) noexcept = default;
+    VM_Deallocator& operator=(const VM_Deallocator&) noexcept = default;
+    VM_Deallocator& operator=(VM_Deallocator&&) noexcept = default;
+    void operator()(const char* p, size_t l);
+  private:
+    size_t* heap_size;
+  };
+
   class VM_GC_Index
   {
   public:
@@ -20,7 +47,7 @@ namespace foxlox
     std::vector<Tuple*> tuple_pool;
     std::vector<Instance*> instance_pool;
 
-    VM_GC_Index(VM* v);
+    VM_GC_Index(VM* v) noexcept;
     ~VM_GC_Index();
     VM_GC_Index(const VM_GC_Index&) = delete;
     VM_GC_Index& operator=(const VM_GC_Index&) = delete;
@@ -75,6 +102,20 @@ namespace foxlox
     CallTrace calltrace;
     CallTrace::iterator p_calltrace;
 
+    // mem manage related
+    VM_Allocator allocator;
+    VM_Deallocator deallocator;
+    size_t current_heap_size;
+    size_t next_gc_heap_size;
+    void collect_garbage();
+    void mark_roots();
+    void mark_value(Value& v);
+    void mark_class(Class& c);
+    void mark_subroutine(Subroutine& s);
+    std::stack<Value*> gray_stack;
+    void trace_references();
+    void sweep();
+
     // data pool
     VM_GC_Index gc_index;
     StringPool string_pool;
@@ -89,19 +130,6 @@ namespace foxlox
     // special strings
     String* str__init__;
 
-    // mem manage related
-    char* allocator(size_t l);
-    void deallocator(const char* p, size_t l);
-    size_t current_heap_size;
-    size_t next_gc_heap_size;
-    void collect_garbage();
-    void mark_roots();
-    void mark_value(Value& v);
-    void mark_class(Class& c);
-    void mark_subroutine(Subroutine& s);
-    std::stack<Value*> gray_stack;
-    void trace_references();
-    void sweep();
 
     friend class VM_GC_Index;
     friend class Debugger;

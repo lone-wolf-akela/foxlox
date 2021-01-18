@@ -66,7 +66,7 @@ namespace foxlox
       error(name, "Redefine variable with the same name in this scope.");
       return nullptr;
     }
-    scope.vars[name.lexeme] = ValueInfo{ .is_ready = false };
+    scope.vars[name.lexeme] = ValueInfo{ .is_ready = false, .declare{} };
     return &scope.vars[name.lexeme];
   }
   void Resolver::declare_from_varstmt(stmt::Var* stmt)
@@ -84,7 +84,7 @@ namespace foxlox
     if (vinfo != nullptr)
     {
       vinfo->declare = VarDeclareAtFunc{ .func = stmt, .param_index = param_index };
-      if (stmt->param_store_types.size() <= param_index)
+      if (ssize(stmt->param_store_types) <= param_index)
       {
         stmt->param_store_types.resize(param_index + 1);
         stmt->param_store_types[param_index] = stmt::VarStoreType::Stack;

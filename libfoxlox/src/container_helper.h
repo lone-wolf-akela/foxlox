@@ -38,7 +38,7 @@ namespace foxlox
 
     bool operator==(const AllocatorWrapper & r)
     {
-      return allocator == r.allocator && deallocator == r.deallocator;
+      return true; // I'm not sure if this is the right way to do this
     }
     bool operator!=(const AllocatorWrapper& r)
     {

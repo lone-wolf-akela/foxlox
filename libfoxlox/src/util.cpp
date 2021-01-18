@@ -1,13 +1,7 @@
 #include <iostream>
 #include <vector>
 
-#ifdef _WIN32
-#include <icu.h>
-#pragma comment(lib, "icu.lib") 
-#undef FALSE
-#undef TRUE
-#endif
-
+#include <unicode/unistr.h>
 #include <gsl/gsl>
 
 #include "util.h"
@@ -16,43 +10,13 @@ namespace foxlox
 {
   std::string u32_to_u8(std::u32string_view in)
   {
-    std::u16string buffer(in.size() * 2, u'\0');
-    {
-      UErrorCode err = U_ZERO_ERROR;
-      int32_t u16_len;
-      u_strFromUTF32(
-        buffer.data(),
-        gsl::narrow_cast<int32_t>(ssize(buffer)),
-        &u16_len,
-        reinterpret_cast<const UChar32*>(in.data()),
-        gsl::narrow_cast<int32_t>(ssize(in)),
-        &err
-      );
-      if (U_FAILURE(err))
-      {
-        std::cerr << "String encoding conversion failed.\n";
-      }
-      buffer.resize(u16_len);
-    }
-    std::string result(in.size() * 4, '\0');
-    {
-      UErrorCode err = U_ZERO_ERROR;
-      int32_t u8_len;
-      u_strToUTF8(
-        result.data(),
-        gsl::narrow_cast<int32_t>(ssize(result)),
-        &u8_len,
-        buffer.data(),
-        gsl::narrow_cast<int32_t>(ssize(buffer)),
-        &err
-      );
-      if (U_FAILURE(err))
-      {
-        std::cerr << "String encoding conversion failed.\n";
-      }
-      result.resize(u8_len);
-    }
-    return result;
+    auto u16string = icu::UnicodeString::fromUTF32(
+      reinterpret_cast<const UChar32*>(in.data()), 
+      gsl::narrow_cast<int32_t>(in.size())
+    );
+    std::string u8string;
+    u16string.toUTF8String(u8string);
+    return u8string;
   }
   std::string u32_to_u8(char32_t in)
   {
@@ -60,42 +24,19 @@ namespace foxlox
   }
   std::u32string u8_to_u32(std::string_view in)
   {
-    std::u16string buffer(in.size() * 2, u'\0');
+    auto u16string = icu::UnicodeString::fromUTF8(in);
+    std::u32string u32string(u16string.length(), U'\0');
+    UErrorCode err = U_ZERO_ERROR;
+    auto len = u16string.toUTF32(
+      reinterpret_cast<UChar32*>(u32string.data()),
+      gsl::narrow_cast<int32_t>(u32string.size()),
+      err
+    );
+    if (U_FAILURE(err))
     {
-      UErrorCode err = U_ZERO_ERROR;
-      int32_t u16_len;
-      u_strFromUTF8Lenient(
-        buffer.data(),
-        gsl::narrow_cast<int32_t>(ssize(buffer)),
-        &u16_len,
-        in.data(),
-        gsl::narrow_cast<int32_t>(ssize(in)),
-        &err
-      );
-      if (U_FAILURE(err))
-      {
-        std::cerr << "String encoding conversion failed.\n";
-      }
-      buffer.resize(u16_len);
+      std::cerr << "String encoding conversion failed.\n";
     }
-    std::u32string result(in.size(), U'\0');
-    {
-      UErrorCode err = U_ZERO_ERROR;
-      int32_t u32_len;
-      u_strToUTF32(
-        reinterpret_cast<int32_t*>(result.data()),
-        gsl::narrow_cast<int32_t>(ssize(result)),
-        &u32_len,
-        buffer.data(),
-        gsl::narrow_cast<int32_t>(ssize(buffer)),
-        &err
-      );
-      if (U_FAILURE(err))
-      {
-        std::cerr << "String encoding conversion failed.\n";
-      }
-      result.resize(u32_len);
-    }
-    return result;
+    u32string.resize(len);
+    return u32string;
   }
 }

@@ -185,21 +185,4 @@ namespace foxlox
   {
     return classes;
   }
-
-  CompiletimeClass::CompiletimeClass(std::string_view name) :
-    classname(name) 
-  {
-  }
-  void CompiletimeClass::add_method(uint16_t name_idx, uint16_t subroutine_idx)
-  {
-    methods.emplace_back(name_idx, subroutine_idx);
-  }
-  std::string_view CompiletimeClass::get_name() const noexcept
-  {
-    return classname;
-  }
-  std::span<const std::pair<uint16_t, uint16_t>> CompiletimeClass::get_methods() const noexcept
-  {
-    return methods;
-  }
 }

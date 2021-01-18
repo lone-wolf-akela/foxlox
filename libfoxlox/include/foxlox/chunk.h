@@ -10,6 +10,7 @@
 #include "../../src/value.h"
 #include "../../src/object.h"
 #include "../../src/opcode.h"
+#include "../../src/compiletime_value.h"
 
 namespace foxlox
 {
@@ -60,18 +61,6 @@ namespace foxlox
     // for memory management
     std::vector<uint16_t> referenced_static_values;
     bool gc_mark;
-  };
-
-  class CompiletimeClass
-  {
-  public:
-    CompiletimeClass(std::string_view name);
-    void add_method(uint16_t name_idx, uint16_t subroutine_idx);
-    std::string_view get_name() const noexcept;
-    std::span<const std::pair<uint16_t, uint16_t>> get_methods() const noexcept;
-  private:
-    std::string classname;
-    std::vector<std::pair<uint16_t, uint16_t>> methods; // store the name str idx & subroutine idx
   };
 
   class Chunk

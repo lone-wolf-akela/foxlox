@@ -36,10 +36,18 @@ int main()
     {
       std::cout << fmt::format("\t{}. {}\n", i + 1, name);
     }
+    std::cout << fmt::format("\t{}. {}\n", bench_names.size() + 1, "[EXIT]");
     std::cout << "Please select: ";
     int selected;
     std::cin >> selected;
-
+    if (selected == bench_names.size() + 1)
+    {
+      return 0;
+    }
+    if (selected < 0 || selected >= bench_names.size() + 2)
+    {
+      continue;
+    }
     const bool run_all = selected == 0;
     if (run_all)
     {

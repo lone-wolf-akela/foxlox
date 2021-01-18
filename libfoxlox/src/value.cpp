@@ -261,7 +261,9 @@ namespace foxlox
   {
     if (l.is_str() && r.is_str())
     {
-      return *l.v.str == *r.v.str;
+      // directly compare pointer value, as the same string will 
+      // always share a storage in the string pool
+      return l.v.str == r.v.str;
     }
     return (l <=> r) == std::partial_ordering::equivalent;
   }

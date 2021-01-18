@@ -93,10 +93,15 @@ namespace foxlox
     static_value_pool.resize(chunk->get_static_value_num());
     static_value_pool.shrink_to_fit();
 
+    const_string_pool.clear();
     for (auto& str : c.get_const_strings())
     {
       const_string_pool.push_back(string_pool.add_string(str));
     }
+    str__init__ = string_pool.add_string("__init__");
+    const_string_pool.push_back(str__init__);
+
+    class_pool.clear();
     for (auto& compiletime_class : c.get_classes())
     {
       class_pool.emplace_back(compiletime_class.get_name());
@@ -132,7 +137,7 @@ namespace foxlox
       collect_garbage();
 #endif
 #if defined(DEBUG_TRACE_INST) || defined(DEBUG_TRACE_SRC)
-      debugger.disassemble_inst(*chunk, *current_subroutine, std::distance(current_subroutine->get_code().begin(), ip));
+      debugger.disassemble_inst(*this, *current_subroutine, std::distance(current_subroutine->get_code().begin(), ip));
 #endif
       try
       {

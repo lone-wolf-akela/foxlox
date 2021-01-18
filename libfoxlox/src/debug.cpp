@@ -18,7 +18,7 @@ namespace foxlox
   {
     colored = colored_output;
   }
-  gsl::index Debugger::disassemble_inst([[maybe_unused]] const Chunk& chunk, const Subroutine& subroutine, gsl::index index)
+  gsl::index Debugger::disassemble_inst([[maybe_unused]] const VM& vm, const Subroutine& subroutine, gsl::index index)
   {
     const int last_line_num = index == 0 ? -1 : subroutine.get_lines().get_line(index - 1);
     const int this_line_num = subroutine.get_lines().get_line(index);
@@ -29,7 +29,7 @@ namespace foxlox
 #ifdef DEBUG_TRACE_SRC
     if (this_line_num != last_line_num)
     {
-      auto src = chunk.get_source(this_line_num);
+      auto src = vm.chunk->get_source(this_line_num);
       if (src != "")
       {
         const auto formatted = fmt::format("{:>5} {:15} {:>4} {}", "[src]", formated_funcname, this_line_num, src);
@@ -95,7 +95,7 @@ namespace foxlox
     {
 #ifdef DEBUG_TRACE_INST
       const uint16_t str = get_uint16();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", magic_enum::enum_name(op), str, chunk.get_const_strings()[str]->get_view());
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", magic_enum::enum_name(op), str, vm.const_string_pool.at(str)->get_view());
 #endif
       return 2;
     }
@@ -103,7 +103,7 @@ namespace foxlox
     {
 #ifdef DEBUG_TRACE_INST
       const uint16_t constant = get_uint16();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_CONSTANT", constant, chunk.get_constants()[constant].to_string());
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_CONSTANT", constant, vm.chunk->get_constants()[constant].to_string());
 #endif
       return 3;
     }
@@ -111,7 +111,7 @@ namespace foxlox
     {
 #ifdef DEBUG_TRACE_INST
       const uint16_t constant = get_uint16();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_FUNC", constant, chunk.get_subroutines()[constant].get_funcname());
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_FUNC", constant, vm.chunk->get_subroutines()[constant].get_funcname());
 #endif
       return 3;
     }
@@ -119,7 +119,7 @@ namespace foxlox
     {
 #ifdef DEBUG_TRACE_INST
       const uint16_t constant = get_uint16();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_CLASS", constant, chunk.get_classes()[constant].get_name());
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_CLASS", constant, vm.class_pool.at(constant).get_name());
 #endif
       return 3;
     }
@@ -127,7 +127,7 @@ namespace foxlox
     {
 #ifdef DEBUG_TRACE_INST
       const uint16_t str = get_uint16();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_STRING", str, chunk.get_const_strings()[str]->get_view());
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "OP_STRING", str, vm.const_string_pool.at(str)->get_view());
 #endif
       return 3;
     }
@@ -176,13 +176,13 @@ namespace foxlox
     assert(false);
     return 0;
   }
-  void Debugger::disassemble_chunk(const Chunk& chunk, const Subroutine& subroutine, std::string_view name)
+  void Debugger::disassemble_chunk(const VM& vm, const Subroutine& subroutine, std::string_view name)
   {
     std::cout << fmt::format("== {} ==\n", name);
     gsl::index i = 0;
     while (i < ssize(subroutine.get_code()))
     {
-      i += disassemble_inst(chunk, subroutine, i);
+      i += disassemble_inst(vm, subroutine, i);
     }
   }
   void Debugger::print_vm_stack(VM& vm)

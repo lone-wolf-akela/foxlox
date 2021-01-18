@@ -160,7 +160,7 @@ namespace foxlox
       ObjBase(ObjType::INSTANCE),
       klass(from_class),
       fields(
-        0, //bucket_count
+        HASH_TABLE_START_BUCKET, //bucket_count
         std::hash<String*>{},
         std::equal_to<String*>{},
         AllocatorWrapper<std::pair<String* const, Value>>(allocator, deallocator)

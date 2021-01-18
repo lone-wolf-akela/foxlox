@@ -143,11 +143,6 @@ namespace foxlox
   {
     return static_value_num;
   }
-  Chunk::Chunk() noexcept
-  {
-    static_value_num = 0;
-    is_moved = false;
-  }
 
   void Chunk::set_source(std::vector<std::string>&& src) noexcept
   {

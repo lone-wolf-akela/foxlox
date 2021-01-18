@@ -53,9 +53,6 @@ namespace
 }
 namespace foxlox
 {
-#ifdef DEBUG_LOG_GC
-  std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(str), str->is_marked() ? "is_marked" : "not_marked", str->get_view());
-#endif
   StringPool::~StringPool()
   {
     for (auto& e : entries)
@@ -139,6 +136,12 @@ namespace foxlox
   {
     for (auto& e : entries)
     {
+#ifdef DEBUG_LOG_GC
+      if (e.str != nullptr && !e.tombstone)
+      {
+        std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(e.str), e.str->is_marked() ? "is_marked" : "not_marked", e.str->get_view());
+      }
+#endif
       if (e.str != nullptr && !e.tombstone && !e.str->is_marked())
       {
         delete_entry(e);

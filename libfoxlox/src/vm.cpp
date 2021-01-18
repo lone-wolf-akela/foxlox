@@ -9,81 +9,64 @@
 #include <foxlox/except.h>
 #include <foxlox/debug.h>
 #include "object.h"
+#include "config.h"
 
 #include <foxlox/vm.h>
 
 namespace foxlox
 {
+  VM_GC_Index::VM_GC_Index(VM* v) : 
+    vm(v) 
+  {
+  }
+  void VM_GC_Index::clean()
+  {
+    for (const Tuple* p : tuple_pool)
+    {
+      Tuple::free(std::bind_front(&VM::deallocator, vm), p);
+    }
+    for (const Instance* p : instance_pool)
+    {
+      Instance::free(std::bind_front(&VM::deallocator, vm), p);
+    }
+  }
+  VM_GC_Index::~VM_GC_Index()
+  {
+    clean();
+  }
+  VM_GC_Index::VM_GC_Index(VM_GC_Index&& o) :
+    tuple_pool(std::move(o.tuple_pool)),
+    instance_pool(std::move(o.instance_pool))
+  {
+    // replace the moved vector to new empty ones
+    // this prevents the moved VM_GC_Index's destructor do anything
+    o.tuple_pool = std::vector<Tuple*>{};
+    o.instance_pool = std::vector<Instance*>{};
+  }
+  VM_GC_Index& VM_GC_Index::operator=(VM_GC_Index&& o)
+  {
+    if (this == &o) { return *this; }
+    clean();
+    tuple_pool = std::move(o.tuple_pool);
+    instance_pool = std::move(o.instance_pool);
+    // replace the moved vector to new empty ones
+    // this prevents the moved VM_GC_Index's destructor do anything
+    o.tuple_pool = std::vector<Tuple*>{};
+    o.instance_pool = std::vector<Instance*>{};
+    return *this;
+  }
+
   VM::VM() noexcept :
     stack(STACK_MAX),
     calltrace(CALLTRACE_MAX),
+    gc_index(this),
     string_pool(std::bind_front(&VM::allocator, this), std::bind_front(&VM::deallocator, this))
   {
     chunk = nullptr;
-    is_moved = false;
     current_heap_size = 0;
     next_gc_heap_size = FIRST_GC_HEAP_SIZE;
-    reset_stack();
   }
-  VM::~VM()
-  {
-    clean();
-  }
-  VM::VM(VM&& r) noexcept :
-    string_pool(std::move(r.string_pool))
-  {
-    is_moved = r.is_moved;
-    current_subroutine = r.current_subroutine;
-    ip = r.ip;
-    chunk = r.chunk;
-    stack = std::move(r.stack);
-    stack_top = stack.begin() + std::distance(r.stack.begin(), r.stack_top);
-    calltrace = std::move(r.calltrace);
-    p_calltrace = calltrace.begin() + std::distance(r.calltrace.begin(), r.p_calltrace);
-    tuple_pool = std::move(r.tuple_pool);
-    instance_pool = std::move(r.instance_pool);
-    static_value_pool = std::move(r.static_value_pool);
-    class_pool = std::move(class_pool);
-    current_heap_size = r.current_heap_size;
-    next_gc_heap_size = r.next_gc_heap_size;
-    r.is_moved = true;
-  }
-  VM& VM::operator=(VM&& r) noexcept
-  {
-    if (this == &r) { return *this; }
-    clean();
-    is_moved = r.is_moved;
-    current_subroutine = r.current_subroutine;
-    ip = r.ip;
-    chunk = r.chunk;
-    stack = std::move(r.stack);
-    stack_top = stack.begin() + std::distance(r.stack.begin(), r.stack_top);
-    calltrace = std::move(r.calltrace);
-    p_calltrace = calltrace.begin() + std::distance(r.calltrace.begin(), r.p_calltrace);
-    string_pool = std::move(r.string_pool);
-    tuple_pool = std::move(r.tuple_pool);
-    instance_pool = std::move(r.instance_pool);
-    static_value_pool = std::move(r.static_value_pool);
-    class_pool = std::move(class_pool);
-    current_heap_size = r.current_heap_size;
-    next_gc_heap_size = r.next_gc_heap_size;
-    r.is_moved = true;
-    return *this;
-  }
-  void VM::clean()
-  {
-    if (!is_moved)
-    {
-      for (const Tuple* p : tuple_pool)
-      {
-        Tuple::free(std::bind_front(&VM::deallocator, this), p);
-      }
-      for (const Instance* p : instance_pool)
-      {
-        Instance::free(std::bind_front(&VM::deallocator, this), p);
-      }
-    }
-  }
+
   Value VM::interpret(Chunk& c)
   {
     chunk = &c;
@@ -112,7 +95,8 @@ namespace foxlox
       }
     }
 
-    reset_stack();
+    stack_top = stack.begin();
+    p_calltrace = calltrace.begin();
     return run();
   }
   size_t VM::get_stack_size()
@@ -211,7 +195,7 @@ namespace foxlox
           else if (l->is_tuple() || r->is_tuple())
           {
             *l = Value::tuplecat(std::bind_front(&VM::allocator, this), *l, *r);
-            tuple_pool.push_back(l->v.tuple);
+            gc_index.tuple_pool.push_back(l->v.tuple);
           }
           else
           {
@@ -360,7 +344,7 @@ namespace foxlox
             GSL_SUPPRESS(bounds.4) GSL_SUPPRESS(bounds.2)
               p->data()[i] = *top(gsl::narrow_cast<uint16_t>(n - i - 1));
           }
-          tuple_pool.push_back(p);
+          gc_index.tuple_pool.push_back(p);
           pop(n);
           push();
           *top() = p;
@@ -513,7 +497,7 @@ namespace foxlox
               std::bind_front(&VM::allocator, this),
               std::bind_front(&VM::deallocator, this),
               klass);
-            instance_pool.push_back(instance);
+            gc_index.instance_pool.push_back(instance);
             if (auto [got, func_to_call] = klass->try_get_method_idx(str__init__); got)
             {
               p_calltrace->subroutine = current_subroutine;
@@ -605,11 +589,6 @@ namespace foxlox
     u |= read_uint8();
     return u;
   }
-  void VM::reset_stack() noexcept
-  {
-    stack_top = stack.begin();
-    p_calltrace = calltrace.begin();
-  }
   VM::Stack::iterator VM::top(int from_top) noexcept
   {
     return stack_top - from_top - 1;
@@ -622,7 +601,7 @@ namespace foxlox
   {
     stack_top -= n;
   }
-  char* VM::allocator(size_t l) noexcept
+  char* VM::allocator(size_t l)
   {
     current_heap_size += l;
     GSL_SUPPRESS(r.11)
@@ -635,7 +614,7 @@ namespace foxlox
 #endif
     return data;
   }
-  void VM::deallocator(const char* p, size_t l) noexcept
+  void VM::deallocator(const char* p, size_t l)
   {
 #ifdef DEBUG_LOG_GC
     std::cout << fmt::format("free size={} at {}; heap size: {} -> {}\n", l, static_cast<const void*>(p), current_heap_size, current_heap_size -l);
@@ -813,7 +792,7 @@ namespace foxlox
     // string_pool
     string_pool.sweep();
     // tuple_pool
-    std::erase_if(tuple_pool, [this](Tuple* tuple) {
+    std::erase_if(gc_index.tuple_pool, [this](Tuple* tuple) {
 #ifdef DEBUG_LOG_GC
       std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(tuple), tuple->is_marked() ? "is_marked" : "not_marked", tuple->is_marked() ? Value(tuple).to_string() : "<tuple elem may not avail>");
 #endif
@@ -826,7 +805,7 @@ namespace foxlox
       return false;
       });
     // instance_pool
-    std::erase_if(instance_pool, [this](Instance* instance) {
+    std::erase_if(gc_index.instance_pool, [this](Instance* instance) {
 #ifdef DEBUG_LOG_GC
       std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(instance), instance->is_marked() ? "is_marked" : "not_marked", Value(instance).to_string());
 #endif

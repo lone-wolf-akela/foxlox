@@ -6,21 +6,39 @@
 
 #include <foxlox/chunk.h>
 #include <foxlox/debug.h>
-#include "../../src/config.h"
 #include "../../src/value.h"
 #include "../../src/string_pool.h"
 
 namespace foxlox
 {
+  class VM;
+  class VM_GC_Index
+  {
+  public:
+    // these pools serve as the index of sweep() in VM
+    // and need special move func / dtor
+    std::vector<Tuple*> tuple_pool;
+    std::vector<Instance*> instance_pool;
+
+    VM_GC_Index(VM* v);
+    ~VM_GC_Index();
+    VM_GC_Index(const VM_GC_Index&) = delete;
+    VM_GC_Index& operator=(const VM_GC_Index&) = delete;
+    VM_GC_Index(VM_GC_Index&& o);
+    VM_GC_Index& operator=(VM_GC_Index&& o);
+  private:
+    void clean();
+    VM* vm;
+  };
+
   class VM
   {
   public:
     VM() noexcept;
-    ~VM();
     VM(const VM&) = delete;
     VM& operator=(const VM&) = delete;
-    VM(VM&& r) noexcept;
-    VM& operator=(VM&& r) noexcept;
+    VM(VM&& r) noexcept = default;
+    VM& operator=(VM&& r) noexcept = default;
 
     Value interpret(Chunk& c);
 
@@ -38,16 +56,11 @@ namespace foxlox
     bool read_bool() noexcept;
     uint8_t read_uint8() noexcept;
     uint16_t read_uint16() noexcept;
-    void reset_stack() noexcept;
-
-    void clean();
 
     Subroutine* current_subroutine;
     using IP = std::span<const uint8_t>::iterator;
     IP ip;
     Chunk* chunk;
-    
-    bool is_moved;
 
     Stack stack;
     Stack::iterator stack_top;
@@ -63,9 +76,8 @@ namespace foxlox
     CallTrace::iterator p_calltrace;
 
     // data pool
+    VM_GC_Index gc_index;
     StringPool string_pool;
-    std::vector<Tuple*> tuple_pool;
-    std::vector<Instance*> instance_pool;
     
     // note: we don't need sweep static_value_pool during gc
     std::vector<Value> static_value_pool;
@@ -78,8 +90,8 @@ namespace foxlox
     String* str__init__;
 
     // mem manage related
-    char* allocator(size_t l) noexcept;
-    void deallocator(const char* p, size_t l) noexcept;
+    char* allocator(size_t l);
+    void deallocator(const char* p, size_t l);
     size_t current_heap_size;
     size_t next_gc_heap_size;
     void collect_garbage();
@@ -91,6 +103,7 @@ namespace foxlox
     void trace_references();
     void sweep();
 
+    friend class VM_GC_Index;
     friend class Debugger;
   };
 }

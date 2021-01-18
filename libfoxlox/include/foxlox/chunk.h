@@ -77,13 +77,6 @@ namespace foxlox
   class Chunk
   {
   public:
-    Chunk() noexcept;
-    ~Chunk() = default;
-    Chunk(const Chunk&) = delete;
-    Chunk& operator=(const Chunk&) = delete;
-    Chunk(Chunk&& r) noexcept = default;
-    Chunk& operator=(Chunk&& r) noexcept = default;
-
     std::vector<Subroutine>& get_subroutines() noexcept;
     std::span<const Subroutine> get_subroutines() const noexcept;
     std::span<const CompiletimeClass> get_classes() const noexcept;
@@ -99,9 +92,6 @@ namespace foxlox
     uint16_t add_static_value() noexcept;
     uint16_t get_static_value_num() const noexcept;
   private:
-    void clean();
-    bool is_moved;
-
     std::vector<std::string> source;
 
     std::vector<Subroutine> subroutines;
@@ -110,7 +100,7 @@ namespace foxlox
     std::vector<Value> constants;
     std::vector<std::string> const_strings;
 
-    uint16_t static_value_num;
+    uint16_t static_value_num = 0;
   };
 }
 

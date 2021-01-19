@@ -34,7 +34,7 @@ namespace foxlox
   {
     *heap_size += l;
 #ifdef DEBUG_LOG_GC
-      std::cout << fmt::format("alloc size={} ", l);
+    std::cout << fmt::format("alloc size={} ", l);
 #endif
     char* const data = static_cast<char*>(MALLOC(l));
 #ifdef DEBUG_LOG_GC
@@ -171,20 +171,22 @@ namespace foxlox
 #endif
     try
     {
-#ifdef USE_COMPUTED_GOTO
+#if defined(USE_COMPUTED_GOTO)
 #pragma message("Enable computed goto!")
-#define DEFINE_JMP_TABLE static void* jmp_table[magic_enum::enum_count<foxlox::OP>()] = { OPCODE(JMP_TABLE_ENTRY) };
-#define JMP_TABLE_ENTRY(op) [static_cast<uint8_t>(foxlox::OP::op)] = &&lbl_##op,
+#define DEFINE_JMP_TABLE static void* jmp_table[] = { OPCODE(JMP_TABLE_ENTRY) };
+#define LBL(op) lbl_##op
+#define JMP_TABLE_ENTRY(op) &&LBL(op),
       DEFINE_JMP_TABLE
 #define DISPATCH() \
       DBG_PRINT_STACK; \
       DBG_GC; \
       DBG_PRINT_INST; \
       goto *jmp_table[static_cast<uint8_t>(read_inst())]
+#define START_VM DISPATCH();
 #endif
-#ifdef USE_SWITCHED_GOTO
+#if defined(USE_SWITCHED_GOTO) && !defined(USE_COMPUTED_GOTO)
 #pragma message("Enable switched goto!")
-      // from https://bullno1.com/blog/switched-goto
+        // from https://bullno1.com/blog/switched-goto
 #define DISPATCH() \
       DBG_PRINT_STACK; \
       DBG_GC; \
@@ -193,16 +195,30 @@ namespace foxlox
         OPCODE(DISPATCH_CASE) \
         default: UNREACHABLE; \
       }
-#define DISPATCH_CASE(op) case OP::op: goto lbl_##op;
+#define LBL(op) lbl_##op
+#define DISPATCH_CASE(op) case OP::op: goto LBL(op);
+#define START_VM DISPATCH();
 #endif
-      DISPATCH();
-      // N
-    lbl_NOP:
+
+#if !defined(USE_COMPUTED_GOTO) && !defined(USE_SWITCHED_GOTO)
+#pragma message("Use plain old while(true) and switch")
+#define START_VM \
+      DBG_PRINT_STACK; \
+      DBG_GC; \
+      DBG_PRINT_INST; \
+      while(true) switch(read_inst())
+#define DISPATCH() break
+#define LBL(op) case OP::op
+#endif
+        START_VM
+      {
+        // N
+      LBL(NOP) :
       {
         /* do nothing */
         DISPATCH();
       }
-    lbl_RETURN:
+      LBL(RETURN) :
       {
         if (p_calltrace == calltrace.begin()) { return Value(); }
         p_calltrace--;
@@ -216,7 +232,7 @@ namespace foxlox
         collect_garbage();
         DISPATCH();
       }
-    lbl_RETURN_V:
+      LBL(RETURN_V) :
       {
         const auto v = *top();
 
@@ -232,27 +248,27 @@ namespace foxlox
         collect_garbage();
         DISPATCH();
       }
-    lbl_POP:
+      LBL(POP) :
       {
         pop();
         DISPATCH();
       }
-    lbl_POP_N:
+      LBL(POP_N) :
       {
         pop(read_uint16());
         DISPATCH();
       }
-    lbl_NEGATE:
+      LBL(NEGATE) :
       {
         *top() = -*top();
         DISPATCH();
       }
-    lbl_NOT:
+      LBL(NOT) :
       {
         *top() = !*top();
         DISPATCH();
       }
-    lbl_ADD:
+      LBL(ADD) :
       {
         const auto l = top(1);
         const auto r = top(0);
@@ -272,7 +288,7 @@ namespace foxlox
         pop();
         DISPATCH();
       }
-    lbl_SUBTRACT:
+      LBL(SUBTRACT) :
       {
         const auto l = top(1);
         const auto r = top(0);
@@ -280,7 +296,7 @@ namespace foxlox
         pop();
         DISPATCH();
       }
-    lbl_MULTIPLY:
+      LBL(MULTIPLY) :
       {
         const auto l = top(1);
         const auto r = top(0);
@@ -288,7 +304,7 @@ namespace foxlox
         pop();
         DISPATCH();
       }
-    lbl_DIVIDE:
+      LBL(DIVIDE) :
       {
         const auto l = top(1);
         const auto r = top(0);
@@ -296,7 +312,7 @@ namespace foxlox
         pop();
         DISPATCH();
       }
-    lbl_INTDIV:
+      LBL(INTDIV) :
       {
         const auto l = top(1);
         const auto r = top(0);
@@ -304,7 +320,7 @@ namespace foxlox
         pop();
         DISPATCH();
       }
-    lbl_EQ:
+      LBL(EQ) :
       {
         const auto l = top(1);
         const auto r = top(0);
@@ -312,7 +328,7 @@ namespace foxlox
         pop();
         DISPATCH();
       }
-    lbl_NE:
+      LBL(NE) :
       {
         const auto l = top(1);
         const auto r = top(0);
@@ -320,7 +336,7 @@ namespace foxlox
         pop();
         DISPATCH();
       }
-    lbl_GT:
+      LBL(GT) :
       {
         const auto l = top(1);
         const auto r = top(0);
@@ -328,7 +344,7 @@ namespace foxlox
         pop();
         DISPATCH();
       }
-    lbl_GE:
+      LBL(GE) :
       {
         const auto l = top(1);
         const auto r = top(0);
@@ -336,7 +352,7 @@ namespace foxlox
         pop();
         DISPATCH();
       }
-    lbl_LT:
+      LBL(LT) :
       {
         const auto l = top(1);
         const auto r = top(0);
@@ -344,7 +360,7 @@ namespace foxlox
         pop();
         DISPATCH();
       }
-    lbl_LE:
+      LBL(LE) :
       {
         const auto l = top(1);
         const auto r = top(0);
@@ -352,33 +368,33 @@ namespace foxlox
         pop();
         DISPATCH();
       }
-    lbl_NIL:
+      LBL(NIL) :
       {
         push();
         *top() = Value();
         DISPATCH();
       }
-    lbl_CONSTANT:
+      LBL(CONSTANT) :
       {
         push();
         const std::span constants = chunk->get_constants();
         *top() = gsl::at(constants, read_uint16());
         DISPATCH();
       }
-    lbl_FUNC:
+      LBL(FUNC) :
       {
         push();
         auto& subroutines = chunk->get_subroutines();
         *top() = &subroutines.at(read_uint16());
         DISPATCH();
       }
-    lbl_CLASS:
+      LBL(CLASS) :
       {
         push();
         *top() = &class_pool.at(read_uint16());
         DISPATCH();
       }
-    lbl_INHERIT:
+      LBL(INHERIT) :
       {
         const auto derived = top(1);
         const auto base = top(0);
@@ -390,19 +406,19 @@ namespace foxlox
         pop();
         DISPATCH();
       }
-    lbl_STRING:
+      LBL(STRING) :
       {
         push();
         *top() = const_string_pool.at(read_uint16());
         DISPATCH();
       }
-    lbl_BOOL:
+      LBL(BOOL) :
       {
         push();
         *top() = Value(read_bool());
         DISPATCH();
       }
-    lbl_TUPLE:
+      LBL(TUPLE) :
       {
         // note: n can be 0
         const auto n = read_uint16();
@@ -417,215 +433,220 @@ namespace foxlox
         push();
         *top() = p;
         DISPATCH();
-      }
-    lbl_LOAD_STACK:
-      {
-        const auto idx = read_uint16();
-        const auto v = *top(idx);
-        push();
-        *top() = v;
-        DISPATCH();
-      }
-    lbl_STORE_STACK:
-      {
-        const auto idx = read_uint16();
-        const auto r = top();
-        *top(idx) = *r;
-        DISPATCH();
-      }
-    lbl_LOAD_STATIC:
-      {
-        const auto idx = read_uint16();
-        push();
-        *top() = static_value_pool.at(idx);
-        DISPATCH();
-      }
-    lbl_STORE_STATIC:
-      {
-        const auto idx = read_uint16();
-        const auto r = top();
-        static_value_pool.at(idx) = *r;
-        DISPATCH();
-      }
-    lbl_JUMP:
-      {
-        const int16_t offset = read_int16();
-        ip += offset;
-        if (offset < 0)
-        {
-          collect_garbage();
         }
-        DISPATCH();
-      }
-    lbl_JUMP_IF_TRUE:
-      {
-        const int16_t offset = read_int16();
-        if (top()->get_bool() == true)
+        LBL(LOAD_STACK) :
         {
-          ip += offset;
-        }
-        pop();
-        if (offset < 0)
-        {
-          collect_garbage();
-        }
-        DISPATCH();
-      }
-    lbl_JUMP_IF_FALSE:
-      {
-        const int16_t offset = read_int16();
-        if (top()->get_bool() == false)
-        {
-          ip += offset;
-        }
-        pop();
-        if (offset < 0)
-        {
-          collect_garbage();
-        }
-        DISPATCH();
-      }
-    lbl_JUMP_IF_TRUE_NO_POP:
-      {
-        const int16_t offset = read_int16();
-        if (top()->get_bool() == true)
-        {
-          ip += offset;
-        }
-        DISPATCH();
-      }
-    lbl_JUMP_IF_FALSE_NO_POP:
-      {
-        const int16_t offset = read_int16();
-        if (top()->get_bool() == false)
-        {
-          ip += offset;
-        }
-        DISPATCH();
-      }
-    lbl_CALL:
-      {
-        const auto v = *top();
-        const uint16_t num_of_params = read_uint16();
-        pop();
-        switch (v.type)
-        {
-        case ValueType::FUNC:
-        {
-          const auto func_to_call = v.v.func;
-          p_calltrace->subroutine = current_subroutine;
-          p_calltrace->ip = ip;
-          p_calltrace->stack_top = stack_top - num_of_params;
-          p_calltrace++;
-
-          if (func_to_call->get_arity() != num_of_params)
-          {
-            throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
-          }
-          current_subroutine = func_to_call;
-          ip = current_subroutine->get_code().begin();
-          break;
-        }
-        case ValueType::CPP_FUNC:
-        {
-          const auto func_to_call = v.v.cppfunc;
-          const std::span<Value> params{ next(top(num_of_params)), next(top(0)) };
-          const Value result = func_to_call(*this, params);
-          pop(num_of_params);
+          const auto idx = read_uint16();
+          const auto v = *top(idx);
           push();
-          *top() = result;
-          break;
+          *top() = v;
+          DISPATCH();
         }
-        case ValueType::METHOD:
+        LBL(STORE_STACK) :
         {
-          const auto func_to_call = v.get_method_func();
-          p_calltrace->subroutine = current_subroutine;
-          p_calltrace->ip = ip;
-          p_calltrace->stack_top = stack_top - num_of_params;
-          p_calltrace++;
-
+          const auto idx = read_uint16();
+          const auto r = top();
+          *top(idx) = *r;
+          DISPATCH();
+        }
+        LBL(LOAD_STATIC) :
+        {
+          const auto idx = read_uint16();
           push();
-          *top() = v.v.instance; // `this'
-
-          if (func_to_call->get_arity() != num_of_params)
-          {
-            throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
-          }
-          current_subroutine = func_to_call;
-          ip = current_subroutine->get_code().begin();
-          break;
+          *top() = static_value_pool.at(idx);
+          DISPATCH();
         }
-        case ValueType::OBJ:
+        LBL(STORE_STATIC) :
         {
-          if (v.is_nil())
+          const auto idx = read_uint16();
+          const auto r = top();
+          static_value_pool.at(idx) = *r;
+          DISPATCH();
+        }
+        LBL(JUMP) :
+        {
+          const int16_t offset = read_int16();
+          ip += offset;
+          if (offset < 0)
           {
-            throw ValueError("Value of type NIL is not callable.");
+            collect_garbage();
           }
-          if (!v.is_class())
+          DISPATCH();
+        }
+        LBL(JUMP_IF_TRUE) :
+        {
+          const int16_t offset = read_int16();
+          if (top()->get_bool() == true)
           {
-            throw ValueError(fmt::format("Value of type {} is not callable.",
-              magic_enum::enum_name(v.v.obj->type)));
+            ip += offset;
           }
-          const auto klass = v.v.klass;
-          const auto instance = Instance::alloc(allocator, deallocator, klass);
-          gc_index.instance_pool.push_back(instance);
-          if (auto func_to_call = klass->get_method(str__init__); func_to_call.has_value())
+          pop();
+          if (offset < 0)
           {
+            collect_garbage();
+          }
+          DISPATCH();
+        }
+        LBL(JUMP_IF_FALSE) :
+        {
+          const int16_t offset = read_int16();
+          if (top()->get_bool() == false)
+          {
+            ip += offset;
+          }
+          pop();
+          if (offset < 0)
+          {
+            collect_garbage();
+          }
+          DISPATCH();
+        }
+        LBL(JUMP_IF_TRUE_NO_POP) :
+        {
+          const int16_t offset = read_int16();
+          if (top()->get_bool() == true)
+          {
+            ip += offset;
+          }
+          DISPATCH();
+        }
+        LBL(JUMP_IF_FALSE_NO_POP) :
+        {
+          const int16_t offset = read_int16();
+          if (top()->get_bool() == false)
+          {
+            ip += offset;
+          }
+          DISPATCH();
+        }
+        LBL(CALL) :
+        {
+          const auto v = *top();
+          const uint16_t num_of_params = read_uint16();
+          pop();
+          switch (v.type)
+          {
+          case ValueType::FUNC:
+          {
+            const auto func_to_call = v.v.func;
+            p_calltrace->subroutine = current_subroutine;
+            p_calltrace->ip = ip;
+            p_calltrace->stack_top = stack_top - num_of_params;
+            p_calltrace++;
+
+            if (func_to_call->get_arity() != num_of_params)
+            {
+              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
+            }
+            current_subroutine = func_to_call;
+            ip = current_subroutine->get_code().begin();
+            break;
+          }
+          case ValueType::CPP_FUNC:
+          {
+            const auto func_to_call = v.v.cppfunc;
+            const std::span<Value> params{ next(top(num_of_params)), next(top(0)) };
+            const Value result = func_to_call(*this, params);
+            pop(num_of_params);
+            push();
+            *top() = result;
+            break;
+          }
+          case ValueType::METHOD:
+          {
+            const auto func_to_call = v.get_method_func();
             p_calltrace->subroutine = current_subroutine;
             p_calltrace->ip = ip;
             p_calltrace->stack_top = stack_top - num_of_params;
             p_calltrace++;
 
             push();
-            *top() = instance; // `this'
+            *top() = v.v.instance; // `this'
 
-            if ((*func_to_call)->get_arity() != num_of_params)
+            if (func_to_call->get_arity() != num_of_params)
             {
-              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", (*func_to_call)->get_arity(), num_of_params));
+              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
             }
-            current_subroutine = *func_to_call;
+            current_subroutine = func_to_call;
             ip = current_subroutine->get_code().begin();
+            break;
           }
-          else
+          case ValueType::OBJ:
           {
-            if (num_of_params != 0)
+            if (v.is_nil())
             {
-              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", 0, num_of_params));
+              throw ValueError("Value of type NIL is not callable.");
             }
-            push();
-            *top() = instance;
+            if (!v.is_class())
+            {
+              throw ValueError(fmt::format("Value of type {} is not callable.",
+                magic_enum::enum_name(v.v.obj->type)));
+            }
+            const auto klass = v.v.klass;
+            const auto instance = Instance::alloc(allocator, deallocator, klass);
+            gc_index.instance_pool.push_back(instance);
+            if (auto func_to_call = klass->get_method(str__init__); func_to_call.has_value())
+            {
+              p_calltrace->subroutine = current_subroutine;
+              p_calltrace->ip = ip;
+              p_calltrace->stack_top = stack_top - num_of_params;
+              p_calltrace++;
+
+              push();
+              *top() = instance; // `this'
+
+              if ((*func_to_call)->get_arity() != num_of_params)
+              {
+                throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", (*func_to_call)->get_arity(), num_of_params));
+              }
+              current_subroutine = *func_to_call;
+              ip = current_subroutine->get_code().begin();
+            }
+            else
+            {
+              if (num_of_params != 0)
+              {
+                throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", 0, num_of_params));
+              }
+              push();
+              *top() = instance;
+            }
+            break;
           }
-          break;
+          default:
+          {
+            throw ValueError(fmt::format("Value of type {} is not callable.",
+              magic_enum::enum_name(v.type)));
+          }
+          }
+          DISPATCH();
         }
-        default:
+        LBL(GET_SUPER_METHOD) :
         {
-          throw ValueError(fmt::format("Value of type {} is not callable.",
-            magic_enum::enum_name(v.type)));
+          const auto name = const_string_pool.at(read_uint16());
+          auto instance = top()->get_instance();
+          *top() = instance->get_super_method(name);
+          DISPATCH();
         }
+        LBL(GET_PROPERTY) :
+        {
+          const auto name = const_string_pool.at(read_uint16());
+          auto instance = top()->get_instance();
+          *top() = instance->get_property(name);
+          DISPATCH();
         }
-        DISPATCH();
-      }
-    lbl_GET_SUPER_METHOD:
-      {
-        const auto name = const_string_pool.at(read_uint16());
-        auto instance = top()->get_instance();
-        *top() = instance->get_super_method(name);
-        DISPATCH();
-      }
-    lbl_GET_PROPERTY:
-      {
-        const auto name = const_string_pool.at(read_uint16());
-        auto instance = top()->get_instance();
-        *top() = instance->get_property(name);
-        DISPATCH();
-      }
-    lbl_SET_PROPERTY:
-      {
-        const auto name = const_string_pool.at(read_uint16());
-        auto instance = top()->get_instance();
-        pop();
-        instance->set_property(name, *top());
-        DISPATCH();
+        LBL(SET_PROPERTY) :
+        {
+          const auto name = const_string_pool.at(read_uint16());
+          auto instance = top()->get_instance();
+          pop();
+          instance->set_property(name, *top());
+          DISPATCH();
+        }
+  #if !defined(USE_COMPUTED_GOTO) && !defined(USE_SWITCHED_GOTO)
+        default:
+          UNREACHABLE;
+  #endif
       }
     }
     catch (const std::exception& e)

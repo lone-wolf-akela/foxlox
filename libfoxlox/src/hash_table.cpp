@@ -58,14 +58,15 @@ namespace
 
   uint32_t ptr_hash(void * p)
   {
-    const uintptr_t p_int = reinterpret_cast<uintptr_t>(p);
-    uint32_t hash = 2166136261u;
-    for (int i = 0; i < sizeof(void*); i++)
-    {
-      hash ^= gsl::narrow_cast<uint8_t>(p_int >> (i * CHAR_BIT));
-      hash *= 16777619u;
-    }
-    return hash;
+    // MurmurHash3, a lot faster than FNV-1a for pointer
+    // from https://zimbry.blogspot.com/2011/09/better-bit-mixing-improving-on.html
+    uintptr_t p_int = reinterpret_cast<uintptr_t>(p);
+    p_int ^= (p_int >> 33);
+    p_int *= 0xff51afd7ed558ccdull;
+    p_int ^= (p_int >> 33);
+    p_int *= 0xc4ceb9fe1a85ec53ull;
+    p_int ^= (p_int >> 33);
+    return gsl::narrow_cast<uint32_t>(p_int);
   }
 }
 namespace foxlox

@@ -85,10 +85,14 @@ namespace foxlox
     const size_t new_capacity_mask = new_capacity - 1;
     auto new_entries = reinterpret_cast<decltype(table->entries)>(
       table->allocator(new_capacity * sizeof(*table->entries)));
+#ifndef _MSC_VER 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
     std::memset(new_entries, 0, new_capacity * sizeof(*table->entries));
+#ifndef _MSC_VER 
 #pragma GCC diagnostic pop
+#endif
     for (auto& e : std::span(table->entries, table->capacity_mask + 1))
     {
       if (e.tombstone || e.str == nullptr)
@@ -394,10 +398,14 @@ namespace foxlox
     capacity_mask = HASH_TABLE_START_BUCKET - 1;
     entries = reinterpret_cast<decltype(entries)>(
       allocator(HASH_TABLE_START_BUCKET * sizeof(*entries)));
+#ifndef _MSC_VER 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
     std::memset(entries, 0, HASH_TABLE_START_BUCKET * sizeof(*entries));
+#ifndef _MSC_VER 
 #pragma GCC diagnostic pop
+#endif
     // make sure HASH_TABLE_START_BUCKET is power of 2
     // otherwise capacity_mask won't work
     static_assert((HASH_TABLE_START_BUCKET & (HASH_TABLE_START_BUCKET - 1)) == 0);

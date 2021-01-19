@@ -16,12 +16,19 @@
 
 using namespace foxlox;
 
-void run(std::string_view source, VM& vm)
+void run(std::string_view source, VM& vm, bool exit_on_error)
 {
   auto [compile_result, chunk] = compile(source);
   if (compile_result != CompilerResult::OK)
   {
-    std::exit(65);
+    if (exit_on_error)
+    {
+      std::exit(65);
+    }
+    else
+    {
+      return;
+    }
   }
   try
   {
@@ -30,7 +37,14 @@ void run(std::string_view source, VM& vm)
   catch (RuntimeError& e)
   {
     fmt::print(stderr, "{}\n", e.what());
-    std::exit(70);
+    if (exit_on_error)
+    {
+      std::exit(70);
+    }
+    else
+    {
+      return;
+    }
   }
 }
 
@@ -45,7 +59,7 @@ void run_prompt(VM& vm)
     {
       break;
     }
-    run(line, vm);
+    run(line, vm, false);
   }
 }
 
@@ -63,22 +77,12 @@ void run_file(const std::filesystem::path& path, VM& vm)
     std::istreambuf_iterator<char>()
   };
   ifs.close();
-  run(content, vm);
+  run(content, vm, true);
 }
 
 int main(int argc, const char* argv[])
 {
   VM vm;
-
-#ifdef _DEBUG
-  std::ignore = argc;
-  std::ignore = argv;
-  const auto code = R"(
-var a = 1;
-)";
-  run(code, vm);
-  return 0;
-#else
   if (argc == 2)
   {
     run_file(argv[1], vm);
@@ -93,5 +97,4 @@ var a = 1;
     std::exit(64);
   }
   return 0;
-#endif
 }

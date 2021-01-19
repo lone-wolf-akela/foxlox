@@ -29,7 +29,7 @@ return r;
     auto v = vm.interpret(chunk);
     ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
-    ASSERT_EQ(s.size(), 2);
+    ASSERT_EQ(ssize(s), 2);
     ASSERT_EQ(s[0].type, ValueType::I64);
     ASSERT_EQ(s[0].get_int64(), 0);
     ASSERT_EQ(s[1].type, ValueType::I64);
@@ -57,7 +57,7 @@ return r;
     auto v = vm.interpret(chunk);
     ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
-    ASSERT_EQ(s.size(), 2);
+    ASSERT_EQ(ssize(s), 2);
     ASSERT_TRUE(s[0].is_str());
     ASSERT_EQ(s[0].get_strview(), "after");
     ASSERT_EQ(s[1].type, ValueType::I64);
@@ -79,7 +79,7 @@ return r;
     auto v = vm.interpret(chunk);
     ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
-    ASSERT_EQ(s.size(), 3);
+    ASSERT_EQ(ssize(s), 3);
     for (int i = 0; i < 3; i++)
     {
       ASSERT_EQ(s[i].type, ValueType::I64);
@@ -99,7 +99,7 @@ return r;
     auto v = vm.interpret(chunk);
     ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
-    ASSERT_EQ(s.size(), 3);
+    ASSERT_EQ(ssize(s), 3);
     for (int i = 0; i < 3; i++)
     {
       ASSERT_EQ(s[i].type, ValueType::I64);
@@ -128,7 +128,7 @@ return r;
     auto v = vm.interpret(chunk);
     ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
-    ASSERT_EQ(s.size(), 2);
+    ASSERT_EQ(ssize(s), 2);
     for (int i = 0; i < 2; i++)
     {
       ASSERT_EQ(s[i].type, ValueType::I64);
@@ -148,7 +148,7 @@ for (var i = 0;; ++i) {
     auto v = vm.interpret(chunk);
     ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
-    ASSERT_EQ(s.size(), 3);
+    ASSERT_EQ(ssize(s), 3);
     for (int i = 0; i < 3; i++)
     {
       ASSERT_EQ(s[i].type, ValueType::I64);
@@ -169,7 +169,7 @@ return r;
     auto v = vm.interpret(chunk);
     ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
-    ASSERT_EQ(s.size(), 2);
+    ASSERT_EQ(ssize(s), 2);
     for (int i = 0; i < 2; i++)
     {
       ASSERT_EQ(s[i].type, ValueType::I64);

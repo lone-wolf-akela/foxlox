@@ -175,6 +175,11 @@ namespace foxlox
     if (ssize(source) < line_num) { return ""; }
     return source.at(line_num - 1);
   }
+  LineInfo::LineNum::LineNum(gsl::index code_idx, int line_n) :
+    code_index(code_idx),
+    line_num(line_n)
+  {
+  }
   const LineInfo& Subroutine::get_lines() const noexcept
   {
     return lines;

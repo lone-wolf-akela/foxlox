@@ -20,7 +20,7 @@ return r;
     auto v = vm.interpret(chunk);
     ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
-    ASSERT_EQ(s.size(), 3);
+    ASSERT_EQ(ssize(s), 3);
     for (int i = 0; i < 3; i++)
     {
       ASSERT_EQ(s[i].type, ValueType::I64);
@@ -42,7 +42,7 @@ return r;
     auto v = vm.interpret(chunk);
     ASSERT_TRUE(v.is_tuple());
     auto s = v.get_tuplespan();
-    ASSERT_EQ(s.size(), 3);
+    ASSERT_EQ(ssize(s), 3);
     for (int i = 0; i < 3; i++)
     {
       ASSERT_EQ(s[i].type, ValueType::I64);

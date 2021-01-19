@@ -231,7 +231,7 @@ namespace foxlox
           equals.type == TokenType::STAR_EQUAL ? TokenType::STAR :
           equals.type == TokenType::SLASH_EQUAL ? TokenType::SLASH :
           TokenType::SLASH_SLASH;
-        value = std::make_unique<expr::Binary>(std::move(expr->clone()), 
+        value = std::make_unique<expr::Binary>(expr->clone(), 
           Token(tk, equals.lexeme, equals.literal, equals.line), std::move(value));
       }
       auto p_expr = expr.get();

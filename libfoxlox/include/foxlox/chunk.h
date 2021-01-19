@@ -22,6 +22,7 @@ namespace foxlox
   private:
     struct LineNum
     {
+      LineNum(gsl::index code_idx, int line_n);
       gsl::index code_index;
       int line_num;
     };

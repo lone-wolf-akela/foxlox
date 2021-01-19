@@ -68,18 +68,30 @@ target_link_libraries(${PROJECT_NAME} PUBLIC mimalloc)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 if(MSVC)
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO 
-    "/O2 /DNDEBUG /Zi /Gy /DNDEBUG /Ob3" 
+    "/O2 /DNDEBUG /Zi /Gy /Ob2" 
     CACHE STRING "compile flags for release build" 
     FORCE)
+  set(CMAKE_CXX_FLAGS_RELEASE 
+    "/O2 /DNDEBUG /Zi /Gy /Ob2" 
+    CACHE STRING "compile flags for release build" 
+    FORCE)
+else()
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO 
+    "/O2 /DNDEBUG /Zi /Gy /Ob3" 
+    CACHE STRING "compile flags for release build" 
+    FORCE)
+  set(CMAKE_CXX_FLAGS_RELEASE 
+    "/O2 /DNDEBUG /Zi /Gy /Ob3" 
+    CACHE STRING "compile flags for release build" 
+    FORCE)
+endif()
   set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO 
     "/DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF" 
     CACHE STRING "link flags for release build" 
     FORCE)
-  set(CMAKE_CXX_FLAGS_RELEASE 
-    "/O2 /DNDEBUG /Zi /Gy /DNDEBUG /Ob3" 
-    CACHE STRING "compile flags for release build" 
-    FORCE)
+  
   set(CMAKE_EXE_LINKER_FLAGS_RELEASE 
     "/DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF" 
     CACHE STRING "link flags for release build" 

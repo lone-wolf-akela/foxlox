@@ -7,7 +7,6 @@
 //#define DEBUG_LOG_GC
 
 #define USE_MIMALLOC
-
 #define USE_SWITCHED_GOTO
 //#define USE_COMPUTED_GOTO
 /* if neither USE_SWITCHED_GOTO nor USE_COMPUTED_GOTO is set

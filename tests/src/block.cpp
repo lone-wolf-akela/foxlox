@@ -39,7 +39,7 @@ return r + a;
   auto v = vm.interpret(chunk);
   ASSERT_TRUE(v.is_tuple());
   auto s = v.get_tuplespan();
-  ASSERT_EQ(s.size(), 2);
+  ASSERT_EQ(ssize(s), 2);
   ASSERT_TRUE(s[0].is_str());
   ASSERT_EQ(s[0].get_strview(), "inner");
   ASSERT_TRUE(s[1].is_str());

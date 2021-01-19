@@ -29,9 +29,9 @@ target_sources(${PROJECT_NAME} PRIVATE
   "src/object.cpp" 
   "src/runtimelib.h" 
   "src/runtimelib.cpp" 
-  "src/container_helper.cpp" 
+   
   "src/cppinterop.cpp" 
-  "src/string_pool.cpp")
+  "src/hash_table.cpp")
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>

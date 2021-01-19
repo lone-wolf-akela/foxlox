@@ -49,13 +49,13 @@ namespace foxlox
   Class* Instance::get_class() const noexcept { return klass; }
   Value Instance::get_property(String* name)
   {
-    if (auto [got, func] = klass->try_get_method_idx(name); got)
+    if (auto func = klass->get_method(name); func.has_value())
     {
-      return Value(this, func);
+      return Value(this, *func);
     }
-    if (auto found = fields.find(name); found != fields.end())
+    if(auto value = fields.get_value(name); value.has_value())
     {
-      return found->second;
+      return *value;
     }
     else
     {
@@ -65,16 +65,16 @@ namespace foxlox
   }
   Value Instance::get_super_method(String* name)
   {
-    if (auto [got, func] = klass->get_super()->try_get_method_idx(name); got)
+    if (auto func = klass->get_super()->get_method(name); func.has_value())
     {
-      return Value(this, func);
+      return Value(this, *func);
     }
     else
     {
       throw ValueError(fmt::format("Super class has no method with name `{}'", name->get_view()));
     }
   }
-  Instance::Fields& Instance::get_all_fields()
+  HashTable<Value>& Instance::get_hash_table()
   {
     return fields;
   }
@@ -84,7 +84,7 @@ namespace foxlox
     {
       throw ValueError("Attempt to rewrite class method. This is not allowed");
     }
-    fields.insert_or_assign(name, value);
+    fields.try_add_entry(name, value);
   }
   bool Instance::is_marked() 
   { 
@@ -99,21 +99,29 @@ namespace foxlox
     gc_mark = false;
   }
   Class::Class(std::string_view name) : 
-    ObjBase(ObjType::CLASS), superclass(nullptr), class_name(name), gc_mark(false)
+    ObjBase(ObjType::CLASS), 
+    superclass(nullptr), 
+    class_name(name),
+    methods([](size_t l) {return new char[l]; }, [](char* p, size_t) {delete[] p; }),
+    gc_mark(false)
   {
   }
   void Class::add_method(String* name, Subroutine* func)
   {
-    methods.emplace(name, func);
+    methods.set_entry(name, func);
   }
   void Class::set_super(Class* super)
   {
     superclass = super;
-    for (auto& [key, val] : super->methods)
+    for (
+      auto entry = super->get_hash_table().first_entry(); 
+      entry!=nullptr;
+      entry = super->get_hash_table().next_entry(entry)
+      )
     {
       // if we already have a method with the same name,
       // do nothing (to shadow the base class method)
-      methods.try_emplace(key, val);
+      methods.try_add_entry(entry->str, entry->value);
     }
   }
   Class* Class::get_super()
@@ -122,18 +130,13 @@ namespace foxlox
   }
   bool Class::has_method(String* name)
   {
-    return methods.contains(name);
+    return methods.get_value(name).has_value();
   }
-  std::pair<bool, Subroutine*> Class::try_get_method_idx(String* name)
+  std::optional<Subroutine*> Class::get_method(String* name)
   {
-    const auto found = methods.find(name);
-    if (found == methods.end())
-    {
-      return std::make_pair(false, nullptr);
-    }
-    return std::make_pair(true, found->second);
+    return methods.get_value(name);
   }
-  std::unordered_map<String*, Subroutine*>& Class::get_all_methods()
+  HashTable<Subroutine*>& Class::get_hash_table()
   {
     return methods;
   }

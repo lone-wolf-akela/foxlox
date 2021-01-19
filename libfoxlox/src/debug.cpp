@@ -8,8 +8,9 @@
 
 #include <foxlox/except.h>
 #include <foxlox/vm.h>
+#include <foxlox/config.h>
 #include "object.h"
-#include "config.h"
+
 
 #include <foxlox/debug.h>
 

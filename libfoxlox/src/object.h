@@ -1,12 +1,10 @@
 #pragma once
 #include <climits>
 #include <version>
-#include <unordered_map>
 
 #include <gsl/gsl>
 
-#include "config.h"
-#include "container_helper.h"
+#include "hash_table.h"
 #include "value.h"
 
 namespace foxlox
@@ -131,39 +129,27 @@ namespace foxlox
     void set_super(Class* super);
     Class* get_super();
     bool has_method(String* name);
-    std::pair<bool, Subroutine*> try_get_method_idx(String* name);
-    std::unordered_map<String*, Subroutine*>& get_all_methods();
+    std::optional<Subroutine*> get_method(String* name);
+    HashTable<Subroutine*>& get_hash_table();
 
     bool is_marked();
     void mark();
     void unmark();
   private:
+    bool gc_mark;
     Class* superclass;
     std::string class_name;
-    std::unordered_map<String*, Subroutine*> methods;
-    bool gc_mark;
+    HashTable<Subroutine*> methods;
   };
 
   class Instance : public ObjBase
   {
   public:
-    using Fields = std::unordered_map<
-      String*, Value,
-      std::hash<String*>,
-      std::equal_to<String*>,
-      AllocatorWrapper<std::pair<String* const, Value>>
-    >;
-
     template<Allocator A, Deallocator D>
     Instance(A allocator, D deallocator, Class* from_class) :
       ObjBase(ObjType::INSTANCE),
       klass(from_class),
-      fields(
-        HASH_TABLE_START_BUCKET, //bucket_count
-        std::hash<String*>{},
-        std::equal_to<String*>{},
-        AllocatorWrapper<std::pair<String* const, Value>>(allocator, deallocator)
-      ),
+      fields(allocator, deallocator),
       gc_mark(false)
     {
     }
@@ -171,7 +157,7 @@ namespace foxlox
     Class* get_class() const noexcept;
     Value get_property(String* name);
     Value get_super_method(String* name);
-    Fields& get_all_fields();
+    HashTable<Value>& get_hash_table();
     void set_property(String* name, Value value);
     bool is_marked();
     void mark();
@@ -193,9 +179,9 @@ namespace foxlox
       deallocator(reinterpret_cast<char*>(p.get()), sizeof(Instance));
     }
   private:
-    Class* klass;
-    Fields fields;
     bool gc_mark;
+    Class* klass;
+    HashTable<Value> fields;
   };
 
   template<Allocator F>

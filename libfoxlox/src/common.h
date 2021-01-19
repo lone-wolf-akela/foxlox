@@ -4,15 +4,19 @@
 
 #include "token.h"
 
-#ifndef NDEBUG
-#define UNREACHABLE assert(false)
-#else
-#ifdef _MSC_VER
+#if defined(NDEBUG) && defined(_MSC_VER)
 #define UNREACHABLE __assume(0)
-#else
+#endif
+#if defined(NDEBUG) && !defined(_MSC_VER)
 #define UNREACHABLE __builtin_unreachable()
 #endif
+#if !defined(NDEBUG) && defined(_MSC_VER)
+#define UNREACHABLE assert(false); __assume(0)
 #endif
+#if !defined(NDEBUG) && !defined(_MSC_VER)
+#define UNREACHABLE assert(false); __builtin_unreachable()
+#endif
+
 namespace foxlox
 {
   void format_error(Token token, std::string_view message);

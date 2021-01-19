@@ -11,7 +11,7 @@ enable_testing()
 add_executable(${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME} PRIVATE
-   "src/temp.cpp" 
+    
    "src/variable.cpp" 
    "src/if.cpp" 
    "src/block.cpp" 

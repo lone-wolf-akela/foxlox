@@ -7,7 +7,7 @@
 #include <foxlox/chunk.h>
 #include <foxlox/debug.h>
 #include "../../src/value.h"
-#include "../../src/string_pool.h"
+#include "../../src/hash_table.h"
 
 namespace foxlox
 {
@@ -103,10 +103,10 @@ namespace foxlox
     CallTrace::iterator p_calltrace;
 
     // mem manage related
+    size_t current_heap_size; // heap size should be initialized before allocator
+    size_t next_gc_heap_size;
     VM_Allocator allocator;
     VM_Deallocator deallocator;
-    size_t current_heap_size;
-    size_t next_gc_heap_size;
     void collect_garbage();
     void mark_roots();
     void mark_value(Value& v);

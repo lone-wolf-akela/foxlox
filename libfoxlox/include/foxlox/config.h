@@ -6,6 +6,8 @@
 //#define DEBUG_STRESS_GC
 //#define DEBUG_LOG_GC
 
+#define USE_MIMALLOC
+
 constexpr auto STACK_MAX = 1024;
 constexpr auto CALLTRACE_MAX = 256;
 constexpr auto FIRST_GC_HEAP_SIZE = 1024 * 1024;

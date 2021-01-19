@@ -4,14 +4,22 @@
 #include <utility>
 #include <iostream>
 
+#include <foxlox/config.h>
+#ifdef USE_MIMALLOC
 #include <mimalloc.h>
+#define MALLOC mi_malloc
+#define FREE mi_free
+#else
+#include <cstdlib>
+#define MALLOC std::malloc
+#define FREE std::free
+#endif
 #include <fmt/format.h>
 #include <magic_enum.hpp>
 
 #include <foxlox/except.h>
 #include <foxlox/debug.h>
 #include "object.h"
-#include "config.h"
 #include "common.h"
 
 #include <foxlox/vm.h>
@@ -28,9 +36,9 @@ namespace foxlox
 #ifdef DEBUG_LOG_GC
       std::cout << fmt::format("alloc size={} ", l);
 #endif
-    char* const data = static_cast<char*>(mi_malloc(l));
+    char* const data = static_cast<char*>(MALLOC(l));
 #ifdef DEBUG_LOG_GC
-    std::cout << fmt::format("at {}; heap size: {} -> {}\n", static_cast<const void*>(data), current_heap_size - l, current_heap_size);
+    std::cout << fmt::format("at {}; heap size: {} -> {}\n", static_cast<const void*>(data), *heap_size - l, *heap_size);
 #endif
     return data;
   }
@@ -41,11 +49,11 @@ namespace foxlox
   void VM_Deallocator::operator()(char* const p, size_t l) noexcept
   {
 #ifdef DEBUG_LOG_GC
-    std::cout << fmt::format("free size={} at {}; heap size: {} -> {}\n", l, static_cast<const void*>(p), current_heap_size, current_heap_size - l);
+    std::cout << fmt::format("free size={} at {}; heap size: {} -> {}\n", l, static_cast<const void*>(p), *heap_size, *heap_size - l);
 #endif
     Ensures(l <= *heap_size);
     *heap_size -= l;
-    mi_free(p);
+    FREE(p);
   }
   VM_GC_Index::VM_GC_Index(VM* v) noexcept :
     vm(v)
@@ -89,16 +97,16 @@ namespace foxlox
   }
 
   VM::VM() noexcept :
+    chunk(nullptr),
     stack(STACK_MAX),
     calltrace(CALLTRACE_MAX),
+    current_heap_size(0),
+    next_gc_heap_size(FIRST_GC_HEAP_SIZE),
     allocator(&current_heap_size),
     deallocator(&current_heap_size),
     gc_index(this),
     string_pool(allocator, deallocator)
   {
-    chunk = nullptr;
-    current_heap_size = 0;
-    next_gc_heap_size = FIRST_GC_HEAP_SIZE;
   }
 
   Value VM::interpret(Chunk& c)
@@ -548,7 +556,7 @@ namespace foxlox
           const auto klass = v.v.klass;
           const auto instance = Instance::alloc(allocator, deallocator, klass);
           gc_index.instance_pool.push_back(instance);
-          if (auto [got, func_to_call] = klass->try_get_method_idx(str__init__); got)
+          if (auto func_to_call = klass->get_method(str__init__); func_to_call.has_value())
           {
             p_calltrace->subroutine = current_subroutine;
             p_calltrace->ip = ip;
@@ -558,11 +566,11 @@ namespace foxlox
             push();
             *top() = instance; // `this'
 
-            if (func_to_call->get_arity() != num_of_params)
+            if ((*func_to_call)->get_arity() != num_of_params)
             {
-              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
+              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", (*func_to_call)->get_arity(), num_of_params));
             }
-            current_subroutine = func_to_call;
+            current_subroutine = *func_to_call;
             ip = current_subroutine->get_code().begin();
           }
           else
@@ -713,10 +721,13 @@ namespace foxlox
   void VM::mark_class(Class& c)
   {
     if (c.is_marked()) { return; }
-    for (auto& [name, func] : c.get_all_methods())
+    for (
+      auto entry = c.get_hash_table().first_entry();
+      entry != nullptr;
+      entry = c.get_hash_table().next_entry(entry)
+      )
     {
-      std::ignore = name;
-      mark_subroutine(*func);
+      mark_subroutine(*entry->value);
     }
     if (c.get_super() != nullptr)
     {
@@ -805,10 +816,13 @@ namespace foxlox
       }
       else // if (v->is_instance() || v->type == ValueType::METHOD)
       {
-        for (auto& [name, value] : v->v.instance->get_all_fields())
+        for (
+          auto entry = v->v.instance->get_hash_table().first_entry();
+          entry != nullptr;
+          entry = v->v.instance->get_hash_table().next_entry(entry)
+          )
         {
-          std::ignore = name;
-          mark_value(value);
+          mark_value(entry->value);
         }
         mark_class(*v->v.instance->get_class());
       }

@@ -46,3 +46,30 @@ else
   ASSERT_EQ(res, CompilerResult::OK);
   ASSERT_NO_THROW(vm.interpret(chunk));
 }
+
+TEST(regression, init_not_found_after_rehash)
+{
+  VM vm;
+  auto [res, chunk] = compile(R"(
+# there was a bug
+# it hapens when there are 7 entries in string pool
+# which trigers the rehash of the pool
+# and the pool wrongly use the old capacity mask instead of the new one
+# during rehashing
+class C {
+  __init__(a) {
+    this.one = 1;
+    this.two = 2;
+    this.three = 3;
+    this.four = 4;
+    this.five = 5;
+    # __init__ is the 6th
+    # and the vm will try add another `__init__' (the 7th entry) into the pool
+    # which triger the rehash
+  }
+}
+C(0);
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  ASSERT_NO_THROW(vm.interpret(chunk));
+}

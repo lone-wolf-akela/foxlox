@@ -1,1 +1,1 @@
-#include "config.h"
+#include <foxlox/config.h>

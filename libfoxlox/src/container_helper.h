@@ -13,7 +13,7 @@ namespace foxlox
     // constructor
     explicit AllocatorWrapper(
       std::function<char* (size_t)> alloc, 
-      std::function<void(const char*, size_t)> dealloc) :
+      std::function<void(char* const, size_t)> dealloc) :
       allocator(alloc), deallocator(dealloc)
     {
     }
@@ -33,7 +33,7 @@ namespace foxlox
     }
     void deallocate(T* p, size_t n)
     {
-      deallocator(reinterpret_cast<const char*>(p), n * sizeof(T));
+      deallocator(reinterpret_cast<char*>(p), n * sizeof(T));
     }
 
     bool operator==(const AllocatorWrapper & r)
@@ -49,6 +49,6 @@ namespace foxlox
     friend class AllocatorWrapper;
   private:
     std::function<char*(size_t)> allocator;
-    std::function<void(const char*, size_t)> deallocator;
+    std::function<void(char* const, size_t)> deallocator;
   };
 }

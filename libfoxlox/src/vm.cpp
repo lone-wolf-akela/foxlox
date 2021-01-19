@@ -4,6 +4,7 @@
 #include <utility>
 #include <iostream>
 
+#include <mimalloc.h>
 #include <fmt/format.h>
 #include <magic_enum.hpp>
 
@@ -11,6 +12,7 @@
 #include <foxlox/debug.h>
 #include "object.h"
 #include "config.h"
+#include "common.h"
 
 #include <foxlox/vm.h>
 
@@ -20,14 +22,13 @@ namespace foxlox
     heap_size(heap_sz)
   {
   }
-  char* VM_Allocator::operator()(size_t l)
+  char* VM_Allocator::operator()(size_t l) noexcept
   {
     *heap_size += l;
-    GSL_SUPPRESS(r.11)
 #ifdef DEBUG_LOG_GC
       std::cout << fmt::format("alloc size={} ", l);
 #endif
-    char* const data = new char[l];
+    char* const data = static_cast<char*>(mi_malloc(l));
 #ifdef DEBUG_LOG_GC
     std::cout << fmt::format("at {}; heap size: {} -> {}\n", static_cast<const void*>(data), current_heap_size - l, current_heap_size);
 #endif
@@ -37,27 +38,26 @@ namespace foxlox
     heap_size(heap_sz)
   {
   }
-  void VM_Deallocator::operator()(const char* p, size_t l)
+  void VM_Deallocator::operator()(char* const p, size_t l) noexcept
   {
 #ifdef DEBUG_LOG_GC
     std::cout << fmt::format("free size={} at {}; heap size: {} -> {}\n", l, static_cast<const void*>(p), current_heap_size, current_heap_size - l);
 #endif
     Ensures(l <= *heap_size);
     *heap_size -= l;
-    GSL_SUPPRESS(r.11) GSL_SUPPRESS(i.11)
-      delete[] p;
+    mi_free(p);
   }
   VM_GC_Index::VM_GC_Index(VM* v) noexcept :
-    vm(v) 
+    vm(v)
   {
   }
   void VM_GC_Index::clean()
   {
-    for (const Tuple* p : tuple_pool)
+    for (auto p : tuple_pool)
     {
       Tuple::free(vm->deallocator, p);
     }
-    for (const Instance* p : instance_pool)
+    for (auto p : instance_pool)
     {
       Instance::free(vm->deallocator, p);
     }
@@ -146,465 +146,474 @@ namespace foxlox
 #if defined(DEBUG_TRACE_STACK) || defined(DEBUG_TRACE_INST) || defined(DEBUG_TRACE_SRC)
     Debugger debugger(true);
 #endif
-    while (true)
-    {
 #ifdef DEBUG_TRACE_STACK
-      debugger.print_vm_stack(*this);
+#define DBG_PRINT_STACK debugger.print_vm_stack(*this)
+#else
+#define DBG_PRINT_STACK
 #endif
 #ifdef DEBUG_STRESS_GC
-      collect_garbage();
+#define DBG_GC collect_garbage()
+#else
+#define DBG_GC
 #endif
 #if defined(DEBUG_TRACE_INST) || defined(DEBUG_TRACE_SRC)
-      debugger.disassemble_inst(*this, *current_subroutine, std::distance(current_subroutine->get_code().begin(), ip));
+#define DBG_PRINT_INST debugger.disassemble_inst(*this, *current_subroutine, std::distance(current_subroutine->get_code().begin(), ip))
+#else
+#define DBG_PRINT_INST
 #endif
-      try
+    try
+    {
+      // from https://bullno1.com/blog/switched-goto
+#define DISPATCH() \
+      DBG_PRINT_STACK; \
+      DBG_GC; \
+      DBG_PRINT_INST; \
+      switch(read_inst()) { \
+        OPCODE(DISPATCH_CASE) \
+        default: UNREACHABLE; \
+      }
+#define DISPATCH_CASE(op) case OP::op: goto lbl_##op;
+
+      DISPATCH();
+      // N
+    lbl_NOP:
       {
-        const OP inst = read_inst();
-        switch (inst)
-        {
-          // N
-        case OP::NOP:
-        {
-          /* do nothing */
-          break;
-        }
-        case OP::RETURN:
-        {
-          if (p_calltrace == calltrace.begin()) { return Value(); }
-          p_calltrace--;
-          current_subroutine = p_calltrace->subroutine;
-          ip = p_calltrace->ip;
-          stack_top = p_calltrace->stack_top;
-          // return a nil
-          push();
-          *top() = Value();
+        /* do nothing */
+        DISPATCH();
+      }
+    lbl_RETURN:
+      {
+        if (p_calltrace == calltrace.begin()) { return Value(); }
+        p_calltrace--;
+        current_subroutine = p_calltrace->subroutine;
+        ip = p_calltrace->ip;
+        stack_top = p_calltrace->stack_top;
+        // return a nil
+        push();
+        *top() = Value();
 
+        collect_garbage();
+        DISPATCH();
+      }
+    lbl_RETURN_V:
+      {
+        const auto v = *top();
+
+        if (p_calltrace == calltrace.begin()) { return v; }
+        p_calltrace--;
+        current_subroutine = p_calltrace->subroutine;
+        ip = p_calltrace->ip;
+        stack_top = p_calltrace->stack_top;
+        // return a val
+        push();
+        *top() = v;
+
+        collect_garbage();
+        DISPATCH();
+      }
+    lbl_POP:
+      {
+        pop();
+        DISPATCH();
+      }
+    lbl_POP_N:
+      {
+        pop(read_uint16());
+        DISPATCH();
+      }
+    lbl_NEGATE:
+      {
+        *top() = -*top();
+        DISPATCH();
+      }
+    lbl_NOT:
+      {
+        *top() = !*top();
+        DISPATCH();
+      }
+    lbl_ADD:
+      {
+        const auto l = top(1);
+        const auto r = top(0);
+        if (l->is_str() && r->is_str())
+        {
+          *l = string_pool.add_str_cat(l->get_strview(), r->get_strview());
+        }
+        else if (l->is_tuple() || r->is_tuple())
+        {
+          *l = Value::tuplecat(allocator, *l, *r);
+          gc_index.tuple_pool.push_back(l->v.tuple);
+        }
+        else
+        {
+          *l = *l + *r;
+        }
+        pop();
+        DISPATCH();
+      }
+    lbl_SUBTRACT:
+      {
+        const auto l = top(1);
+        const auto r = top(0);
+        *l = *l - *r;
+        pop();
+        DISPATCH();
+      }
+    lbl_MULTIPLY:
+      {
+        const auto l = top(1);
+        const auto r = top(0);
+        *l = *l * *r;
+        pop();
+        DISPATCH();
+      }
+    lbl_DIVIDE:
+      {
+        const auto l = top(1);
+        const auto r = top(0);
+        *l = *l / *r;
+        pop();
+        DISPATCH();
+      }
+    lbl_INTDIV:
+      {
+        const auto l = top(1);
+        const auto r = top(0);
+        *l = intdiv(*l, *r);
+        pop();
+        DISPATCH();
+      }
+    lbl_EQ:
+      {
+        const auto l = top(1);
+        const auto r = top(0);
+        *l = *l == *r;
+        pop();
+        DISPATCH();
+      }
+    lbl_NE:
+      {
+        const auto l = top(1);
+        const auto r = top(0);
+        *l = *l != *r;
+        pop();
+        DISPATCH();
+      }
+    lbl_GT:
+      {
+        const auto l = top(1);
+        const auto r = top(0);
+        *l = *l > *r;
+        pop();
+        DISPATCH();
+      }
+    lbl_GE:
+      {
+        const auto l = top(1);
+        const auto r = top(0);
+        *l = *l >= *r;
+        pop();
+        DISPATCH();
+      }
+    lbl_LT:
+      {
+        const auto l = top(1);
+        const auto r = top(0);
+        *l = *l < *r;
+        pop();
+        DISPATCH();
+      }
+    lbl_LE:
+      {
+        const auto l = top(1);
+        const auto r = top(0);
+        *l = *l <= *r;
+        pop();
+        DISPATCH();
+      }
+    lbl_NIL:
+      {
+        push();
+        *top() = Value();
+        DISPATCH();
+      }
+    lbl_CONSTANT:
+      {
+        push();
+        const std::span constants = chunk->get_constants();
+        *top() = gsl::at(constants, read_uint16());
+        DISPATCH();
+      }
+    lbl_FUNC:
+      {
+        push();
+        auto& subroutines = chunk->get_subroutines();
+        *top() = &subroutines.at(read_uint16());
+        DISPATCH();
+      }
+    lbl_CLASS:
+      {
+        push();
+        *top() = &class_pool.at(read_uint16());
+        DISPATCH();
+      }
+    lbl_INHERIT:
+      {
+        const auto derived = top(1);
+        const auto base = top(0);
+        if (!derived->is_class() || !base->is_class())
+        {
+          throw ValueError("Value is not a class.");
+        }
+        derived->v.klass->set_super(base->v.klass);
+        pop();
+        DISPATCH();
+      }
+    lbl_STRING:
+      {
+        push();
+        *top() = const_string_pool.at(read_uint16());
+        DISPATCH();
+      }
+    lbl_BOOL:
+      {
+        push();
+        *top() = Value(read_bool());
+        DISPATCH();
+      }
+    lbl_TUPLE:
+      {
+        // note: n can be 0
+        const auto n = read_uint16();
+        const auto p = Tuple::alloc(allocator, n);
+        for (gsl::index i = 0; i < n; i++)
+        {
+          GSL_SUPPRESS(bounds.4) GSL_SUPPRESS(bounds.2)
+            p->data()[i] = *top(gsl::narrow_cast<uint16_t>(n - i - 1));
+        }
+        gc_index.tuple_pool.push_back(p);
+        pop(n);
+        push();
+        *top() = p;
+        DISPATCH();
+      }
+    lbl_LOAD_STACK:
+      {
+        const auto idx = read_uint16();
+        const auto v = *top(idx);
+        push();
+        *top() = v;
+        DISPATCH();
+      }
+    lbl_STORE_STACK:
+      {
+        const auto idx = read_uint16();
+        const auto r = top();
+        *top(idx) = *r;
+        DISPATCH();
+      }
+    lbl_LOAD_STATIC:
+      {
+        const auto idx = read_uint16();
+        push();
+        *top() = static_value_pool.at(idx);
+        DISPATCH();
+      }
+    lbl_STORE_STATIC:
+      {
+        const auto idx = read_uint16();
+        const auto r = top();
+        static_value_pool.at(idx) = *r;
+        DISPATCH();
+      }
+    lbl_JUMP:
+      {
+        const int16_t offset = read_int16();
+        ip += offset;
+        if (offset < 0)
+        {
           collect_garbage();
-          break;
         }
-        case OP::RETURN_V:
+        DISPATCH();
+      }
+    lbl_JUMP_IF_TRUE:
+      {
+        const int16_t offset = read_int16();
+        if (top()->get_bool() == true)
         {
-          const auto v = *top();
-
-          if (p_calltrace == calltrace.begin()) { return v; }
-          p_calltrace--;
-          current_subroutine = p_calltrace->subroutine;
-          ip = p_calltrace->ip;
-          stack_top = p_calltrace->stack_top;
-          // return a val
-          push();
-          *top() = v;
-
+          ip += offset;
+        }
+        pop();
+        if (offset < 0)
+        {
           collect_garbage();
-          break;
         }
-        case OP::POP:
+        DISPATCH();
+      }
+    lbl_JUMP_IF_FALSE:
+      {
+        const int16_t offset = read_int16();
+        if (top()->get_bool() == false)
         {
-          pop();
-          break;
+          ip += offset;
         }
-        case OP::POP_N:
+        pop();
+        if (offset < 0)
         {
-          pop(read_uint16());
-          break;
+          collect_garbage();
         }
-        case OP::NEGATE:
+        DISPATCH();
+      }
+    lbl_JUMP_IF_TRUE_NO_POP:
+      {
+        const int16_t offset = read_int16();
+        if (top()->get_bool() == true)
         {
-          *top() = -*top();
-          break;
+          ip += offset;
         }
-        case OP::NOT:
+        DISPATCH();
+      }
+    lbl_JUMP_IF_FALSE_NO_POP:
+      {
+        const int16_t offset = read_int16();
+        if (top()->get_bool() == false)
         {
-          *top() = !*top();
-          break;
+          ip += offset;
         }
-        case OP::ADD:
+        DISPATCH();
+      }
+    lbl_CALL:
+      {
+        const auto v = *top();
+        const uint16_t num_of_params = read_uint16();
+        pop();
+        switch (v.type)
         {
-          const auto l = top(1);
-          const auto r = top(0);
-          if (l->is_str() && r->is_str())
+        case ValueType::FUNC:
+        {
+          const auto func_to_call = v.v.func;
+          p_calltrace->subroutine = current_subroutine;
+          p_calltrace->ip = ip;
+          p_calltrace->stack_top = stack_top - num_of_params;
+          p_calltrace++;
+
+          if (func_to_call->get_arity() != num_of_params)
           {
-            *l = string_pool.add_str_cat(l->get_strview(), r->get_strview());
+            throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
           }
-          else if (l->is_tuple() || r->is_tuple())
+          current_subroutine = func_to_call;
+          ip = current_subroutine->get_code().begin();
+          break;
+        }
+        case ValueType::CPP_FUNC:
+        {
+          const auto func_to_call = v.v.cppfunc;
+          const std::span<Value> params{ next(top(num_of_params)), next(top(0)) };
+          const Value result = func_to_call(*this, params);
+          pop(num_of_params);
+          push();
+          *top() = result;
+          break;
+        }
+        case ValueType::METHOD:
+        {
+          const auto func_to_call = v.get_method_func();
+          p_calltrace->subroutine = current_subroutine;
+          p_calltrace->ip = ip;
+          p_calltrace->stack_top = stack_top - num_of_params;
+          p_calltrace++;
+
+          push();
+          *top() = v.v.instance; // `this'
+
+          if (func_to_call->get_arity() != num_of_params)
           {
-            *l = Value::tuplecat(allocator, *l, *r);
-            gc_index.tuple_pool.push_back(l->v.tuple);
+            throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
+          }
+          current_subroutine = func_to_call;
+          ip = current_subroutine->get_code().begin();
+          break;
+        }
+        case ValueType::OBJ:
+        {
+          if (v.is_nil())
+          {
+            throw ValueError("Value of type NIL is not callable.");
+          }
+          if (!v.is_class())
+          {
+            throw ValueError(fmt::format("Value of type {} is not callable.",
+              magic_enum::enum_name(v.v.obj->type)));
+          }
+          const auto klass = v.v.klass;
+          const auto instance = Instance::alloc(allocator, deallocator, klass);
+          gc_index.instance_pool.push_back(instance);
+          if (auto [got, func_to_call] = klass->try_get_method_idx(str__init__); got)
+          {
+            p_calltrace->subroutine = current_subroutine;
+            p_calltrace->ip = ip;
+            p_calltrace->stack_top = stack_top - num_of_params;
+            p_calltrace++;
+
+            push();
+            *top() = instance; // `this'
+
+            if (func_to_call->get_arity() != num_of_params)
+            {
+              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
+            }
+            current_subroutine = func_to_call;
+            ip = current_subroutine->get_code().begin();
           }
           else
           {
-            *l = *l + *r;
-          }
-          pop();
-          break;
-        }
-        case OP::SUBTRACT:
-        {
-          const auto l = top(1);
-          const auto r = top(0);
-          *l = *l - *r;
-          pop();
-          break;
-        }
-        case OP::MULTIPLY:
-        {
-          const auto l = top(1);
-          const auto r = top(0);
-          *l = *l * *r;
-          pop();
-          break;
-        }
-        case OP::DIVIDE:
-        {
-          const auto l = top(1);
-          const auto r = top(0);
-          *l = *l / *r;
-          pop();
-          break;
-        }
-        case OP::INTDIV:
-        {
-          const auto l = top(1);
-          const auto r = top(0);
-          *l = intdiv(*l, *r);
-          pop();
-          break;
-        }
-        case OP::EQ:
-        {
-          const auto l = top(1);
-          const auto r = top(0);
-          *l = *l == *r;
-          pop();
-          break;
-        }
-        case OP::NE:
-        {
-          const auto l = top(1);
-          const auto r = top(0);
-          *l = *l != *r;
-          pop();
-          break;
-        }
-        case OP::GT:
-        {
-          const auto l = top(1);
-          const auto r = top(0);
-          *l = *l > *r;
-          pop();
-          break;
-        }
-        case OP::GE:
-        {
-          const auto l = top(1);
-          const auto r = top(0);
-          *l = *l >= *r;
-          pop();
-          break;
-        }
-        case OP::LT:
-        {
-          const auto l = top(1);
-          const auto r = top(0);
-          *l = *l < *r;
-          pop();
-          break;
-        }
-        case OP::LE:
-        {
-          const auto l = top(1);
-          const auto r = top(0);
-          *l = *l <= *r;
-          pop();
-          break;
-        }
-        case OP::NIL:
-        {
-          push();
-          *top() = Value();
-          break;
-        }
-        case OP::CONSTANT:
-        {
-          push();
-          const std::span constants = chunk->get_constants();
-          *top() = gsl::at(constants, read_uint16());
-          break;
-        }
-        case OP::FUNC:
-        {
-          push();
-          auto& subroutines = chunk->get_subroutines();
-          *top() = &subroutines.at(read_uint16());
-          break;
-        }
-        case OP::CLASS:
-        {
-          push();
-          *top() = &class_pool.at(read_uint16());
-          break;
-        }
-        case OP::INHERIT:
-        {
-          const auto derived = top(1);
-          const auto base = top(0);
-          if (!derived->is_class() || !base->is_class())
-          {
-            throw ValueError("Value is not a class.");
-          }
-          derived->v.klass->set_super(base->v.klass);
-          pop();
-          break;
-        }
-        case OP::STRING:
-        {
-          push();
-          *top() = const_string_pool.at(read_uint16());
-          break;
-        }
-        case OP::BOOL:
-        {
-          push();
-          *top() = Value(read_bool());
-          break;
-        }
-        case OP::TUPLE:
-        {
-          // note: n can be 0
-          const auto n = read_uint16();
-          const auto p = Tuple::alloc(allocator, n);
-          for (gsl::index i = 0; i < n; i++)
-          {
-            GSL_SUPPRESS(bounds.4) GSL_SUPPRESS(bounds.2)
-              p->data()[i] = *top(gsl::narrow_cast<uint16_t>(n - i - 1));
-          }
-          gc_index.tuple_pool.push_back(p);
-          pop(n);
-          push();
-          *top() = p;
-          break;
-        }
-        case OP::LOAD_STACK:
-        {
-          const auto idx = read_uint16();
-          const auto v = *top(idx);
-          push();
-          *top() = v;
-          break;
-        }
-        case OP::STORE_STACK:
-        {
-          const auto idx = read_uint16();
-          const auto r = top();
-          *top(idx) = *r;
-          break;
-        }
-        case OP::LOAD_STATIC:
-        {
-          const auto idx = read_uint16();
-          push();
-          *top() = static_value_pool.at(idx);
-          break;
-        }
-        case OP::STORE_STATIC:
-        {
-          const auto idx = read_uint16();
-          const auto r = top();
-          static_value_pool.at(idx) = *r;
-          break;
-        }
-        case OP::JUMP:
-        {
-          const int16_t offset = read_int16();
-          ip += offset;
-          if (offset < 0)
-          {
-            collect_garbage();
-          }
-          break;
-        }
-        case OP::JUMP_IF_TRUE:
-        {
-          const int16_t offset = read_int16();
-          if (top()->get_bool() == true)
-          {
-            ip += offset;
-          }
-          pop();
-          if (offset < 0)
-          {
-            collect_garbage();
-          }
-          break;
-        }
-        case OP::JUMP_IF_FALSE:
-        {
-          const int16_t offset = read_int16();
-          if (top()->get_bool() == false)
-          {
-            ip += offset;
-          }
-          pop();
-          if (offset < 0)
-          {
-            collect_garbage();
-          }
-          break;
-        }
-        case OP::JUMP_IF_TRUE_NO_POP:
-        {
-          const int16_t offset = read_int16();
-          if (top()->get_bool() == true)
-          {
-            ip += offset;
-          }
-          break;
-        }
-        case OP::JUMP_IF_FALSE_NO_POP:
-        {
-          const int16_t offset = read_int16();
-          if (top()->get_bool() == false)
-          {
-            ip += offset;
-          }
-          break;
-        }
-        case OP::CALL:
-        {
-          const auto v = *top();
-          const uint16_t num_of_params = read_uint16();
-          pop();
-          switch (v.type)
-          {
-          case ValueType::FUNC:
-          {
-            const auto func_to_call = v.v.func;
-            p_calltrace->subroutine = current_subroutine;
-            p_calltrace->ip = ip;
-            p_calltrace->stack_top = stack_top - num_of_params;
-            p_calltrace++;
-
-            if (func_to_call->get_arity() != num_of_params)
+            if (num_of_params != 0)
             {
-              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
+              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", 0, num_of_params));
             }
-            current_subroutine = func_to_call;
-            ip = current_subroutine->get_code().begin();
-            break;
-          }
-          case ValueType::CPP_FUNC:
-          {
-            const auto func_to_call = v.v.cppfunc;
-            const std::span<Value> params{ next(top(num_of_params)), next(top(0)) };
-            const Value result = func_to_call(*this, params);
-            pop(num_of_params);
             push();
-            *top() = result;
-            break;
+            *top() = instance;
           }
-          case ValueType::METHOD:
-          {
-            const auto func_to_call = v.get_method_func();
-            p_calltrace->subroutine = current_subroutine;
-            p_calltrace->ip = ip;
-            p_calltrace->stack_top = stack_top - num_of_params;
-            p_calltrace++;
-            
-            push();
-            *top() = v.v.instance; // `this'
-
-            if (func_to_call->get_arity() != num_of_params)
-            {
-              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
-            }
-            current_subroutine = func_to_call;
-            ip = current_subroutine->get_code().begin();
-            break;
-          }
-          case ValueType::OBJ:
-          {
-            if (v.is_nil())
-            {
-              throw ValueError("Value of type NIL is not callable.");
-            }
-            if (!v.is_class())
-            {
-              throw ValueError(fmt::format("Value of type {} is not callable.",
-                magic_enum::enum_name(v.v.obj->type)));
-            }
-            const auto klass = v.v.klass;
-            const auto instance = Instance::alloc(allocator, deallocator, klass);
-            gc_index.instance_pool.push_back(instance);
-            if (auto [got, func_to_call] = klass->try_get_method_idx(str__init__); got)
-            {
-              p_calltrace->subroutine = current_subroutine;
-              p_calltrace->ip = ip;
-              p_calltrace->stack_top = stack_top - num_of_params;
-              p_calltrace++;
-
-              push();
-              *top() = instance; // `this'
-
-              if (func_to_call->get_arity() != num_of_params)
-              {
-                throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
-              }
-              current_subroutine = func_to_call;
-              ip = current_subroutine->get_code().begin();
-            }
-            else
-            {
-              if (num_of_params != 0)
-              {
-                throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", 0, num_of_params));
-              }
-              push();
-              *top() = instance;
-            }
-            break;
-          }
-          default:
-          {
-            throw ValueError(fmt::format("Value of type {} is not callable.",
-              magic_enum::enum_name(v.type)));
-          }
-          }
-          collect_garbage();
-          break;
-        }
-        case OP::GET_SUPER_METHOD:
-        {
-          const auto name = const_string_pool.at(read_uint16());
-          auto instance = top()->get_instance();
-          *top() = instance->get_super_method(name);
-          break;
-        }
-        case OP::GET_PROPERTY:
-        {
-          const auto name = const_string_pool.at(read_uint16());
-          auto instance = top()->get_instance();
-          *top() = instance->get_property(name);
-          break;
-        }
-        case OP::SET_PROPERTY:
-        {
-          const auto name = const_string_pool.at(read_uint16());
-          auto instance = top()->get_instance();
-          pop();
-          instance->set_property(name, *top());
           break;
         }
         default:
-          throw InternalRuntimeError(fmt::format("Unknown instruction: {}.", magic_enum::enum_name(inst)));
+        {
+          throw ValueError(fmt::format("Value of type {} is not callable.",
+            magic_enum::enum_name(v.type)));
         }
+        }
+        collect_garbage();
+        DISPATCH();
       }
-      catch(const std::exception& e)
+    lbl_GET_SUPER_METHOD:
       {
-        const auto code_idx = std::distance(current_subroutine->get_code().begin(), ip);
-        const auto line_num = current_subroutine->get_lines().get_line(code_idx);
-        const auto src = chunk->get_source(line_num);
-        throw RuntimeError(e.what(), line_num, src);
+        const auto name = const_string_pool.at(read_uint16());
+        auto instance = top()->get_instance();
+        *top() = instance->get_super_method(name);
+        DISPATCH();
       }
+    lbl_GET_PROPERTY:
+      {
+        const auto name = const_string_pool.at(read_uint16());
+        auto instance = top()->get_instance();
+        *top() = instance->get_property(name);
+        DISPATCH();
+      }
+    lbl_SET_PROPERTY:
+      {
+        const auto name = const_string_pool.at(read_uint16());
+        auto instance = top()->get_instance();
+        pop();
+        instance->set_property(name, *top());
+        DISPATCH();
+      }
+    }
+    catch (const std::exception& e)
+    {
+      const auto code_idx = std::distance(current_subroutine->get_code().begin(), ip);
+      const auto line_num = current_subroutine->get_lines().get_line(code_idx);
+      const auto src = chunk->get_source(line_num);
+      throw RuntimeError(e.what(), line_num, src);
     }
   }
   OP VM::read_inst() noexcept
@@ -666,7 +675,7 @@ namespace foxlox
       std::cout << "-- gc end --\n";
       std::cout << fmt::format("   collected {} bytes (from {} to {}). next at {}.\n",
         heap_size_before - current_heap_size,
-        heap_size_before, 
+        heap_size_before,
         current_heap_size,
         next_gc_heap_size);
 #endif

@@ -64,10 +64,29 @@ find_package(magic_enum CONFIG REQUIRED)
 find_package(ICU REQUIRED COMPONENTS uc)
 target_link_libraries(${PROJECT_NAME} PRIVATE ICU::uc)
 
+find_package(mimalloc 1.6 CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC mimalloc)
+
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 if(MSVC)
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO 
+    "/O2 /DNDEBUG /Zi /Gy /DNDEBUG /Ob3" 
+    CACHE STRING "compile flags for release build" 
+    FORCE)
+  set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO 
+    "/DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF" 
+    CACHE STRING "link flags for release build" 
+    FORCE)
+  set(CMAKE_CXX_FLAGS_RELEASE 
+    "/O2 /DNDEBUG /Zi /Gy /DNDEBUG /Ob3" 
+    CACHE STRING "compile flags for release build" 
+    FORCE)
+  set(CMAKE_EXE_LINKER_FLAGS_RELEASE 
+    "/DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF" 
+    CACHE STRING "link flags for release build" 
+    FORCE)
   target_compile_options(${PROJECT_NAME} PRIVATE /nologo /utf-8)
-  target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX /Ob3)
+  target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic -Werror)
   target_compile_options(${PROJECT_NAME} PUBLIC -Wno-unknown-pragmas -Wno-pedantic)

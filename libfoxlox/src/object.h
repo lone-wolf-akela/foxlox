@@ -73,11 +73,11 @@ namespace foxlox
     }
 
     template<Deallocator F>
-    static void free(F deallocator, gsl::not_null<const String*> p)
+    static void free(F deallocator, gsl::not_null<String*> p)
     {
       const auto size = p->size();
       p->~String();
-      deallocator(reinterpret_cast<const char*>(p.get()), sizeof(String) + size * sizeof(char));
+      deallocator(reinterpret_cast<char*>(p.get()), sizeof(String) + size * sizeof(char));
     }
 
     std::string_view get_view() const noexcept;
@@ -111,11 +111,11 @@ namespace foxlox
     }
 
     template<Deallocator F>
-    static void free(F deallocator, gsl::not_null<const Tuple*> p)
+    static void free(F deallocator, gsl::not_null<Tuple*> p)
     {
       const auto size = p->size();
       p->~Tuple();
-      deallocator(reinterpret_cast<const char*>(p.get()), sizeof(Tuple) + size * sizeof(Value));
+      deallocator(reinterpret_cast<char*>(p.get()), sizeof(Tuple) + size * sizeof(Value));
     }
 
     std::span<const Value> get_span() const noexcept;
@@ -185,12 +185,12 @@ namespace foxlox
     }
 
     template<Deallocator F>
-    static void free(F deallocator, gsl::not_null<const Instance*> p)
+    static void free(F deallocator, gsl::not_null<Instance*> p)
     {
       // call dtor to delete the map inside
       p->~Instance();
       GSL_SUPPRESS(type.1)
-      deallocator(reinterpret_cast<const char*>(p.get()), sizeof(Instance));
+      deallocator(reinterpret_cast<char*>(p.get()), sizeof(Instance));
     }
   private:
     Class* klass;

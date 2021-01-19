@@ -21,7 +21,7 @@ namespace foxlox
     VM_Allocator(VM_Allocator&&) noexcept = default;
     VM_Allocator& operator=(const VM_Allocator&) noexcept = default;
     VM_Allocator& operator=(VM_Allocator&&) noexcept = default;
-    char* operator()(size_t l);
+    char* operator()(size_t l) noexcept;
   private:
     size_t *heap_size;
   };
@@ -34,7 +34,7 @@ namespace foxlox
     VM_Deallocator(VM_Deallocator&&) noexcept = default;
     VM_Deallocator& operator=(const VM_Deallocator&) noexcept = default;
     VM_Deallocator& operator=(VM_Deallocator&&) noexcept = default;
-    void operator()(const char* p, size_t l);
+    void operator()(char* const p, size_t l) noexcept;
   private:
     size_t* heap_size;
   };

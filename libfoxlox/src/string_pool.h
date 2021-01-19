@@ -40,7 +40,7 @@ namespace foxlox
     void delete_entry(StringPoolEntry& e);
 
     std::function<char* (size_t)> allocator;
-    std::function<void(const char*, size_t)> deallocator;
+    std::function<void(char* const, size_t)> deallocator;
     size_t count;
     size_t capacity_mask;
     std::vector<StringPoolEntry> entries;

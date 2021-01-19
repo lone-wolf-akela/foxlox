@@ -23,18 +23,7 @@
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "msvc_x64_x64" ],
-      "variables": [
-        {
-          "name": "CMAKE_CXX_FLAGS_RELWITHDEBINFO",
-          "value": "/O2 /DNDEBUG /Zi /Gy /DNDEBUG /Ob3",
-          "type": "STRING"
-        },
-        {
-          "name": "CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO",
-          "value": "/DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF",
-          "type": "STRING"
-        }
-      ],
+      "variables": [],
       "codeAnalysisRuleset": "${projectDir}\\codeanalysis.ruleset"
     },
     {

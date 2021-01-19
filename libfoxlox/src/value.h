@@ -28,7 +28,7 @@ namespace foxlox
   concept Allocator = std::is_invocable_r_v<char*, F, size_t>;
 
   template<typename F>
-  concept Deallocator = std::is_invocable_r_v<void, F, char*, size_t>;
+  concept Deallocator = std::is_invocable_r_v<void, F, char* const, size_t>;
 
   class String;
   class Tuple;

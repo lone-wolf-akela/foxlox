@@ -78,45 +78,64 @@ namespace foxlox
     } v;
 
 
-    Value() noexcept : type(ValueType::OBJ), v{ .obj = nullptr } {}
+    constexpr Value() noexcept : method_func(0), type(ValueType::OBJ), v{ .obj = nullptr } {}
 
     template<std::convertible_to<String*> T>
-    Value(T str) noexcept : type(ValueType::OBJ), v{ .str = str } {}
+    constexpr Value(T str) noexcept : type(ValueType::OBJ), v{ .str = str } {}
 
     template<std::convertible_to<Tuple*> T>
-    Value(T tuple) noexcept : type(ValueType::OBJ), v{ .tuple = tuple } {}
+    constexpr Value(T tuple) noexcept : type(ValueType::OBJ), v{ .tuple = tuple } {}
 
     template<std::convertible_to<Subroutine*> T>
-    Value(T func) noexcept : type(ValueType::FUNC), v{ .func = func } {}
+    constexpr Value(T func) noexcept : type(ValueType::FUNC), v{ .func = func } {}
 
     template<std::convertible_to<CppFunc*> T>
-    Value(T cppfunc) noexcept : type(ValueType::CPP_FUNC), v{ .cppfunc = cppfunc } {}
+    constexpr Value(T cppfunc) noexcept : type(ValueType::CPP_FUNC), v{ .cppfunc = cppfunc } {}
 
     template<std::convertible_to<Instance*> T>
-    Value(T instance) noexcept : type(ValueType::OBJ), v{ .instance = instance } {}
+    constexpr Value(T instance) noexcept : type(ValueType::OBJ), v{ .instance = instance } {}
 
     template<std::convertible_to<Instance*> I, std::convertible_to<Subroutine*> S >
-    Value(I instance, S func) noexcept : 
+    constexpr Value(I instance, S func) noexcept :
       method_func(reinterpret_cast<uintptr_t>(static_cast<Subroutine*>(func)) >> method_func_shift),
       type(ValueType::METHOD), v{ .instance = instance } {}
 
     template<std::convertible_to<Class*> T>
-    Value(T klass) noexcept : type(ValueType::OBJ), v{ .klass = klass } {}
+    constexpr Value(T klass) noexcept : type(ValueType::OBJ), v{ .klass = klass } {}
 
     template<remove_cv_same_as<bool> T>
-    Value(T b) noexcept : type(ValueType::BOOL), v{ .b = b } {}
+    constexpr Value(T b) noexcept : type(ValueType::BOOL), v{ .b = b } {}
 
     template<std::floating_point T>
-    Value(T f64) noexcept : type(ValueType::F64), v{ .f64 = f64 } {}
+    constexpr Value(T f64) noexcept : type(ValueType::F64), v{ .f64 = f64 } {}
 
     template<IntegralExcludeBool T>
-    Value(T i64) noexcept : type(ValueType::I64), v{ .i64 = i64 } {}
+    constexpr Value(T i64) noexcept : type(ValueType::I64), v{ .i64 = i64 } {}
 
-    bool is_nil() const noexcept;
-    bool is_str() const noexcept;
-    bool is_tuple() const noexcept;
-    bool is_class() const noexcept;
-    bool is_instance() const noexcept;
+    constexpr bool is_nil() const noexcept
+    {
+      return (type == ValueType::OBJ) && (v.obj == nullptr);
+    }
+
+    constexpr bool is_str() const noexcept
+    {
+      return (type == ValueType::OBJ) && (v.obj != nullptr) && (v.obj->type == ObjType::STR);
+    }
+
+    constexpr bool is_tuple() const noexcept
+    {
+      return (type == ValueType::OBJ) && (v.obj != nullptr) && (v.obj->type == ObjType::TUPLE);
+    }
+
+    constexpr bool is_class() const noexcept
+    {
+      return (type == ValueType::OBJ) && (v.obj != nullptr) && (v.obj->type == ObjType::CLASS);
+    }
+
+    constexpr bool is_instance() const noexcept
+    {
+      return (type == ValueType::OBJ) && (v.obj != nullptr) && (v.obj->type == ObjType::INSTANCE);
+    }
 
     double get_double() const;
     int64_t get_int64() const;

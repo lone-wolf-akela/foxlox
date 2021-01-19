@@ -148,9 +148,9 @@ namespace foxlox
     template<Allocator A, Deallocator D>
     Instance(A allocator, D deallocator, Class* from_class) :
       ObjBase(ObjType::INSTANCE),
+      gc_mark(false),
       klass(from_class),
-      fields(allocator, deallocator),
-      gc_mark(false)
+      fields(allocator, deallocator)
     {
     }
     ~Instance() = default;

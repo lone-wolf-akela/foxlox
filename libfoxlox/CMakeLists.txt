@@ -86,7 +86,12 @@ if(MSVC)
     FORCE)
   target_compile_options(${PROJECT_NAME} PRIVATE /nologo /utf-8)
   target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
+  target_compile_options(${PROJECT_NAME} PRIVATE /wd4068) #  warning C4068: 未知的杂注“GCC” 
 else()
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO 
+    "-O3 -g -DNDEBUG" 
+    CACHE STRING "compile flags for release build" 
+    FORCE)
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic -Werror)
   target_compile_options(${PROJECT_NAME} PUBLIC -Wno-unknown-pragmas -Wno-pedantic)
 endif()

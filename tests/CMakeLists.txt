@@ -11,7 +11,6 @@ enable_testing()
 add_executable(${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME} PRIVATE
-    
    "src/variable.cpp" 
    "src/if.cpp" 
    "src/block.cpp" 
@@ -24,7 +23,8 @@ target_sources(${PROJECT_NAME} PRIVATE
    "src/closure.cpp" 
    "src/basic.cpp" 
    "src/class.cpp" 
-   "src/regression.cpp")
+   "src/regression.cpp" 
+   "src/static_test.cpp")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE libfoxlox)
 
@@ -40,6 +40,7 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 if(MSVC)
   target_compile_options(${PROJECT_NAME} PRIVATE /nologo /utf-8)
   target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
+  target_compile_options(${PROJECT_NAME} PRIVATE /wd4068) #  warning C4068: 未知的杂注“GCC” 
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic -Werror)
 endif()

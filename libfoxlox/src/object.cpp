@@ -100,10 +100,10 @@ namespace foxlox
   }
   Class::Class(std::string_view name) : 
     ObjBase(ObjType::CLASS), 
+    gc_mark(false),
     superclass(nullptr), 
     class_name(name),
-    methods([](size_t l) {return new char[l]; }, [](char* p, size_t) {delete[] p; }),
-    gc_mark(false)
+    methods([](size_t l) {return new char[l]; }, [](char* p, size_t) {delete[] p; })
   {
   }
   void Class::add_method(String* name, Subroutine* func)

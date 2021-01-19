@@ -71,36 +71,16 @@ namespace
 
 namespace foxlox
 {
+  // keep Value small and fast!
   static_assert(sizeof(Value) == 16);
+  static_assert(std::is_trivially_copyable_v<Value>);
+  // I want to make sure a Value which is memset to all 0 is a nil
+  // but I cannot check that at compile time
+  // so that test is now in unittest
 
   ObjBase::ObjBase(ObjType t) noexcept : 
     type(t) 
   {
-  }
-
-  bool Value::is_nil() const noexcept
-  {
-    return (type == ValueType::OBJ) && (v.obj == nullptr);
-  }
-
-  bool Value::is_str() const noexcept
-  {
-    return (type == ValueType::OBJ) && (v.obj != nullptr) && (v.obj->type == ObjType::STR);
-  }
-
-  bool Value::is_tuple() const noexcept
-  {
-    return (type == ValueType::OBJ) && (v.obj != nullptr) && (v.obj->type == ObjType::TUPLE);
-  }
-
-  bool Value::is_class() const noexcept
-  {
-    return (type == ValueType::OBJ) && (v.obj != nullptr) && (v.obj->type == ObjType::CLASS);
-  }
-
-  bool Value::is_instance() const noexcept
-  {
-    return (type == ValueType::OBJ) && (v.obj != nullptr) && (v.obj->type == ObjType::INSTANCE);
   }
 
   double Value::get_double() const

@@ -171,6 +171,19 @@ namespace foxlox
 #endif
     try
     {
+#ifdef USE_COMPUTED_GOTO
+#pragma message("Enable computed goto!")
+#define DEFINE_JMP_TABLE static void* jmp_table[magic_enum::enum_count<foxlox::OP>()] = { OPCODE(JMP_TABLE_ENTRY) };
+#define JMP_TABLE_ENTRY(op) [static_cast<uint8_t>(foxlox::OP::op)] = &&lbl_##op,
+      DEFINE_JMP_TABLE
+#define DISPATCH() \
+      DBG_PRINT_STACK; \
+      DBG_GC; \
+      DBG_PRINT_INST; \
+      goto *jmp_table[static_cast<uint8_t>(read_inst())]
+#endif
+#ifdef USE_SWITCHED_GOTO
+#pragma message("Enable switched goto!")
       // from https://bullno1.com/blog/switched-goto
 #define DISPATCH() \
       DBG_PRINT_STACK; \
@@ -181,7 +194,7 @@ namespace foxlox
         default: UNREACHABLE; \
       }
 #define DISPATCH_CASE(op) case OP::op: goto lbl_##op;
-
+#endif
       DISPATCH();
       // N
     lbl_NOP:

@@ -46,7 +46,7 @@
   X(GET_SUPER_METHOD)
 namespace foxlox
 {
-#define DEFINE_ENUM(NAME, ENUMX) enum class NAME { ENUMX(ENUM_ENTRY) }
+#define DEFINE_ENUM(NAME, ENUMX) enum class NAME : uint8_t { ENUMX(ENUM_ENTRY) }
 #define ENUM_ENTRY(ENTRY) ENTRY,
 
 DEFINE_ENUM(OP, OPCODE);

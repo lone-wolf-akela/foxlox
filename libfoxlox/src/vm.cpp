@@ -590,7 +590,6 @@ namespace foxlox
             magic_enum::enum_name(v.type)));
         }
         }
-        collect_garbage();
         DISPATCH();
       }
     lbl_GET_SUPER_METHOD:

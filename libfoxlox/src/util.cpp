@@ -27,7 +27,7 @@ namespace foxlox
     auto u16string = icu::UnicodeString::fromUTF8(in);
     std::u32string u32string(u16string.length(), U'\0');
     UErrorCode err = U_ZERO_ERROR;
-    auto len = u16string.toUTF32(
+    const auto len = u16string.toUTF32(
       reinterpret_cast<UChar32*>(u32string.data()),
       gsl::narrow_cast<int32_t>(u32string.size()),
       err

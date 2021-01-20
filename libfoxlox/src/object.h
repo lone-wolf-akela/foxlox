@@ -28,10 +28,12 @@ namespace foxlox
 
     auto data() noexcept
     {
+      GSL_SUPPRESS(type.2) GSL_SUPPRESS(bounds.3)
       return static_cast<T*>(this)->m_data;
     }
     auto data() const noexcept
     {
+      GSL_SUPPRESS(bounds.3) GSL_SUPPRESS(type.2)
       return static_cast<const T*>(this)->m_data;
     }
     bool is_marked() const noexcept
@@ -75,6 +77,7 @@ namespace foxlox
     {
       const auto size = p->size();
       p->~String();
+      GSL_SUPPRESS(type.1)
       deallocator(reinterpret_cast<char*>(p.get()), sizeof(String) + size * sizeof(char));
     }
 
@@ -85,8 +88,8 @@ namespace foxlox
 #else
     using TStrViewComp = std::weak_ordering;
 #endif
-    friend TStrViewComp operator<=>(const String& l, const String& r);
-    friend bool operator==(const String& l, const String& r);
+    friend TStrViewComp operator<=>(const String& l, const String& r) noexcept;
+    friend bool operator==(const String& l, const String& r) noexcept;
   };
 
 
@@ -113,6 +116,7 @@ namespace foxlox
     {
       const auto size = p->size();
       p->~Tuple();
+      GSL_SUPPRESS(type.1)
       deallocator(reinterpret_cast<char*>(p.get()), sizeof(Tuple) + size * sizeof(Value));
     }
 
@@ -126,15 +130,15 @@ namespace foxlox
     Class(std::string_view name);
     std::string_view get_name() const noexcept { return class_name; }
     void add_method(String* name, Subroutine* func);
-    void set_super(Class* super);
-    Class* get_super();
+    void set_super(gsl::not_null<Class*> super);
+    Class* get_super() noexcept;
     bool has_method(String* name);
     std::optional<Subroutine*> get_method(String* name);
-    HashTable<Subroutine*>& get_hash_table();
+    HashTable<Subroutine*>& get_hash_table() noexcept;
 
-    bool is_marked();
-    void mark();
-    void unmark();
+    bool is_marked() const noexcept;
+    void mark() noexcept;
+    void unmark() noexcept;
   private:
     bool gc_mark;
     Class* superclass;
@@ -153,15 +157,19 @@ namespace foxlox
       fields(allocator, deallocator)
     {
     }
+    Instance(const Instance&) = delete;
+    Instance(Instance&&) = delete;
+    Instance& operator=(const Instance&) = delete;
+    Instance& operator=(Instance&&) = delete;
     ~Instance() = default;
     Class* get_class() const noexcept;
-    Value get_property(String* name);
-    Value get_super_method(String* name);
-    HashTable<Value>& get_hash_table();
-    void set_property(String* name, Value value);
-    bool is_marked();
-    void mark();
-    void unmark();
+    Value get_property(gsl::not_null<String*> name);
+    Value get_super_method(gsl::not_null<String*> name);
+    HashTable<Value>& get_hash_table() noexcept;
+    void set_property(gsl::not_null<String*> name, Value value);
+    bool is_marked() const noexcept;
+    void mark() noexcept;
+    void unmark() noexcept;
 
     template<Allocator A, Deallocator D>
     static gsl::not_null<Instance*> alloc(A allocator, D deallocator, Class* klass)
@@ -192,7 +200,7 @@ namespace foxlox
     {
       const auto s1 = l.v.tuple->get_span();
       const auto s2 = r.v.tuple->get_span();
-      Tuple* p = Tuple::alloc(allocator, s1.size() + s2.size());
+      const gsl::not_null p = Tuple::alloc(allocator, s1.size() + s2.size());
       GSL_SUPPRESS(bounds.3) GSL_SUPPRESS(stl.1)
         const auto it = std::copy(s1.begin(), s1.end(), p->data());
       GSL_SUPPRESS(stl.1)
@@ -202,7 +210,7 @@ namespace foxlox
     else if (l.is_tuple())
     {
       const auto s1 = l.v.tuple->get_span();
-      Tuple* p = Tuple::alloc(allocator, s1.size() + 1);
+      const gsl::not_null p = Tuple::alloc(allocator, s1.size() + 1);
       GSL_SUPPRESS(bounds.3) GSL_SUPPRESS(stl.1)
         const auto it = std::copy(s1.begin(), s1.end(), p->data());
       *it = r;
@@ -211,7 +219,8 @@ namespace foxlox
     else
     {
       const auto s2 = r.v.tuple->get_span();
-      Tuple* p = Tuple::alloc(allocator, 1 + s2.size());
+      const gsl::not_null p = Tuple::alloc(allocator, 1 + s2.size());
+      GSL_SUPPRESS(bounds.1)
       p->data()[0] = l;
       GSL_SUPPRESS(bounds.3) GSL_SUPPRESS(stl.1) GSL_SUPPRESS(bounds.1)
         std::copy(s2.begin(), s2.end(), p->data() + 1);

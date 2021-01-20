@@ -15,7 +15,7 @@ namespace foxlox
   class CodeGen : public expr::IVisitor<void>, public stmt::IVisitor<void>
   {
   public:
-    CodeGen(AST&& a);
+    explicit CodeGen(AST&& a);
     Chunk gen();
     bool get_had_error() noexcept;
   private:

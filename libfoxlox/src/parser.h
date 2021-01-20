@@ -14,14 +14,14 @@ namespace foxlox
   class Parser
   {
   public:
-    Parser(std::vector<Token>&& tokens);
+    explicit Parser(std::vector<Token>&& tokens) noexcept;
     void define(std::string_view name, CppFunc* func);
     AST parse();
     bool get_had_error() noexcept;
   private:
     AST ast;
     const std::vector<Token> tokens;
-    int current;
+    gsl::index current;
     bool had_error;
 
     std::unique_ptr<stmt::Stmt> declaration();

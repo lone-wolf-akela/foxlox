@@ -17,7 +17,7 @@ return false and 1;
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
     ASSERT_EQ(v.type, ValueType::BOOL);
-    ASSERT_EQ(v.get_bool(), false);
+    ASSERT_EQ(v.v.b, false);
   }
   {
     auto [res, chunk] = compile(R"(
@@ -35,7 +35,7 @@ return 1 and 2 and false;
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
     ASSERT_EQ(v.type, ValueType::BOOL);
-    ASSERT_EQ(v.get_bool(), false);
+    ASSERT_EQ(v.v.b, false);
   }
   // Return the last argument if all are true.
   {
@@ -45,7 +45,7 @@ return 1 and true;
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
     ASSERT_EQ(v.type, ValueType::BOOL);
-    ASSERT_EQ(v.get_bool(), true);
+    ASSERT_EQ(v.v.b, true);
   }
   {
     auto [res, chunk] = compile(R"(
@@ -73,9 +73,9 @@ return r;
     auto s = v.get_tuplespan();
     ASSERT_EQ(ssize(s), 2);
     ASSERT_EQ(s[0].type, ValueType::BOOL);
-    ASSERT_EQ(s[0].get_bool(), true);
+    ASSERT_EQ(s[0].v.b, true);
     ASSERT_EQ(s[1].type, ValueType::BOOL);
-    ASSERT_EQ(s[1].get_bool(), false);
+    ASSERT_EQ(s[1].v.b, false);
   }
 }
 
@@ -90,7 +90,7 @@ return false and "bad";
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
     ASSERT_EQ(v.type, ValueType::BOOL);
-    ASSERT_EQ(v.get_bool(), false);
+    ASSERT_EQ(v.v.b, false);
   }
   {
     auto [res, chunk] = compile(R"(
@@ -160,7 +160,7 @@ return false or false or true;
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
     ASSERT_EQ(v.type, ValueType::BOOL);
-    ASSERT_EQ(v.get_bool(), true);
+    ASSERT_EQ(v.v.b, true);
   }
   // Return the last argument if all are false.
   {
@@ -170,7 +170,7 @@ return false or false;
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
     ASSERT_EQ(v.type, ValueType::BOOL);
-    ASSERT_EQ(v.get_bool(), false);
+    ASSERT_EQ(v.v.b, false);
   }
   {
     auto [res, chunk] = compile(R"(
@@ -179,7 +179,7 @@ return  false or false or false;
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
     ASSERT_EQ(v.type, ValueType::BOOL);
-    ASSERT_EQ(v.get_bool(), false);
+    ASSERT_EQ(v.v.b, false);
   }
   // Short-circuit at the first true argument.
   {
@@ -198,9 +198,9 @@ return r;
     auto s = v.get_tuplespan();
     ASSERT_EQ(ssize(s), 2);
     ASSERT_EQ(s[0].type, ValueType::BOOL);
-    ASSERT_EQ(s[0].get_bool(), false);
+    ASSERT_EQ(s[0].v.b, false);
     ASSERT_EQ(s[1].type, ValueType::BOOL);
-    ASSERT_EQ(s[1].get_bool(), true);
+    ASSERT_EQ(s[1].v.b, true);
   }
 }
 
@@ -234,7 +234,7 @@ return true or "ok";
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
     ASSERT_EQ(v.type, ValueType::BOOL);
-    ASSERT_EQ(v.get_bool(), true);
+    ASSERT_EQ(v.v.b, true);
   }
   {
     auto [res, chunk] = compile(R"(

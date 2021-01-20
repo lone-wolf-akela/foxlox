@@ -51,8 +51,8 @@ namespace foxlox
     ~VM_GC_Index();
     VM_GC_Index(const VM_GC_Index&) = delete;
     VM_GC_Index& operator=(const VM_GC_Index&) = delete;
-    VM_GC_Index(VM_GC_Index&& o);
-    VM_GC_Index& operator=(VM_GC_Index&& o);
+    VM_GC_Index(VM_GC_Index&& o) noexcept;
+    VM_GC_Index& operator=(VM_GC_Index&& o) noexcept;
   private:
     void clean();
     VM* vm;

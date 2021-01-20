@@ -18,7 +18,7 @@ namespace foxlox
   class Scanner
   {
   public:
-    Scanner(std::u32string&& s);
+    explicit Scanner(std::u32string&& s) noexcept;
     // return tokens with each line of the source file
     std::tuple<std::vector<Token>, std::vector<std::string>> scan_tokens();
 

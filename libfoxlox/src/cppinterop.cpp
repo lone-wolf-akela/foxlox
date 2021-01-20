@@ -19,7 +19,7 @@ namespace foxlox
     case ValueType::CPP_FUNC:
       return v.v.cppfunc;
     case ValueType::METHOD:
-      return std::make_pair(v.v.instance, v.get_method_func());
+      return std::make_pair(v.v.instance, v.method_func());
     case ValueType::OBJ:
     {
       if (v.v.obj == nullptr)

@@ -105,5 +105,5 @@ else()
     CACHE STRING "compile flags for release build" 
     FORCE)
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic -Werror)
-  target_compile_options(${PROJECT_NAME} PUBLIC -Wno-unknown-pragmas -Wno-pedantic)
+  target_compile_options(${PROJECT_NAME} PUBLIC -Wno-unknown-pragmas -Wno-pedantic -Wno-attributes)
 endif()

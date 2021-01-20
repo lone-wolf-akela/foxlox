@@ -23,7 +23,7 @@ namespace foxlox
   struct VarDeclareAtFunc // store function parameters ...
   {
     stmt::Function* func;
-    int param_index;
+    gsl::index param_index;
     friend auto operator<=>(const VarDeclareAtFunc& l, const VarDeclareAtFunc& r) = default;
   };
   struct VarDeclareAtClass // store `this' ...

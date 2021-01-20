@@ -10,6 +10,8 @@
 #include <type_traits>
 #include <utility>
 
+#include <gsl/gsl>
+
 namespace foxlox
 {
   class ValueError : public std::runtime_error
@@ -60,7 +62,7 @@ namespace foxlox
   {
     // pointer packing
     constexpr static auto method_func_shift = 3;
-    uintptr_t method_func : sizeof(uintptr_t)* CHAR_BIT - method_func_shift;
+    uintptr_t method_func_ptr : sizeof(uintptr_t)* CHAR_BIT - method_func_shift;
     ValueType type : method_func_shift;
 
     union
@@ -78,7 +80,7 @@ namespace foxlox
     } v;
 
 
-    constexpr Value() noexcept : method_func(0), type(ValueType::OBJ), v{ .obj = nullptr } {}
+    constexpr Value() noexcept : method_func_ptr(0), type(ValueType::OBJ), v{ .obj = nullptr } {}
 
     template<std::convertible_to<String*> T>
     constexpr Value(T str) noexcept : type(ValueType::OBJ), v{ .str = str } {}
@@ -96,8 +98,9 @@ namespace foxlox
     constexpr Value(T instance) noexcept : type(ValueType::OBJ), v{ .instance = instance } {}
 
     template<std::convertible_to<Instance*> I, std::convertible_to<Subroutine*> S >
+    GSL_SUPPRESS(type.1)
     constexpr Value(I instance, S func) noexcept :
-      method_func(reinterpret_cast<uintptr_t>(static_cast<Subroutine*>(func)) >> method_func_shift),
+      method_func_ptr(reinterpret_cast<uintptr_t>(static_cast<Subroutine*>(func)) >> method_func_shift),
       type(ValueType::METHOD), v{ .instance = instance } {}
 
     template<std::convertible_to<Class*> T>
@@ -139,11 +142,13 @@ namespace foxlox
 
     double get_double() const;
     int64_t get_int64() const;
-    bool get_bool() const;
+    
     Instance* get_instance() const;
     std::string_view get_strview() const;
     std::span<Value> get_tuplespan() const;
-    Subroutine* get_method_func() const;
+
+    bool is_truthy() const noexcept;
+    Subroutine* method_func() const noexcept;
 
     friend double operator/(const Value& l, const Value& r);
     friend Value operator*(const Value& l, const Value& r);

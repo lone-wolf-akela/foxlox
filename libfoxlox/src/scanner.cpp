@@ -12,19 +12,19 @@ namespace
 {
   using namespace foxlox;
 
-  bool is_digit(char32_t c)
+  bool is_digit(char32_t c) noexcept
   {
     return u_isdigit(c);
   }
-  bool is_whitespace(char32_t c)
+  bool is_whitespace(char32_t c) noexcept
   {
     return u_isWhitespace(c);
   }
-  bool is_letter(char32_t c)
+  bool is_letter(char32_t c) noexcept
   {
     return u_isalpha(c) || c == '_';
   }
-  bool is_letter_or_digit(char32_t c)
+  bool is_letter_or_digit(char32_t c) noexcept 
   {
     return u_isalnum(c) || c == U'_';
   }
@@ -53,12 +53,13 @@ namespace
 
 namespace foxlox
 {
-  Scanner::Scanner(std::u32string&& s) : source(std::move(s))
+  Scanner::Scanner(std::u32string&& s) noexcept :
+    source(std::move(s)),
+    last_line_end(0),
+    start(0),
+    current(0),
+    line(1)
   {
-    start = 0;
-    current = 0;
-    line = 1;
-    last_line_end = 0;
   }
   std::tuple<std::vector<Token>, std::vector<std::string>> Scanner::scan_tokens()
   {
@@ -151,9 +152,8 @@ namespace foxlox
     case U'#': skipline(); break;
     case U'\n':
     {
-      auto a_line_u32 = std::u32string_view(source).substr(last_line_end, current - last_line_end - 1);
-      auto a_line_u8 = u32_to_u8(a_line_u32);
-      source_per_line.emplace_back(std::move(a_line_u8));
+      const auto a_line_u32 = std::u32string_view(source).substr(last_line_end, current - last_line_end - 1);
+      source_per_line.emplace_back(u32_to_u8(a_line_u32));
       last_line_end = current;
       line++;
       break;
@@ -169,7 +169,7 @@ namespace foxlox
   }
   char32_t Scanner::advance()
   {
-    return source[current++];
+    return source.at(current++);
   }
   void Scanner::add_token(TokenType type)
   {
@@ -188,7 +188,7 @@ namespace foxlox
   bool Scanner::match(char32_t expected)
   {
     if (is_at_end()) { return false; }
-    if (source[current] != expected) { return false; }
+    if (source.at(current) != expected) { return false; }
     current++;
     return true;
   }
@@ -196,7 +196,7 @@ namespace foxlox
   char32_t Scanner::peek()
   {
     if (is_at_end()) { return '\0'; }
-    return source[current];
+    return source.at(current);
   }
 
   void Scanner::scanstring()
@@ -230,6 +230,7 @@ namespace foxlox
     }
   }
 
+  GSL_SUPPRESS(bounds.1)
   void Scanner::number()
   {
     while (is_digit(peek()))
@@ -289,7 +290,7 @@ namespace foxlox
     {
       return '\0';
     }
-    return source[current + 1];
+    return source.at(current + 1);
   }
 
   void Scanner::identifier()
@@ -299,7 +300,7 @@ namespace foxlox
       advance();
     }
     auto text = source.substr(start, current - start);
-    TokenType type;
+    TokenType type{};
     if (const auto found = keywords.find(text); found == keywords.end())
     {
       type = TokenType::IDENTIFIER;

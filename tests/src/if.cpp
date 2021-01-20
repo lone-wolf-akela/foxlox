@@ -45,7 +45,7 @@ if (a = true) return a;
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
     ASSERT_EQ(v.type, ValueType::BOOL);
-    ASSERT_EQ(v.get_bool(), true);
+    ASSERT_EQ(v.v.b, true);
   }
 }
 
@@ -113,7 +113,7 @@ if (true) return true;
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = vm.interpret(chunk);
     ASSERT_EQ(v.type, ValueType::BOOL);
-    ASSERT_EQ(v.get_bool(), true);
+    ASSERT_EQ(v.v.b, true);
   }
   {
     auto [res, chunk] = compile(R"(

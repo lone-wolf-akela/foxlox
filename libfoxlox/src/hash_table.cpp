@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstring>
 #include <algorithm>
 #include <bit>
@@ -16,12 +17,13 @@ namespace
 {
   using namespace foxlox;
 
-  bool str_equal(String* l, std::string_view r)
+  bool str_equal(gsl::not_null<String*> l, std::string_view r) noexcept
   {
     return l->get_view() == r;
   }
-  bool str_equal(String* l, std::string_view r1, std::string_view r2)
+  bool str_equal(gsl::not_null<String*> l, std::string_view r1, std::string_view r2) noexcept
   {
+    GSL_SUPPRESS(stl.1) GSL_SUPPRESS(bounds.1)
     return l->size() == (r1.size() + r2.size()) &&
       std::equal(r1.begin(), r1.end(), l->data()) &&
       std::equal(r2.begin(), r2.end(), l->data() + r1.size());
@@ -29,34 +31,35 @@ namespace
 
   // FNV-1a hash
   // http://www.isthe.com/chongo/tech/comp/fnv/index.html#FNV-1a
-  uint32_t str_hash(std::string_view str)
+  constexpr uint32_t str_hash(std::string_view str) noexcept
   {
     uint32_t hash = 2166136261u;
     for(auto c: str)
     {
-      hash ^= static_cast<uint8_t>(c);
+      hash ^= gsl::narrow_cast<uint8_t>(c);
       hash *= 16777619u;
     }
     return hash;
   }
 
-  uint32_t str_hash(std::string_view str1, std::string_view str2)
+  uint32_t str_hash(std::string_view str1, std::string_view str2) noexcept
   {
     uint32_t hash = 2166136261u;
     for (auto c : str1)
     {
-      hash ^= static_cast<uint8_t>(c);
+      hash ^= gsl::narrow_cast<uint8_t>(c);
       hash *= 16777619u;
     }
     for (auto c : str2)
     {
-      hash ^= static_cast<uint8_t>(c);
+      hash ^= gsl::narrow_cast<uint8_t>(c);
       hash *= 16777619u;
     }
     return hash;
   }
 
-  uint32_t ptr_hash(void * p)
+  GSL_SUPPRESS(type.1)
+  uint32_t ptr_hash(void * p) noexcept
   {
     // MurmurHash3, a lot faster than FNV-1a for pointer
     // from https://zimbry.blogspot.com/2011/09/better-bit-mixing-improving-on.html
@@ -72,6 +75,7 @@ namespace
 namespace foxlox
 {
   template<typename T>
+  GSL_SUPPRESS(type.1) GSL_SUPPRESS(f.23)
   void grow_capacity(T* table)
   {
     if (table->count > std::bit_floor(std::numeric_limits<decltype(table->count)>::max()) / 2)
@@ -103,6 +107,7 @@ namespace foxlox
       gsl::index idx = e.hash & new_capacity_mask;
       while (true)
       {
+        GSL_SUPPRESS(bounds.1)
         if (new_entries[idx].str == nullptr)
         {
           new_entries[idx] = e;
@@ -111,6 +116,7 @@ namespace foxlox
         idx = (idx + 1) & new_capacity_mask;
       }
     }
+    GSL_SUPPRESS(type.1)
     table->deallocator(reinterpret_cast<char*>(table->entries), 
       (table->capacity_mask + 1) * sizeof(*table->entries));
     table->entries = new_entries;
@@ -120,9 +126,16 @@ namespace foxlox
 
   StringPool::~StringPool()
   {
-    clean();
+    try
+    {
+      clean();
+    }
+    catch (...)
+    {
+      std::terminate();
+    }
   }
-  String* StringPool::add_string(std::string_view str)
+  gsl::not_null<String*> StringPool::add_string(std::string_view str)
   {
     if (count + 1 > (capacity_mask + 1) * STRING_POOL_MAX_LOAD)
     {
@@ -131,6 +144,7 @@ namespace foxlox
     const auto hash = str_hash(str);
     gsl::index idx = hash & capacity_mask;
     StringPoolEntry* first_tombstone = nullptr;
+    GSL_SUPPRESS(bounds.1)
     while (true)
     {
       if (entries[idx].tombstone)
@@ -139,7 +153,8 @@ namespace foxlox
       }
       else if (entries[idx].str == nullptr)
       {
-        String* p = String::alloc(allocator, str.size());
+        const gsl::not_null<String*> p = String::alloc(allocator, str.size());
+        GSL_SUPPRESS(stl.1)
         std::copy(str.begin(), str.end(), p->data());
        
         if (first_tombstone == nullptr) { count++; }
@@ -156,6 +171,7 @@ namespace foxlox
       idx = (idx + 1) & capacity_mask;
     }
   }
+  GSL_SUPPRESS(f.6)
   StringPool::StringPool(StringPool&& o) noexcept : 
     allocator(o.allocator),
     deallocator(o.deallocator),
@@ -168,16 +184,23 @@ namespace foxlox
   StringPool& StringPool::operator=(StringPool&& o) noexcept
   {
     if (this == &o) { return *this; }
-    clean();
-    allocator = o.allocator;
-    deallocator = o.deallocator;
-    count = o.count;
-    entries = o.entries;
-    capacity_mask = o.capacity_mask;
-    o.entries = nullptr;
-    return *this;
+    try
+    {
+      clean();
+      allocator = o.allocator;
+      deallocator = o.deallocator;
+      count = o.count;
+      entries = o.entries;
+      capacity_mask = o.capacity_mask;
+      o.entries = nullptr;
+      return *this;
+    }
+    catch (...)
+    {
+      std::terminate();
+    }
   }
-  String* StringPool::add_str_cat(std::string_view lhs, std::string_view rhs)
+  gsl::not_null<String*> StringPool::add_str_cat(std::string_view lhs, std::string_view rhs)
   {
     if (count + 1 > (capacity_mask + 1) * STRING_POOL_MAX_LOAD)
     {
@@ -186,6 +209,7 @@ namespace foxlox
     const auto hash = str_hash(lhs, rhs);
     gsl::index idx = hash & capacity_mask;
     StringPoolEntry* first_tombstone = nullptr;
+    GSL_SUPPRESS(bounds.1) GSL_SUPPRESS(stl.1)
     while (true)
     {
       if (entries[idx].tombstone)
@@ -194,7 +218,7 @@ namespace foxlox
       }
       else if (entries[idx].str == nullptr)
       {
-        String* p = String::alloc(allocator, lhs.size() + rhs.size());
+        gsl::not_null<String*> p = String::alloc(allocator, lhs.size() + rhs.size());
         const auto it = std::copy(lhs.begin(), lhs.end(), p->data());
         std::copy(rhs.begin(), rhs.end(), it);
 
@@ -232,6 +256,7 @@ namespace foxlox
   void StringPool::init_entries()
   {
     capacity_mask = HASH_TABLE_START_BUCKET - 1;
+    GSL_SUPPRESS(type.1)
     entries = reinterpret_cast<decltype(entries)>(
       allocator(HASH_TABLE_START_BUCKET * sizeof(*entries)));
     std::memset(entries, 0, HASH_TABLE_START_BUCKET * sizeof(*entries));
@@ -259,6 +284,7 @@ namespace foxlox
           delete_entry(e);
         }
       }
+      GSL_SUPPRESS(type.1)
       deallocator(reinterpret_cast<char*>(entries), (capacity_mask + 1) * sizeof(*entries));
     }
   }
@@ -266,7 +292,14 @@ namespace foxlox
   template<typename T> requires std::same_as<T, Subroutine*> || std::same_as<T, Value>
   HashTable<T>::~HashTable()
   {
-    clean();
+    try
+    {
+      clean();
+    }
+    catch (...)
+    {
+      std::terminate();
+    }
   }
 
   template<typename T> requires std::same_as<T, Subroutine*> || std::same_as<T, Value>
@@ -274,6 +307,7 @@ namespace foxlox
   {
     if (entries != nullptr)
     {
+      GSL_SUPPRESS(type.1)
       deallocator(reinterpret_cast<char*>(entries), (capacity_mask + 1) * sizeof(*entries));
     }
   }
@@ -286,7 +320,7 @@ namespace foxlox
       grow_capacity(this);
     }
     const uint32_t hash = ptr_hash(name);
-    auto entry = find_entry(name, hash);
+    const auto entry = find_entry(name, hash);
     if (entry->str == nullptr && !entry->tombstone)
     {
       // new entry
@@ -314,7 +348,7 @@ namespace foxlox
       grow_capacity(this);
     }
     const uint32_t hash = ptr_hash(name);
-    auto entry = find_entry(name, hash);
+    const auto entry = find_entry(name, hash);
     if (entry->str != nullptr && !entry->tombstone)
     {
       // key already exist, do nothing
@@ -334,7 +368,7 @@ namespace foxlox
   std::optional<T> HashTable<T>::get_value(String* name)
   {
     const uint32_t hash = ptr_hash(name);
-    auto entry = find_entry(name, hash);
+    const auto entry = find_entry(name, hash);
     if (entry->str != nullptr && !entry->tombstone)
     {
       // key found
@@ -346,7 +380,7 @@ namespace foxlox
     }
   }
   template<typename T> requires std::same_as<T, Subroutine*> || std::same_as<T, Value>
-  HashTableEntry<T>* HashTable<T>::first_entry()
+  HashTableEntry<T>* HashTable<T>::first_entry() noexcept
   {
     for (auto& e : std::span(entries, capacity_mask + 1))
     {
@@ -358,8 +392,10 @@ namespace foxlox
     return nullptr;
   }
   template<typename T> requires std::same_as<T, Subroutine*> || std::same_as<T, Value>
-  HashTableEntry<T>* HashTable<T>::next_entry(HashTableEntry<T>* p)
+    GSL_SUPPRESS(bounds.1) GSL_SUPPRESS(lifetime.4) GSL_SUPPRESS(lifetime.1)
+  HashTableEntry<T>* HashTable<T>::next_entry(HashTableEntry<T>* p) noexcept
   {
+    Expects(entries <= p && p <= entries + capacity_mask);
     while (++p <= entries + capacity_mask)
     {
       if (p->str != nullptr && !p->tombstone)
@@ -370,6 +406,7 @@ namespace foxlox
     return nullptr;
   }
   template<typename T> requires std::same_as<T, Subroutine*> || std::same_as<T, Value>
+    GSL_SUPPRESS(f.6)
   HashTable<T>::HashTable(HashTable&& o) noexcept :
     allocator(o.allocator),
     deallocator(o.deallocator),
@@ -383,19 +420,27 @@ namespace foxlox
   HashTable<T>& HashTable<T>::operator=(HashTable&& o) noexcept
   {
     if (this == &o) { return *this; }
-    clean();
-    allocator = o.allocator;
-    deallocator = o.deallocator;
-    count = o.count;
-    entries = o.entries;
-    capacity_mask = o.capacity_mask;
-    o.entries = nullptr;
-    return *this;
+    try
+    {
+      clean();
+      allocator = o.allocator;
+      deallocator = o.deallocator;
+      count = o.count;
+      entries = o.entries;
+      capacity_mask = o.capacity_mask;
+      o.entries = nullptr;
+      return *this;
+    }
+    catch (...)
+    {
+      std::terminate();
+    }
   }
   template<typename T> requires std::same_as<T, Subroutine*> || std::same_as<T, Value>
   void HashTable<T>::init_entries()
   {
     capacity_mask = HASH_TABLE_START_BUCKET - 1;
+    GSL_SUPPRESS(type.1)
     entries = reinterpret_cast<decltype(entries)>(
       allocator(HASH_TABLE_START_BUCKET * sizeof(*entries)));
 #ifndef _MSC_VER 
@@ -411,10 +456,11 @@ namespace foxlox
     static_assert((HASH_TABLE_START_BUCKET & (HASH_TABLE_START_BUCKET - 1)) == 0);
   }
   template<typename T> requires std::same_as<T, Subroutine*> || std::same_as<T, Value>
-  HashTableEntry<T>* HashTable<T>::find_entry(String* name, uint32_t hash)
+  gsl::not_null<HashTableEntry<T>*> HashTable<T>::find_entry(gsl::not_null<String*> name, uint32_t hash) noexcept
   {
     gsl::index idx = hash & capacity_mask;
     HashTableEntry<T>* first_tombstone = nullptr;
+    GSL_SUPPRESS(bounds.1)
     while (true)
     {
       if (entries[idx].tombstone)
@@ -434,7 +480,7 @@ namespace foxlox
   }
 
   template<typename T> requires std::same_as<T, Subroutine*> || std::same_as<T, Value>
-  void HashTable<T>::delete_entry(HashTableEntry<T>& e)
+  void HashTable<T>::delete_entry(HashTableEntry<T>& e) noexcept
   {
     if (e.str != nullptr)
     {

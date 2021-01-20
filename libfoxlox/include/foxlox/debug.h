@@ -11,11 +11,11 @@ namespace foxlox
   class Debugger
   {
   public:
-    Debugger(bool colored_output);
+    Debugger(bool colored_output) noexcept;
     gsl::index disassemble_inst(const VM& vm, const Subroutine& subroutine, gsl::index index);
     void disassemble_chunk(const VM& vm, const Subroutine& subroutine, std::string_view name);
     void print_vm_stack(VM& vm);
   private:
-    bool colored;
+    [[maybe_unused]] bool colored;
   };
 }

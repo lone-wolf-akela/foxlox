@@ -12,22 +12,22 @@ namespace foxlox
 {
   struct ValueInfo
   {
-    bool is_ready;
+    bool is_ready = false;
     VarDeclareAt declare;
   };
 
   struct Scope
   {
-    int function_level; // how many layer of nested function are we in?
+    int function_level{}; // how many layer of nested function are we in?
     std::map<std::string, ValueInfo> vars; // name : info
   };
 
   class Resolver : public expr::IVisitor<void>, public stmt::IVisitor<void>
   {
   public:
-    Resolver(AST&& a);
+    explicit Resolver(AST&& a) noexcept;
     AST resolve();
-    bool get_had_error();
+    bool get_had_error() noexcept;
   private:
     AST ast;
     bool had_error;
@@ -44,11 +44,11 @@ namespace foxlox
     void resolve(std::vector<std::unique_ptr<stmt::Stmt>>& stmts);
 
     void begin_scope(bool is_new_function);
-    void end_scope();
+    void end_scope() noexcept;
     
     [[nodiscard]] ValueInfo* declare(Token name);
     void declare_from_varstmt(stmt::Var* stmt);
-    void declare_from_functionparam(stmt::Function* stmt, int param_index);
+    void declare_from_functionparam(stmt::Function* stmt, gsl::index param_index);
     void declare_from_class(stmt::Class* stmt);
     void declare_from_functionname(stmt::Function* stmt);
     void define(Token name);
@@ -58,7 +58,7 @@ namespace foxlox
     void visit_binary_expr(gsl::not_null<expr::Binary*> expr) final;
     void visit_grouping_expr(gsl::not_null<expr::Grouping*> expr) final;
     void visit_tuple_expr(gsl::not_null<expr::Tuple*> expr) final;
-    void visit_literal_expr(gsl::not_null<expr::Literal*> expr) final;
+    void visit_literal_expr(gsl::not_null<expr::Literal*> expr) noexcept final;
     void visit_unary_expr(gsl::not_null<expr::Unary*> expr) final;
     void visit_variable_expr(gsl::not_null<expr::Variable*> expr) final;
     void visit_assign_expr(gsl::not_null<expr::Assign*> expr) final;

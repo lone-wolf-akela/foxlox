@@ -7,11 +7,12 @@
 
 namespace foxlox
 {
+  GSL_SUPPRESS(type.6)
   String::String(size_t l) noexcept :
-    SimpleObj(ObjType::STR, l), m_data{}
+    SimpleObj(ObjType::STR, l)
   {
   }
-  String::TStrViewComp operator<=>(const String& l, const String& r)
+  String::TStrViewComp operator<=>(const String& l, const String& r) noexcept
   {
 #if __cpp_lib_three_way_comparison >= 201907L
 #pragma message("We get __cpp_lib_three_way_comparison support!")
@@ -24,7 +25,7 @@ namespace foxlox
     return std::weak_ordering::greater;
 #endif
   }
-  bool operator==(const String& l, const String& r)
+  bool operator==(const String& l, const String& r) noexcept
   {
     return l.get_view() == r.get_view();
   }
@@ -32,8 +33,9 @@ namespace foxlox
   {
     return std::string_view(data(), size());
   }
+  GSL_SUPPRESS(type.6)
   Tuple::Tuple(size_t l) noexcept : 
-    SimpleObj(ObjType::TUPLE, l), m_data{} 
+    SimpleObj(ObjType::TUPLE, l)
   {
   }
   std::span<const Value> Tuple::get_span() const noexcept
@@ -47,10 +49,11 @@ namespace foxlox
       return std::span{ data(), size() };
   }
   Class* Instance::get_class() const noexcept { return klass; }
-  Value Instance::get_property(String* name)
+  Value Instance::get_property(gsl::not_null<String*> name)
   {
     if (auto func = klass->get_method(name); func.has_value())
     {
+      GSL_SUPPRESS(lifetime.3)
       return Value(this, *func);
     }
     if(auto value = fields.get_value(name); value.has_value())
@@ -63,10 +66,11 @@ namespace foxlox
       return Value();
     }
   }
-  Value Instance::get_super_method(String* name)
+  Value Instance::get_super_method(gsl::not_null<String*> name)
   {
     if (auto func = klass->get_super()->get_method(name); func.has_value())
     {
+      GSL_SUPPRESS(lifetime.3)
       return Value(this, *func);
     }
     else
@@ -74,11 +78,11 @@ namespace foxlox
       throw ValueError(fmt::format("Super class has no method with name `{}'", name->get_view()));
     }
   }
-  HashTable<Value>& Instance::get_hash_table()
+  HashTable<Value>& Instance::get_hash_table() noexcept
   {
     return fields;
   }
-  void Instance::set_property(String* name, Value value)
+  void Instance::set_property(gsl::not_null<String*> name, Value value)
   {
     if (klass->has_method(name))
     {
@@ -86,18 +90,19 @@ namespace foxlox
     }
     fields.try_add_entry(name, value);
   }
-  bool Instance::is_marked() 
+  bool Instance::is_marked() const noexcept
   { 
     return gc_mark;
   }
-  void Instance::mark()
+  void Instance::mark() noexcept
   {
     gc_mark = true;
   }
-  void Instance::unmark()
+  void Instance::unmark() noexcept
   {
     gc_mark = false;
   }
+  GSL_SUPPRESS(r.11) GSL_SUPPRESS(i.11)
   Class::Class(std::string_view name) : 
     ObjBase(ObjType::CLASS), 
     gc_mark(false),
@@ -110,7 +115,7 @@ namespace foxlox
   {
     methods.set_entry(name, func);
   }
-  void Class::set_super(Class* super)
+  void Class::set_super(gsl::not_null<Class*> super)
   {
     superclass = super;
     for (
@@ -124,7 +129,7 @@ namespace foxlox
       methods.try_add_entry(entry->str, entry->value);
     }
   }
-  Class* Class::get_super()
+  Class* Class::get_super() noexcept
   {
     return superclass;
   }
@@ -136,19 +141,19 @@ namespace foxlox
   {
     return methods.get_value(name);
   }
-  HashTable<Subroutine*>& Class::get_hash_table()
+  HashTable<Subroutine*>& Class::get_hash_table() noexcept
   {
     return methods;
   }
-  bool Class::is_marked()
+  bool Class::is_marked() const noexcept
   {
     return gc_mark;
   }
-  void Class::mark()
+  void Class::mark() noexcept
   {
     gc_mark = true;
   }
-  void Class::unmark()
+  void Class::unmark() noexcept
   {
     gc_mark = false;
   }

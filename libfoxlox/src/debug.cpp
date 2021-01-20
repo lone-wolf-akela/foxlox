@@ -16,9 +16,9 @@
 
 namespace foxlox
 {
-  Debugger::Debugger(bool colored_output)
+  Debugger::Debugger(bool colored_output) noexcept :
+    colored(colored_output)
   {
-    colored = colored_output;
   }
   gsl::index Debugger::disassemble_inst([[maybe_unused]] const VM& vm, const Subroutine& subroutine, gsl::index index)
   {
@@ -55,18 +55,18 @@ namespace foxlox
 
     [[maybe_unused]]
     const auto get_uint8 = [&]() -> uint8_t {
-      return codes[index + 1];
+      return gsl::at(codes, index + 1);
     };
     [[maybe_unused]]
     const auto get_uint16 = [&]() -> uint16_t {
-      return (static_cast<uint16_t>(codes[index + 1]) << 8) | codes[index + 2];
+      return (static_cast<uint16_t>(gsl::at(codes, index + 1)) << 8) | gsl::at(codes, index + 2);
     };
     [[maybe_unused]]
     const auto get_int16 = [&]() -> int16_t {
-      return static_cast<int16_t>(get_uint16());
+      return gsl::narrow_cast<int16_t>(get_uint16());
     };
 
-    OP op = static_cast<OP>(codes[index]);
+    const OP op = static_cast<OP>(gsl::at(codes, index));
     switch (op)
     {
     case OP::NOP:
@@ -108,15 +108,16 @@ namespace foxlox
     {
 #ifdef DEBUG_TRACE_INST
       const uint16_t constant = get_uint16();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", "CONSTANT", constant, vm.chunk->get_constants()[constant].to_string());
+      const auto constants = vm.chunk->get_constants();
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "CONSTANT", constant, gsl::at(constants, constant).to_string());
 #endif
       return 3;
     }
     case OP::FUNC:
     {
 #ifdef DEBUG_TRACE_INST
-      const uint16_t constant = get_uint16();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", "FUNC", constant, vm.chunk->get_subroutines()[constant].get_funcname());
+      const uint16_t subroutine_idx = get_uint16();
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "FUNC", subroutine_idx, vm.chunk->get_subroutines().at(subroutine_idx).get_funcname());
 #endif
       return 3;
     }
@@ -139,7 +140,7 @@ namespace foxlox
     case OP::BOOL:
     {
 #ifdef DEBUG_TRACE_INST
-      bool b = static_cast<bool>(get_uint8());
+      const bool b = gsl::narrow_cast<bool>(get_uint8());
       std::cout << fmt::format("{:<16} {:>4}, {}\n", "BOOL", "", b ? "true" : "false");
 #endif
       return 2;

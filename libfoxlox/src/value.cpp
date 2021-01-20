@@ -102,7 +102,7 @@ namespace foxlox
     return static_cast<int64_t>(v.f64);
   }
 
-  bool Value::get_bool() const
+  bool Value::is_truthy() const noexcept
   {
     if ((type == ValueType::OBJ && v.obj == nullptr) ||
       (type == ValueType::BOOL && v.b == false))
@@ -130,9 +130,10 @@ namespace foxlox
     return v.tuple->get_span();
   }
 
-  Subroutine* Value::get_method_func() const
+  Subroutine* Value::method_func() const noexcept
   {
-    return reinterpret_cast<Subroutine*>(method_func << method_func_shift);
+    GSL_SUPPRESS(type.1)
+    return reinterpret_cast<Subroutine*>(method_func_ptr << method_func_shift);
   }
 
   std::partial_ordering operator<=>(const Value& l, const Value& r)
@@ -266,9 +267,10 @@ namespace foxlox
     case ValueType::FUNC:
       return fmt::format("<fn {}>", v.func->get_funcname());
     case ValueType::CPP_FUNC:
+      GSL_SUPPRESS(type.1)
       return fmt::format("<native fn {}>", reinterpret_cast<void*>(v.cppfunc));
     case ValueType::METHOD:
-      return fmt::format("<class {} method {}>", v.instance->get_class()->get_name(), get_method_func()->get_funcname());
+      return fmt::format("<class {} method {}>", v.instance->get_class()->get_name(), method_func()->get_funcname());
     case ValueType::OBJ:
     {
       if (v.obj == nullptr) { return "nil"; }

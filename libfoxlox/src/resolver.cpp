@@ -8,13 +8,14 @@
 
 namespace foxlox
 {
-  Resolver::Resolver(AST&& a) : ast(std::move(a))
-  {
-    current_function = FunctionType::NONE;
-    current_loop = LoopType::NONE;
-    current_class = ClassType::NONE;
+  Resolver::Resolver(AST&& a) noexcept :
+    ast(std::move(a)),
+    had_error(false),
+    current_loop(LoopType::NONE),
+    current_function(FunctionType::NONE),
+    current_class(ClassType::NONE)
 
-    had_error = false;
+  {
   }
   AST Resolver::resolve()
   {
@@ -24,7 +25,7 @@ namespace foxlox
     end_scope();
     return std::move(ast);
   }
-  bool Resolver::get_had_error()
+  bool Resolver::get_had_error() noexcept
   {
     return had_error;
   }
@@ -50,14 +51,15 @@ namespace foxlox
   }
   void Resolver::begin_scope(bool is_new_function)
   {
-    int last_func_level = scopes.empty() ? 0 : scopes.back().function_level;
+    const int last_func_level = scopes.empty() ? 0 : scopes.back().function_level;
     scopes.emplace_back();
     scopes.back().function_level = is_new_function ? last_func_level + 1 : last_func_level;
   }
-  void Resolver::end_scope()
+  void Resolver::end_scope() noexcept
   {
     scopes.pop_back();
   }
+  GSL_SUPPRESS(lifetime.4)
   [[nodiscard]] ValueInfo* Resolver::declare(Token name)
   {
     auto& scope = scopes.back();
@@ -66,8 +68,8 @@ namespace foxlox
       error(name, "Redefine variable with the same name in this scope.");
       return nullptr;
     }
-    scope.vars[name.lexeme] = ValueInfo{ .is_ready = false, .declare{} };
-    return &scope.vars[name.lexeme];
+    scope.vars.emplace(name.lexeme, ValueInfo{ .is_ready = false, .declare{} });
+    return &scope.vars.at(name.lexeme);
   }
   void Resolver::declare_from_varstmt(stmt::Var* stmt)
   {
@@ -78,16 +80,16 @@ namespace foxlox
       stmt->store_type = stmt::VarStoreType::Stack;
     }
   }
-  void Resolver::declare_from_functionparam(stmt::Function* stmt, int param_index)
+  void Resolver::declare_from_functionparam(stmt::Function* stmt, gsl::index param_index)
   {
-    ValueInfo* vinfo = declare(stmt->param[param_index]);
+    ValueInfo* vinfo = declare(stmt->param.at(param_index));
     if (vinfo != nullptr)
     {
       vinfo->declare = VarDeclareAtFunc{ .func = stmt, .param_index = param_index };
       if (ssize(stmt->param_store_types) <= param_index)
       {
         stmt->param_store_types.resize(param_index + 1);
-        stmt->param_store_types[param_index] = stmt::VarStoreType::Stack;
+        stmt->param_store_types.at(param_index) = stmt::VarStoreType::Stack;
       }
     }
   }
@@ -119,8 +121,8 @@ namespace foxlox
     const auto current_function_level = scopes.back().function_level;
     for (gsl::index i = 0; i < ssize(scopes); i++)
     {
-      auto& this_scope = scopes[ssize(scopes) - 1 - i];
-      auto found = this_scope.vars.find(name.lexeme);
+      auto& this_scope = scopes.at(ssize(scopes) - 1 - i);
+      const auto found = this_scope.vars.find(name.lexeme);
       if (found != this_scope.vars.end())
       {
         if (!found->second.is_ready)
@@ -147,7 +149,7 @@ namespace foxlox
           else if (std::holds_alternative<VarDeclareAtFunc>(found->second.declare))
           {
             auto at = std::get<VarDeclareAtFunc>(found->second.declare);
-            at.func->param_store_types[at.param_index] = stmt::VarStoreType::Static;
+            at.func->param_store_types.at(at.param_index) = stmt::VarStoreType::Static;
           }
           else if (std::holds_alternative<VarDeclareAtClass>(found->second.declare))
           {
@@ -194,7 +196,7 @@ namespace foxlox
   {
     resolve(expr->expression.get());
   }
-  void Resolver::visit_literal_expr(gsl::not_null<expr::Literal*> /*expr*/)
+  void Resolver::visit_literal_expr(gsl::not_null<expr::Literal*> /*expr*/) noexcept
   {
     // do nothing
     return;
@@ -293,14 +295,14 @@ namespace foxlox
   void Resolver::visit_if_stmt(gsl::not_null<stmt::If*> stmt)
   {
     resolve(stmt->condition.get());
-    if (const auto p = dynamic_cast<stmt::Var*>(stmt->then_branch.get()); p != nullptr)
+    if (const auto p = dynamic_cast<stmt::Var const*>(stmt->then_branch.get()); p != nullptr)
     {
       error(p->name, "Conditioned variable declaration is not allowed.");
     }
     resolve(stmt->then_branch.get());
     if (stmt->else_branch.get() != nullptr)
     {
-      if (const auto p = dynamic_cast<stmt::Var*>(stmt->then_branch.get()); p != nullptr)
+      if (const auto p = dynamic_cast<stmt::Var const*>(stmt->then_branch.get()); p != nullptr)
       {
         error(p->name, "Conditioned variable declaration is not allowed.");
       }
@@ -313,7 +315,7 @@ namespace foxlox
 
     const auto enclosing_loop = current_loop;
     current_loop = LoopType::WHILE;
-    if (const auto p = dynamic_cast<stmt::Var*>(stmt->body.get()); p != nullptr)
+    if (const auto p = dynamic_cast<stmt::Var const*>(stmt->body.get()); p != nullptr)
     {
       error(p->name, "Conditioned variable declaration is not allowed.");
     }
@@ -403,9 +405,9 @@ namespace foxlox
     resolve(stmt->condition.get());
     resolve(stmt->increment.get());
 
-    LoopType enclosingt_loop = current_loop;
+    const LoopType enclosingt_loop = current_loop;
     current_loop = LoopType::FOR;
-    if (const auto p = dynamic_cast<stmt::Var*>(stmt->body.get()); p != nullptr)
+    if (const auto p = dynamic_cast<stmt::Var const*>(stmt->body.get()); p != nullptr)
     {
       error(p->name, "Conditioned variable declaration is not allowed.");
     }

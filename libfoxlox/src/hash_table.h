@@ -36,8 +36,8 @@ namespace foxlox
     StringPool& operator=(StringPool&& o) noexcept;
     ~StringPool();
 
-    String* add_string(std::string_view str);
-    String* add_str_cat(std::string_view lhs, std::string_view rhs);
+    gsl::not_null<String*> add_string(std::string_view str);
+    gsl::not_null<String*> add_str_cat(std::string_view lhs, std::string_view rhs);
     void sweep();
   private:
     void init_entries();
@@ -86,13 +86,13 @@ namespace foxlox
     void set_entry(String* name, T value);
     void try_add_entry(String* name, T value);
     std::optional<T> get_value(String* name);
-    HashTableEntry<T>* first_entry();
-    HashTableEntry<T>* next_entry(HashTableEntry<T>* p);
+    HashTableEntry<T>* first_entry() noexcept;
+    HashTableEntry<T>* next_entry(HashTableEntry<T>* p) noexcept;
   private:
     void init_entries();
     void clean();
-    HashTableEntry<T>* find_entry(String* name, uint32_t hash);
-    void delete_entry(HashTableEntry<T>& e);
+    gsl::not_null<HashTableEntry<T>*> find_entry(gsl::not_null<String*> name, uint32_t hash) noexcept;
+    void delete_entry(HashTableEntry<T>& e) noexcept;
 
     std::function<char* (size_t)> allocator;
     std::function<void(char* const, size_t)> deallocator;

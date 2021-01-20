@@ -19,7 +19,7 @@ namespace
     {
       throw RuntimeLibError("[print]: Requires at least one parameter to print.");
     }
-    bool multi_args = (values.size()) > 1;
+    const bool multi_args = (values.size()) > 1;
     if (multi_args && !values.front().is_str())
     {
       throw RuntimeLibError("[print]: When print multiple values, the first parameter must be a format string.");
@@ -68,7 +68,7 @@ namespace
     }
     using namespace std::chrono;
     const auto ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-    return double(ms.count()) / 1000.;
+    return ms.count() / 1000.0;
   }
 }
 

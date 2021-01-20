@@ -268,7 +268,8 @@ namespace foxlox
       return fmt::format("<fn {}>", v.func->get_funcname());
     case ValueType::CPP_FUNC:
       GSL_SUPPRESS(type.1)
-      return fmt::format("<native fn {}>", reinterpret_cast<void*>(v.cppfunc));
+      //return fmt::format("<native fn {}>", reinterpret_cast<void*>(v.cppfunc));
+      return "<native fn>";
     case ValueType::METHOD:
       return fmt::format("<class {} method {}>", v.instance->get_class()->get_name(), method_func()->get_funcname());
     case ValueType::OBJ:

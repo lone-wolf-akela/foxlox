@@ -565,7 +565,8 @@ namespace foxlox
         if (store_type == stmt::VarStoreType::Static)
         {
           const uint16_t idx = value_idxs.at(VarDeclareAtFunc{ stmt, gsl::narrow_cast<int>(i) }).idx;
-          emit(OP::LOAD_STACK, gsl::narrow_cast<uint16_t>(stmt->param.size() - i - 1));
+          const size_t param_num = (klass != nullptr) ? stmt->param.size() + 1 : stmt->param.size();
+          emit(OP::LOAD_STACK, gsl::narrow_cast<uint16_t>(param_num - i - 1));
           emit(OP::STORE_STATIC, idx);
           emit(OP::POP);
           current_subroutine().add_referenced_static_value(idx);

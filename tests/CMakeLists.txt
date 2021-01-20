@@ -24,7 +24,10 @@ target_sources(${PROJECT_NAME} PRIVATE
    "src/basic.cpp" 
    "src/class.cpp" 
    "src/regression.cpp" 
-   "src/static_test.cpp" "src/assignment.cpp")
+   "src/static_test.cpp" 
+   "src/assignment.cpp" 
+   "src/call.cpp"
+   "src/comments.cpp" "src/constructor.cpp")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE libfoxlox)
 

@@ -144,6 +144,33 @@ return r;
   }
 }
 
+TEST(closure, close_over_method_parameter)
+{
+  VM vm;
+  {
+    auto [res, chunk] = compile(R"(
+var r;
+var f;
+
+class Foo {
+  method(param) {
+    fun f_() {
+      r = param;
+    }
+    f = f_;
+  }
+}
+Foo().method("param");
+f(); # expect: param
+return r;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = vm.interpret(chunk);
+    ASSERT_TRUE(v.is_str());
+    ASSERT_EQ(v.get_strview(), "param");
+  }
+}
+
 TEST(closure, closed_closure_in_function)
 {
   VM vm;

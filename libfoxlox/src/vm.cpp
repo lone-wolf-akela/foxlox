@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include <foxlox/config.h>
-#ifdef USE_MIMALLOC
+#ifdef FOXLOX_USE_MIMALLOC
 #include <mimalloc.h>
 #define MALLOC mi_malloc
 #define FREE mi_free
@@ -34,11 +34,11 @@ namespace foxlox
   char* VM_Allocator::operator()(size_t l) noexcept
   {
     *heap_size += l;
-#ifdef DEBUG_LOG_GC
+#ifdef FOXLOX_DEBUG_LOG_GC
     std::cout << fmt::format("alloc size={} ", l);
 #endif
     char* const data = static_cast<char*>(MALLOC(l));
-#ifdef DEBUG_LOG_GC
+#ifdef FOXLOX_DEBUG_LOG_GC
     std::cout << fmt::format("at {}; heap size: {} -> {}\n", static_cast<const void*>(data), *heap_size - l, *heap_size);
 #endif
     Ensures(data != nullptr);
@@ -51,7 +51,7 @@ namespace foxlox
   GSL_SUPPRESS(f.6)
   void VM_Deallocator::operator()(char* const p, size_t l) noexcept
   {
-#ifdef DEBUG_LOG_GC
+#ifdef FOXLOX_DEBUG_LOG_GC
     std::cout << fmt::format("free size={} at {}; heap size: {} -> {}\n", l, static_cast<const void*>(p), *heap_size, *heap_size - l);
 #endif
     Expects(l <= *heap_size);
@@ -174,20 +174,20 @@ namespace foxlox
   GSL_SUPPRESS(es.76) GSL_SUPPRESS(gsl.util)
   Value VM::run()
   {
-#if defined(DEBUG_TRACE_STACK) || defined(DEBUG_TRACE_INST) || defined(DEBUG_TRACE_SRC)
+#if defined(FOXLOX_DEBUG_TRACE_STACK) || defined(FOXLOX_DEBUG_TRACE_INST) || defined(FOXLOX_DEBUG_TRACE_SRC)
     Debugger debugger(true);
 #endif
-#ifdef DEBUG_TRACE_STACK
+#ifdef FOXLOX_DEBUG_TRACE_STACK
 #define DBG_PRINT_STACK debugger.print_vm_stack(*this)
 #else
 #define DBG_PRINT_STACK
 #endif
-#ifdef DEBUG_STRESS_GC
+#ifdef FOXLOX_DEBUG_STRESS_GC
 #define DBG_GC collect_garbage()
 #else
 #define DBG_GC
 #endif
-#if defined(DEBUG_TRACE_INST) || defined(DEBUG_TRACE_SRC)
+#if defined(FOXLOX_DEBUG_TRACE_INST) || defined(FOXLOX_DEBUG_TRACE_SRC)
 #define DBG_PRINT_INST debugger.disassemble_inst(*this, *current_subroutine, std::distance(current_subroutine->get_code().begin(), ip))
 #else
 #define DBG_PRINT_INST
@@ -207,7 +207,7 @@ namespace foxlox
       goto *jmp_table[static_cast<uint8_t>(read_inst())]
 #define START_VM DISPATCH();
 #endif
-#if defined(USE_SWITCHED_GOTO) && !defined(USE_COMPUTED_GOTO)
+#if defined(FOXLOX_USE_SWITCHED_GOTO) && !defined(USE_COMPUTED_GOTO)
 #pragma message("Enable switched goto!")
         // from https://bullno1.com/blog/switched-goto
 #define DISPATCH() \
@@ -223,7 +223,7 @@ namespace foxlox
 #define START_VM DISPATCH();
 #endif
 
-#if !defined(USE_COMPUTED_GOTO) && !defined(USE_SWITCHED_GOTO)
+#if !defined(USE_COMPUTED_GOTO) && !defined(FOXLOX_USE_SWITCHED_GOTO)
 #pragma message("Use plain old while(true) and switch")
 #define START_VM \
       DBG_PRINT_STACK; \
@@ -666,7 +666,7 @@ namespace foxlox
           instance->set_property(name, *top());
           DISPATCH();
         }
-  #if !defined(USE_COMPUTED_GOTO) && !defined(USE_SWITCHED_GOTO)
+  #if !defined(USE_COMPUTED_GOTO) && !defined(FOXLOX_USE_SWITCHED_GOTO)
         default:
           UNREACHABLE;
   #endif
@@ -720,14 +720,14 @@ namespace foxlox
   }
   void VM::collect_garbage()
   {
-#ifdef DEBUG_STRESS_GC
+#ifdef FOXLOX_DEBUG_STRESS_GC
     constexpr bool do_gc = true;
 #else
     const bool do_gc = current_heap_size > next_gc_heap_size;
 #endif
     if (do_gc)
     {
-#ifdef DEBUG_LOG_GC
+#ifdef FOXLOX_DEBUG_LOG_GC
       std::cout << "-- gc begin --\n";
       const size_t heap_size_before = current_heap_size;
 #endif
@@ -735,7 +735,7 @@ namespace foxlox
       trace_references();
       sweep();
       next_gc_heap_size = std::max<size_t>(current_heap_size * GC_HEAP_GROW_FACTOR, FIRST_GC_HEAP_SIZE);
-#ifdef DEBUG_LOG_GC
+#ifdef FOXLOX_DEBUG_LOG_GC
       std::cout << "-- gc end --\n";
       std::cout << fmt::format("   collected {} bytes (from {} to {}). next at {}.\n",
         heap_size_before - current_heap_size,
@@ -792,7 +792,7 @@ namespace foxlox
   }
   void VM::mark_value(Value& v)
   {
-#ifdef DEBUG_LOG_GC
+#ifdef FOXLOX_DEBUG_LOG_GC
     if (v.is_str())
     {
       std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.str), v.v.str->is_marked() ? "is_marked" : "not_marked", v.to_string());
@@ -890,7 +890,7 @@ namespace foxlox
     string_pool.sweep();
     // tuple_pool
     std::erase_if(gc_index.tuple_pool, [this](gsl::not_null<Tuple*> tuple) {
-#ifdef DEBUG_LOG_GC
+#ifdef FOXLOX_DEBUG_LOG_GC
       std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(tuple), tuple->is_marked() ? "is_marked" : "not_marked", tuple->is_marked() ? Value(tuple).to_string() : "<tuple elem may not avail>");
 #endif
       if (!tuple->is_marked())
@@ -903,7 +903,7 @@ namespace foxlox
       });
     // instance_pool
     std::erase_if(gc_index.instance_pool, [this](gsl::not_null<Instance*> instance) {
-#ifdef DEBUG_LOG_GC
+#ifdef FOXLOX_DEBUG_LOG_GC
       std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(instance), instance->is_marked() ? "is_marked" : "not_marked", Value(instance).to_string());
 #endif
       if (!instance->is_marked())

@@ -240,7 +240,7 @@ namespace foxlox
   {
     for (auto& e : std::span(entries, capacity_mask + 1))
     {
-#ifdef DEBUG_LOG_GC
+#ifdef FOXLOX_DEBUG_LOG_GC
       if (e.str != nullptr && !e.tombstone)
       {
         std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(e.str), e.str->is_marked() ? "is_marked" : "not_marked", e.str->get_view());

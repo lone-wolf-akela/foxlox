@@ -1,17 +1,17 @@
 #pragma once
 
-//#define DEBUG_TRACE_STACK
-//#define DEBUG_TRACE_INST
-//#define DEBUG_TRACE_SRC
-//#define DEBUG_STRESS_GC
-//#define DEBUG_LOG_GC
+//#define FOXLOX_DEBUG_TRACE_STACK
+//#define FOXLOX_DEBUG_TRACE_INST
+//#define FOXLOX_DEBUG_TRACE_SRC
+//#define FOXLOX_DEBUG_STRESS_GC
+//#define FOXLOX_DEBUG_LOG_GC
 
-#define USE_MIMALLOC
-#define USE_SWITCHED_GOTO
+#define FOXLOX_USE_MIMALLOC
+#define FOXLOX_USE_SWITCHED_GOTO
 //#define USE_COMPUTED_GOTO
-/* if neither USE_SWITCHED_GOTO nor USE_COMPUTED_GOTO is set
+/* if neither FOXLOX_USE_SWITCHED_GOTO nor USE_COMPUTED_GOTO is set
  * we will use the plain old while(true) and switch case in the vm
- * Note: USE_SWITCHED_GOTO is faster than USE_COMPUTED_GOTO during my testing
+ * Note: FOXLOX_USE_SWITCHED_GOTO is faster than USE_COMPUTED_GOTO during my testing
  * Note2: USE_COMPUTED_GOTO does not support MSVC compiler
  */
 

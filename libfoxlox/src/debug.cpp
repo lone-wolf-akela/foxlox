@@ -29,7 +29,7 @@ namespace foxlox
     [[maybe_unused]]
     bool print_line_num_before_inst = this_line_num != last_line_num;
 
-#ifdef DEBUG_TRACE_SRC
+#ifdef FOXLOX_DEBUG_TRACE_SRC
     if (this_line_num != last_line_num)
     {
       auto src = vm.chunk->get_source(this_line_num);
@@ -41,7 +41,7 @@ namespace foxlox
       }
     }
 #endif
-#ifdef DEBUG_TRACE_INST
+#ifdef FOXLOX_DEBUG_TRACE_INST
     if (print_line_num_before_inst)
     {
       std::cout << fmt::format("{:05} {:15} {:>4} ", index, formated_funcname, this_line_num);
@@ -89,7 +89,7 @@ namespace foxlox
     case OP::LE:
     case OP::INHERIT:
     {
-#ifdef DEBUG_TRACE_INST
+#ifdef FOXLOX_DEBUG_TRACE_INST
       std::cout << fmt::format("{}\n", magic_enum::enum_name(op));
 #endif
       return 1;
@@ -98,7 +98,7 @@ namespace foxlox
     case OP::GET_PROPERTY:
     case OP::GET_SUPER_METHOD:
     {
-#ifdef DEBUG_TRACE_INST
+#ifdef FOXLOX_DEBUG_TRACE_INST
       const uint16_t str = get_uint16();
       std::cout << fmt::format("{:<16} {:>4}, {}\n", magic_enum::enum_name(op), str, vm.const_string_pool.at(str)->get_view());
 #endif
@@ -106,7 +106,7 @@ namespace foxlox
     }
     case OP::CONSTANT:
     {
-#ifdef DEBUG_TRACE_INST
+#ifdef FOXLOX_DEBUG_TRACE_INST
       const uint16_t constant = get_uint16();
       const auto constants = vm.chunk->get_constants();
       std::cout << fmt::format("{:<16} {:>4}, {}\n", "CONSTANT", constant, gsl::at(constants, constant).to_string());
@@ -115,7 +115,7 @@ namespace foxlox
     }
     case OP::FUNC:
     {
-#ifdef DEBUG_TRACE_INST
+#ifdef FOXLOX_DEBUG_TRACE_INST
       const uint16_t subroutine_idx = get_uint16();
       std::cout << fmt::format("{:<16} {:>4}, {}\n", "FUNC", subroutine_idx, vm.chunk->get_subroutines().at(subroutine_idx).get_funcname());
 #endif
@@ -123,7 +123,7 @@ namespace foxlox
     }
     case OP::CLASS:
     {
-#ifdef DEBUG_TRACE_INST
+#ifdef FOXLOX_DEBUG_TRACE_INST
       const uint16_t constant = get_uint16();
       std::cout << fmt::format("{:<16} {:>4}, {}\n", "CLASS", constant, vm.class_pool.at(constant).get_name());
 #endif
@@ -131,7 +131,7 @@ namespace foxlox
     }
     case OP::STRING:
     {
-#ifdef DEBUG_TRACE_INST
+#ifdef FOXLOX_DEBUG_TRACE_INST
       const uint16_t str = get_uint16();
       std::cout << fmt::format("{:<16} {:>4}, {}\n", "STRING", str, vm.const_string_pool.at(str)->get_view());
 #endif
@@ -139,7 +139,7 @@ namespace foxlox
     }
     case OP::BOOL:
     {
-#ifdef DEBUG_TRACE_INST
+#ifdef FOXLOX_DEBUG_TRACE_INST
       const bool b = gsl::narrow_cast<bool>(get_uint8());
       std::cout << fmt::format("{:<16} {:>4}, {}\n", "BOOL", "", b ? "true" : "false");
 #endif
@@ -147,7 +147,7 @@ namespace foxlox
     }
     case OP::CALL:
     {
-#ifdef DEBUG_TRACE_INST
+#ifdef FOXLOX_DEBUG_TRACE_INST
       const uint16_t arity = get_uint16();
       std::cout << fmt::format("{:<16} {:>4}, {}\n", "CALL", "", arity);
 #endif
@@ -160,7 +160,7 @@ namespace foxlox
     case OP::POP_N:
     case OP::TUPLE:
     {
-#ifdef DEBUG_TRACE_INST
+#ifdef FOXLOX_DEBUG_TRACE_INST
       std::cout << fmt::format("{:<16} {:>4}\n", magic_enum::enum_name(op), get_uint16());
 #endif
       return 3;
@@ -171,7 +171,7 @@ namespace foxlox
     case OP::JUMP_IF_TRUE_NO_POP:
     case OP::JUMP_IF_FALSE_NO_POP:
     {
-#ifdef DEBUG_TRACE_INST
+#ifdef FOXLOX_DEBUG_TRACE_INST
       std::cout << fmt::format("{:<16} {:>4}\n", magic_enum::enum_name(op), get_int16());
 #endif
       return 3;

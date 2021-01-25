@@ -88,7 +88,7 @@ namespace foxlox
     {
       throw ValueError("Attempt to rewrite class method. This is not allowed");
     }
-    fields.try_add_entry(name, value);
+    fields.set_entry(name, value);
   }
   bool Instance::is_marked() const noexcept
   { 

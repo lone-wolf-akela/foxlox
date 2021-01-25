@@ -2,8 +2,105 @@
 
 #include <foxlox/vm.h>
 #include <foxlox/compiler.h>
+#include <foxlox/cppinterop.h>
 
 using namespace foxlox;
+
+TEST(for_, class_in_body)
+{
+  auto [res, chunk] = compile(R"(
+for (;;) class Foo {}
+)");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(for_, closure_in_body)
+{
+  VM vm;
+  {
+    auto [res, chunk] = compile(R"(
+var r = ();
+
+var f1;
+var f2;
+var f3;
+for (var i = 1; i < 4; ++i) {
+  var j = i;
+  fun f() {
+    r += i;
+    r += j;
+  }
+  if (j == 1) f1 = f;
+  else if (j == 2) f2 = f;
+  else f3 = f;
+}
+f1(); # expect: 4
+      # expect: 3
+f2(); # expect: 4
+      # expect: 3
+f3(); # expect: 4
+      # expect: 3
+
+return r;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
+    auto s = std::get<TupleSpan>(v);
+    ASSERT_EQ(to_variant(s[0]), FoxValue(4_i64));
+    ASSERT_EQ(to_variant(s[1]), FoxValue(3_i64));
+    ASSERT_EQ(to_variant(s[2]), FoxValue(4_i64));
+    ASSERT_EQ(to_variant(s[3]), FoxValue(3_i64));
+    ASSERT_EQ(to_variant(s[4]), FoxValue(4_i64));
+    ASSERT_EQ(to_variant(s[5]), FoxValue(3_i64));
+  }
+}
+
+TEST(for_, fun_in_body)
+{
+  auto [res, chunk] = compile(R"(
+for (;;) fun foo() {}
+)");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(for_, return_closure)
+{
+  VM vm;
+  auto [res, chunk] = compile(R"(
+var r;
+fun f() {
+  for (;;) {
+    var i = "i";
+    fun g() { r = i; }
+    return g;
+  }
+}
+var h = f();
+h(); # expect: i
+return r;
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  auto v = to_variant(vm.interpret(chunk));
+  ASSERT_EQ(v, FoxValue("i"));
+}
+
+TEST(for_, return_inside)
+{
+  VM vm;
+  auto [res, chunk] = compile(R"(
+fun f() {
+  for (;;) {
+    var i = "i";
+    return i;
+  }
+}
+return f(); # expect: i
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  auto v = to_variant(vm.interpret(chunk));
+  ASSERT_EQ(v, FoxValue("i"));
+}
 
 TEST(for_, scope)
 {
@@ -26,14 +123,11 @@ var r = ();
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 2);
-    ASSERT_EQ(s[0].type, ValueType::I64);
-    ASSERT_EQ(s[0].get_int64(), 0);
-    ASSERT_EQ(s[1].type, ValueType::I64);
-    ASSERT_EQ(s[1].get_int64(), -1);
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
+    auto s = std::get<TupleSpan>(v);
+    ASSERT_EQ(to_variant(s[0]), FoxValue(0_i64));
+    ASSERT_EQ(to_variant(s[1]), FoxValue(-1_i64));
   }
   {
     auto [res, chunk] = compile(R"(
@@ -54,15 +148,36 @@ var r = ();
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 2);
-    ASSERT_TRUE(s[0].is_str());
-    ASSERT_EQ(s[0].get_strview(), "after");
-    ASSERT_EQ(s[1].type, ValueType::I64);
-    ASSERT_EQ(s[1].get_int64(), 0);
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
+    auto s = std::get<TupleSpan>(v);
+    ASSERT_EQ(to_variant(s[0]), FoxValue("after"));
+    ASSERT_EQ(to_variant(s[1]), FoxValue(0_i64));
   }
+}
+
+TEST(for_, statement_condition)
+{
+  auto [res, chunk] = compile(R"(
+for (var a = 1; {}; a = a + 1) {}
+)");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(for_, statement_increment)
+{
+  auto [res, chunk] = compile(R"(
+for (var a = 1; a < 2; {}) {}
+)");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(for_, statement_initializer)
+{
+  auto [res, chunk] = compile(R"(
+for ({}; a < 2; a = a + 1) {}
+)");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
 }
 
 TEST(for_, syntax)
@@ -76,14 +191,12 @@ for (var c = 0; c < 3;) r += (++c);
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 3);
-    for (int i = 0; i < 3; i++)
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
+    auto s = std::get<TupleSpan>(v);
+    for (int64_t i = 0; i < 3; i++)
     {
-      ASSERT_EQ(s[i].type, ValueType::I64);
-      ASSERT_EQ(s[i].get_int64(), i + 1);
+      ASSERT_EQ(to_variant(s[i]), FoxValue(i + 1));
     }
   }
   // Block body.
@@ -96,14 +209,12 @@ for (var a = 0; a < 3; ++a) {
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 3);
-    for (int i = 0; i < 3; i++)
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
+    auto s = std::get<TupleSpan>(v);
+    for (int64_t i = 0; i < 3; i++)
     {
-      ASSERT_EQ(s[i].type, ValueType::I64);
-      ASSERT_EQ(s[i].get_int64(), i);
+      ASSERT_EQ(to_variant(s[i]), FoxValue(i));
     }
   }
   // No clauses.
@@ -112,9 +223,8 @@ return r;
 for (;;) return "done";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_str());
-    ASSERT_EQ(v.get_strview(), "done");
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue("done"));
   }
   // No variable.
   {
@@ -125,14 +235,12 @@ for (; i < 2; ++i) r += i;
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 2);
-    for (int i = 0; i < 2; i++)
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
+    auto s = std::get<TupleSpan>(v);
+    for (int64_t i = 0; i < 2; i++)
     {
-      ASSERT_EQ(s[i].type, ValueType::I64);
-      ASSERT_EQ(s[i].get_int64(), i);
+      ASSERT_EQ(to_variant(s[i]), FoxValue(i));
     }
   }
   // No condition.
@@ -145,14 +253,12 @@ for (var i = 0;; ++i) {
 }
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 3);
-    for (int i = 0; i < 3; i++)
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
+    auto s = std::get<TupleSpan>(v);
+    for (int64_t i = 0; i < 3; i++)
     {
-      ASSERT_EQ(s[i].type, ValueType::I64);
-      ASSERT_EQ(s[i].get_int64(), i);
+      ASSERT_EQ(to_variant(s[i]), FoxValue(i));
     }
   }
   // No increment.
@@ -166,14 +272,12 @@ for (var i = 0; i < 2;) {
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 2);
-    for (int i = 0; i < 2; i++)
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
+    auto s = std::get<TupleSpan>(v);
+    for (int64_t i = 0; i < 2; i++)
     {
-      ASSERT_EQ(s[i].type, ValueType::I64);
-      ASSERT_EQ(s[i].get_int64(), i);
+      ASSERT_EQ(to_variant(s[i]), FoxValue(i));
     }
   }
   // Statement bodies.
@@ -184,9 +288,17 @@ for (; false;) while (true) 1;
 for (; false;) for (;;) 1;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_nil());
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue(nil));
   }
+}
+
+TEST(for_, var_in_body)
+{
+  auto [res, chunk] = compile(R"(
+for (;;) var foo;
+)");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
 }
 
 TEST(for_, break_)
@@ -199,9 +311,8 @@ for(c = 0; c < 10; ++c) if (c >= 3) break;
 return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, ValueType::I64);
-    ASSERT_EQ(v.get_int64(), 3);
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue(3_i64));
   }
   {
     auto [res, chunk] = compile(R"(
@@ -214,9 +325,8 @@ for(c = 0; c < 10; ++c) {
 return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, ValueType::I64);
-    ASSERT_EQ(v.get_int64(), 3);
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue(3_i64));
   }
   // no init
   {
@@ -230,9 +340,8 @@ for(; c < 10; ++c) {
 return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, ValueType::I64);
-    ASSERT_EQ(v.get_int64(), 3);
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue(3_i64));
   }
   // no cond
   {
@@ -246,9 +355,8 @@ for(c = 0;; ++c) {
 return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, ValueType::I64);
-    ASSERT_EQ(v.get_int64(), 3);
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue(3_i64));
   }
   // no incre
   {
@@ -263,9 +371,8 @@ for(c = 0; c < 10;) {
 return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, ValueType::I64);
-    ASSERT_EQ(v.get_int64(), 3);
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue(3_i64));
   }
 }
 
@@ -284,9 +391,8 @@ for(var c = 1; c <= 5; ++c) {
 return s;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, ValueType::I64);
-    ASSERT_EQ(v.get_int64(), 1 + 2 + 3 + 4 + 5 - 3);
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue(int64_t(1 + 2 + 3 + 4 + 5 - 3)));
   }
   // no init
   {
@@ -302,9 +408,8 @@ for(; c <= 5; ++c) {
 return s;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, ValueType::I64);
-    ASSERT_EQ(v.get_int64(), 1 + 2 + 3 + 4 + 5 - 3);
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue(int64_t(1 + 2 + 3 + 4 + 5 - 3)));
   }
   // no cond
   {
@@ -320,9 +425,8 @@ for(var c = 1;; ++c) {
 return s;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, ValueType::I64);
-    ASSERT_EQ(v.get_int64(), 1 + 2 + 3 + 4 + 5 - 3);
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue(int64_t(1 + 2 + 3 + 4 + 5 - 3)));
   }
   // no incre
   {
@@ -338,9 +442,8 @@ for(var c = 0; c < 5;) {
 return s;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, ValueType::I64);
-    ASSERT_EQ(v.get_int64(), 1 + 2 + 3 + 4 + 5 - 3);
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue(int64_t(1 + 2 + 3 + 4 + 5 - 3)));
   }
 }
 
@@ -359,9 +462,8 @@ for(;;) {
 return "outer";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_str());
-    ASSERT_EQ(v.get_strview(), "mid");
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue("mid"));
   }
   {
     auto [res, chunk] = compile(R"(
@@ -375,9 +477,8 @@ while(true) {
 return "outer";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_str());
-    ASSERT_EQ(v.get_strview(), "mid");
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue("mid"));
   }
 }
 
@@ -398,9 +499,8 @@ for(var i = 11; i <= 13; ++i) {
 return outer_sum;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, ValueType::I64);
-    ASSERT_EQ(v.get_int64(), 11*(1+3) + 12*(1+3) + 13*(1+3));
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue(int64_t(11 * (1 + 3) + 12 * (1 + 3) + 13 * (1 + 3))));
   }
   {
     auto [res, chunk] = compile(R"(
@@ -418,8 +518,7 @@ while(i <= 13) {
 return outer_sum;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_EQ(v.type, ValueType::I64);
-    ASSERT_EQ(v.get_int64(), 11 * (1 + 3) + 12 * (1 + 3) + 13 * (1 + 3));
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue(int64_t(11 * (1 + 3) + 12 * (1 + 3) + 13 * (1 + 3))));
   }
 }

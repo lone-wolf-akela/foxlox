@@ -2,6 +2,7 @@
 
 #include <foxlox/vm.h>
 #include <foxlox/compiler.h>
+#include <foxlox/cppinterop.h>
 
 using namespace foxlox;
 
@@ -40,18 +41,13 @@ g();
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 4);
-    ASSERT_TRUE(s[0].is_str());
-    ASSERT_EQ(s[0].get_strview(), "local");
-    ASSERT_TRUE(s[1].is_str());
-    ASSERT_EQ(s[1].get_strview(), "after f");
-    ASSERT_TRUE(s[2].is_str());
-    ASSERT_EQ(s[2].get_strview(), "after f");
-    ASSERT_TRUE(s[3].is_str());
-    ASSERT_EQ(s[3].get_strview(), "after g");
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
+    auto s = std::get<TupleSpan>(v);
+    ASSERT_EQ(to_variant(s[0]), FoxValue("local"));
+    ASSERT_EQ(to_variant(s[1]), FoxValue("after f"));
+    ASSERT_EQ(to_variant(s[2]), FoxValue("after f"));
+    ASSERT_EQ(to_variant(s[3]), FoxValue("after g"));
   }
 }
 
@@ -74,14 +70,11 @@ r += a; # expect: assigned
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 2);
-    ASSERT_TRUE(s[0].is_str());
-    ASSERT_EQ(s[0].get_strview(), "inner");
-    ASSERT_TRUE(s[1].is_str());
-    ASSERT_EQ(s[1].get_strview(), "assigned");
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
+    auto s = std::get<TupleSpan>(v);
+    ASSERT_EQ(to_variant(s[0]), FoxValue("inner"));
+    ASSERT_EQ(to_variant(s[1]), FoxValue("assigned"));
   }
 }
 
@@ -103,9 +96,8 @@ f(); # expect: param
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_str());
-    ASSERT_EQ(v.get_strview(), "param");
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue("param"));
   }
 }
 
@@ -133,14 +125,11 @@ f();
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 2);
-    ASSERT_TRUE(s[0].is_str());
-    ASSERT_EQ(s[0].get_strview(), "b");
-    ASSERT_TRUE(s[1].is_str());
-    ASSERT_EQ(s[1].get_strview(), "a");
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
+    auto s = std::get<TupleSpan>(v);
+    ASSERT_EQ(to_variant(s[0]), FoxValue("b"));
+    ASSERT_EQ(to_variant(s[1]), FoxValue("a"));
   }
 }
 
@@ -165,9 +154,8 @@ f(); # expect: param
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_str());
-    ASSERT_EQ(v.get_strview(), "param");
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue("param"));
   }
 }
 
@@ -189,9 +177,8 @@ f(); # expect: local
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_str());
-    ASSERT_EQ(v.get_strview(), "local");
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue("local"));
   }
 }
 
@@ -227,16 +214,12 @@ f();
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 3);
-    ASSERT_TRUE(s[0].is_str());
-    ASSERT_EQ(s[0].get_strview(), "a");
-    ASSERT_TRUE(s[1].is_str());
-    ASSERT_EQ(s[1].get_strview(), "b");
-    ASSERT_TRUE(s[2].is_str());
-    ASSERT_EQ(s[2].get_strview(), "c");
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
+    auto s = std::get<TupleSpan>(v);
+    ASSERT_EQ(to_variant(s[0]), FoxValue("a"));
+    ASSERT_EQ(to_variant(s[1]), FoxValue("b"));
+    ASSERT_EQ(to_variant(s[2]), FoxValue("c"));
   }
 }
 
@@ -256,9 +239,8 @@ var r;
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_str());
-    ASSERT_EQ(v.get_strview(), "local");
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue("local"));
   }
 }
 
@@ -283,14 +265,11 @@ f();
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 2);
-    ASSERT_TRUE(s[0].is_str());
-    ASSERT_EQ(s[0].get_strview(), "a");
-    ASSERT_TRUE(s[1].is_str());
-    ASSERT_EQ(s[1].get_strview(), "a");
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
+    auto s = std::get<TupleSpan>(v);
+    ASSERT_EQ(to_variant(s[0]), FoxValue("a"));
+    ASSERT_EQ(to_variant(s[1]), FoxValue("a"));
   }
 }
 
@@ -318,9 +297,8 @@ var r;
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_str());
-    ASSERT_EQ(v.get_strview(), "a");
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue("a"));
   }
 }
 
@@ -345,16 +323,12 @@ var r = ();
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 3);
-    ASSERT_TRUE(s[0].is_str());
-    ASSERT_EQ(s[0].get_strview(), "closure");
-    ASSERT_TRUE(s[1].is_str());
-    ASSERT_EQ(s[1].get_strview(), "shadow");
-    ASSERT_TRUE(s[2].is_str());
-    ASSERT_EQ(s[2].get_strview(), "closure");
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
+    auto s = std::get<TupleSpan>(v);
+    ASSERT_EQ(to_variant(s[0]), FoxValue("closure"));
+    ASSERT_EQ(to_variant(s[1]), FoxValue("shadow"));
+    ASSERT_EQ(to_variant(s[2]), FoxValue("closure"));
   }
 }
 
@@ -377,9 +351,8 @@ TEST(closure, unused_closure)
 return "ok";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_str());
-    ASSERT_EQ(v.get_strview(), "ok");
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue("ok"));
   }
 }
 
@@ -414,8 +387,7 @@ var closure;
 }
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.interpret(chunk);
-    ASSERT_TRUE(v.is_str());
-    ASSERT_EQ(v.get_strview(), "a");
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue("a"));
   }
 }

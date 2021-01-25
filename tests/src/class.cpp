@@ -57,10 +57,9 @@ return r;
   auto v = to_variant(vm.interpret(chunk));
   ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
   auto s = std::get<TupleSpan>(v);
-  int i = 0;
-  ASSERT_EQ(to_variant(s[i++]), FoxValue("in foo"));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue("in bar"));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue("in baz"));
+  ASSERT_EQ(to_variant(s[0]), FoxValue("in foo"));
+  ASSERT_EQ(to_variant(s[1]), FoxValue("in bar"));
+  ASSERT_EQ(to_variant(s[2]), FoxValue("in baz"));
 }
 
 TEST(class_, local_inherit_other)

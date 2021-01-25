@@ -2,6 +2,7 @@
 
 #include <foxlox/vm.h>
 #include <foxlox/compiler.h>
+#include <foxlox/cppinterop.h>
 
 using namespace foxlox;
 
@@ -18,9 +19,8 @@ return "ok";
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = vm.interpret(chunk);
-  ASSERT_TRUE(v.is_str());
-  ASSERT_EQ(v.get_strview(), "ok");
+  auto v = to_variant(vm.interpret(chunk));
+  ASSERT_EQ(v, FoxValue("ok"));
 }
 
 TEST(block, scope)
@@ -36,12 +36,9 @@ return r + a;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = vm.interpret(chunk);
-  ASSERT_TRUE(v.is_tuple());
-  auto s = v.get_tuplespan();
-  ASSERT_EQ(ssize(s), 2);
-  ASSERT_TRUE(s[0].is_str());
-  ASSERT_EQ(s[0].get_strview(), "inner");
-  ASSERT_TRUE(s[1].is_str());
-  ASSERT_EQ(s[1].get_strview(), "outer");
+  auto v = to_variant(vm.interpret(chunk));
+  ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
+  auto s = std::get<TupleSpan>(v);
+  ASSERT_EQ(to_variant(s[0]), FoxValue("inner"));
+  ASSERT_EQ(to_variant(s[1]), FoxValue("outer"));
 }

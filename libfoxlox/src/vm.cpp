@@ -194,7 +194,7 @@ namespace foxlox
 #endif
     try
     {
-#if defined(USE_COMPUTED_GOTO)
+#if defined(FOXLOX_USE_COMPUTED_GOTO)
 #pragma message("Enable computed goto!")
 #define DEFINE_JMP_TABLE static void* jmp_table[] = { OPCODE(JMP_TABLE_ENTRY) };
 #define LBL(op) lbl_##op
@@ -207,7 +207,7 @@ namespace foxlox
       goto *jmp_table[static_cast<uint8_t>(read_inst())]
 #define START_VM DISPATCH();
 #endif
-#if defined(FOXLOX_USE_SWITCHED_GOTO) && !defined(USE_COMPUTED_GOTO)
+#if defined(FOXLOX_USE_SWITCHED_GOTO) && !defined(FOXLOX_USE_COMPUTED_GOTO)
 #pragma message("Enable switched goto!")
         // from https://bullno1.com/blog/switched-goto
 #define DISPATCH() \
@@ -223,7 +223,7 @@ namespace foxlox
 #define START_VM DISPATCH();
 #endif
 
-#if !defined(USE_COMPUTED_GOTO) && !defined(FOXLOX_USE_SWITCHED_GOTO)
+#if !defined(FOXLOX_USE_COMPUTED_GOTO) && !defined(FOXLOX_USE_SWITCHED_GOTO)
 #pragma message("Use plain old while(true) and switch")
 #define START_VM \
       DBG_PRINT_STACK; \
@@ -666,7 +666,7 @@ namespace foxlox
           instance->set_property(name, *top());
           DISPATCH();
         }
-  #if !defined(USE_COMPUTED_GOTO) && !defined(FOXLOX_USE_SWITCHED_GOTO)
+  #if !defined(FOXLOX_USE_COMPUTED_GOTO) && !defined(FOXLOX_USE_SWITCHED_GOTO)
         default:
           UNREACHABLE;
   #endif

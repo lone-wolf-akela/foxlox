@@ -29,7 +29,8 @@ target_sources(${PROJECT_NAME} PRIVATE
    "src/call.cpp"
    "src/comments.cpp" 
    "src/constructor.cpp" 
-   "src/field.cpp")
+   "src/field.cpp" 
+   "src/function.cpp")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE libfoxlox)
 

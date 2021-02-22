@@ -7,13 +7,6 @@
 //#define FOXLOX_DEBUG_LOG_GC
 
 #define FOXLOX_USE_MIMALLOC
-#define FOXLOX_USE_SWITCHED_GOTO
-//#define FOXLOX_USE_COMPUTED_GOTO
-/* if neither FOXLOX_USE_SWITCHED_GOTO nor FOXLOX_USE_COMPUTED_GOTO is set
- * we will use the plain old while(true) and switch case in the vm
- * Note: FOXLOX_USE_SWITCHED_GOTO is faster than FOXLOX_USE_COMPUTED_GOTO during my testing
- * Note2: FOXLOX_USE_COMPUTED_GOTO does not support MSVC compiler
- */
 
 constexpr auto STACK_MAX = 1024;
 constexpr auto CALLTRACE_MAX = 256;

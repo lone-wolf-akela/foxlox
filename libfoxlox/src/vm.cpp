@@ -745,13 +745,9 @@ namespace foxlox
   void VM::mark_class(Class& c)
   {
     if (c.is_marked()) { return; }
-    for (
-      auto entry = c.get_hash_table().first_entry();
-      entry != nullptr;
-      entry = c.get_hash_table().next_entry(entry)
-      )
+    for (auto& entry : c.get_hash_table())
     {
-      mark_subroutine(*entry->value);
+      mark_subroutine(*entry.value);
     }
     if (c.get_super() != nullptr)
     {
@@ -840,13 +836,9 @@ namespace foxlox
       }
       else // if (v->is_instance() || v->type == ValueType::METHOD)
       {
-        for (
-          auto entry = v->v.instance->get_hash_table().first_entry();
-          entry != nullptr;
-          entry = v->v.instance->get_hash_table().next_entry(entry)
-          )
+        for (auto& entry : v->v.instance->get_hash_table())
         {
-          mark_value(entry->value);
+          mark_value(entry.value);
         }
         mark_class(*v->v.instance->get_class());
       }

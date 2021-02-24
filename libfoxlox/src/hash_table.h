@@ -26,7 +26,7 @@ namespace foxlox
       deallocator(dealloc), 
       count(0),
       entries{},
-      capacity_mask{}
+      capacity{}
     {
       init_entries();
     }
@@ -48,7 +48,7 @@ namespace foxlox
     std::function<void(char* const, size_t)> deallocator;
     size_t count;
     StringPoolEntry* entries;
-    size_t capacity_mask;
+    size_t capacity;
 
     template<typename U>
     friend void grow_capacity(U* table);
@@ -64,6 +64,22 @@ namespace foxlox
   };
 
   template<typename T> requires std::same_as<T, Subroutine*> || std::same_as<T, Value>
+  class HashTable;
+
+  template<typename T> requires std::same_as<T, Subroutine*> || std::same_as<T, Value>
+  class HashTableIter
+  {
+  public:
+    HashTableIter(HashTable<T>* table, HashTableEntry<T>* entry) noexcept;
+    bool operator==(const HashTableIter<T>& rhs) const noexcept;
+    HashTableEntry<T>& operator*() const noexcept;
+    HashTableIter<T>& operator++() noexcept;
+  private:
+    HashTable<T>* p_table;
+    HashTableEntry<T>* p_entry;
+  };
+
+  template<typename T> requires std::same_as<T, Subroutine*> || std::same_as<T, Value>
   class HashTable
   {
   public:
@@ -73,7 +89,7 @@ namespace foxlox
       deallocator(dealloc),
       count(0),
       entries{},
-      capacity_mask{}
+      capacity{}
     {
       init_entries();
     }
@@ -86,21 +102,25 @@ namespace foxlox
     void set_entry(String* name, T value);
     void try_add_entry(String* name, T value);
     std::optional<T> get_value(String* name);
-    HashTableEntry<T>* first_entry() noexcept;
-    HashTableEntry<T>* next_entry(HashTableEntry<T>* p) noexcept;
+
+    HashTableIter<T> begin() noexcept;
+    HashTableIter<T> end() noexcept;
   private:
     void init_entries();
     void clean();
-    gsl::not_null<HashTableEntry<T>*> find_entry(gsl::not_null<String*> name, uint32_t hash) noexcept;
+    gsl::not_null<HashTableEntry<T>*> find_entry(gsl::not_null<String*> name, uint32_t hash) noexcept;   
     void delete_entry(HashTableEntry<T>& e) noexcept;
+    HashTableEntry<T>* next_entry(HashTableEntry<T>* p) noexcept;
 
     std::function<char* (size_t)> allocator;
     std::function<void(char* const, size_t)> deallocator;
     size_t count;
     HashTableEntry<T>* entries;
-    size_t capacity_mask;
+    size_t capacity;
 
     template<typename U>
     friend void grow_capacity(U* table);
+
+    friend class HashTableIter<T>;
   };
 }

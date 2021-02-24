@@ -118,15 +118,11 @@ namespace foxlox
   void Class::set_super(gsl::not_null<Class*> super)
   {
     superclass = super;
-    for (
-      auto entry = super->get_hash_table().first_entry(); 
-      entry!=nullptr;
-      entry = super->get_hash_table().next_entry(entry)
-      )
+    for(auto& entry : super->get_hash_table())
     {
       // if we already have a method with the same name,
       // do nothing (to shadow the base class method)
-      methods.try_add_entry(entry->str, entry->value);
+      methods.try_add_entry(entry.str, entry.value);
     }
   }
   Class* Class::get_super() noexcept

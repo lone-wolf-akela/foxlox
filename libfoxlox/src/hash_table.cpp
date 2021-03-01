@@ -172,8 +172,8 @@ namespace foxlox
   StringPool::StringPool(StringPool&& o) noexcept : 
     allocator(o.allocator),
     deallocator(o.deallocator),
-    count(o.count),
     entries(o.entries),
+    count(o.count),
     capacity(o.capacity)
   {
     o.entries = nullptr;
@@ -413,8 +413,8 @@ namespace foxlox
   HashTable<T>::HashTable(HashTable&& o) noexcept :
     allocator(o.allocator),
     deallocator(o.deallocator),
-    count(o.count),
     entries(o.entries),
+    count(o.count),
     capacity(o.capacity)
   {
     o.entries = nullptr;

@@ -24,8 +24,8 @@ namespace foxlox
     StringPool(A alloc, D dealloc) :
       allocator(alloc), 
       deallocator(dealloc), 
-      count(0),
       entries{},
+      count(0),
       capacity{}
     {
       init_entries();
@@ -87,8 +87,8 @@ namespace foxlox
     HashTable(A alloc, D dealloc) :
       allocator(alloc),
       deallocator(dealloc),
-      count(0),
       entries{},
+      count(0),
       capacity{}
     {
       init_entries();

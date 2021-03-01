@@ -2,8 +2,46 @@
 
 #include <foxlox/vm.h>
 #include <foxlox/compiler.h>
+#include <foxlox/cppinterop.h>
 
 using namespace foxlox;
+
+TEST(if_, class_in_else)
+{
+  auto [res, chunk] = compile(R"(
+if (true) "ok"; else class Foo {}
+)");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(if_, class_in_then)
+{
+  auto [res, chunk] = compile(R"(
+if (true) class Foo {}
+)");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(if_, dangling_else)
+{
+  VM vm;
+  {
+    auto [res, chunk] = compile(R"(
+if (true) if (false) return "bad"; else return "good";
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue("good"));
+  }
+  {
+    auto [res, chunk] = compile(R"(
+if (false) if (true) return "bad"; else return "bad";
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = to_variant(vm.interpret(chunk));
+    ASSERT_EQ(v, FoxValue(nil));
+  }
+}
 
 TEST(if_, if_)
 {

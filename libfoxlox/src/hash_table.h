@@ -46,9 +46,9 @@ namespace foxlox
 
     std::function<char* (size_t)> allocator;
     std::function<void(char* const, size_t)> deallocator;
-    size_t count;
     StringPoolEntry* entries;
-    size_t capacity;
+    uint32_t count;
+    uint32_t capacity;
 
     template<typename U>
     friend void grow_capacity(U* table);
@@ -114,9 +114,9 @@ namespace foxlox
 
     std::function<char* (size_t)> allocator;
     std::function<void(char* const, size_t)> deallocator;
-    size_t count;
     HashTableEntry<T>* entries;
-    size_t capacity;
+    uint32_t count;
+    uint32_t capacity;
 
     template<typename U>
     friend void grow_capacity(U* table);

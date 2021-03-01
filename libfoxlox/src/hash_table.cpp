@@ -82,8 +82,8 @@ namespace foxlox
     {
       throw InternalRuntimeError("Too many strings. String pool is full.");
     }
-    size_t new_count = 0;
-    const size_t new_capacity = table->capacity * 2;
+    uint32_t new_count = 0;
+    const uint32_t new_capacity = table->capacity * 2;
     auto new_entries = reinterpret_cast<decltype(table->entries)>(
       table->allocator(new_capacity * sizeof(*table->entries)));
 #ifndef _MSC_VER 
@@ -101,7 +101,7 @@ namespace foxlox
         continue;
       }
       new_count++;
-      gsl::index idx = e.hash & (new_capacity - 1);
+      uint32_t idx = e.hash & (new_capacity - 1);
       while (true)
       {
         GSL_SUPPRESS(bounds.1)
@@ -139,7 +139,7 @@ namespace foxlox
       grow_capacity(this);
     }
     const auto hash = str_hash(str);
-    gsl::index idx = hash & (capacity - 1);
+    uint32_t idx = hash & (capacity - 1);
     StringPoolEntry* first_tombstone = nullptr;
     GSL_SUPPRESS(bounds.1)
     while (true)
@@ -204,7 +204,7 @@ namespace foxlox
       grow_capacity(this);
     }
     const auto hash = str_hash(lhs, rhs);
-    gsl::index idx = hash & (capacity - 1);
+    uint32_t idx = hash & (capacity - 1);
     StringPoolEntry* first_tombstone = nullptr;
     GSL_SUPPRESS(bounds.1) GSL_SUPPRESS(stl.1)
     while (true)
@@ -461,7 +461,7 @@ namespace foxlox
   template<typename T> requires std::same_as<T, Subroutine*> || std::same_as<T, Value>
   gsl::not_null<HashTableEntry<T>*> HashTable<T>::find_entry(gsl::not_null<String*> name, uint32_t hash) noexcept
   {
-    gsl::index idx = hash & (capacity - 1);
+    uint32_t idx = hash & (capacity - 1);
     HashTableEntry<T>* first_tombstone = nullptr;
     GSL_SUPPRESS(bounds.1)
     while (true)

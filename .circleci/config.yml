@@ -1,0 +1,41 @@
+version: 2.1
+executors:
+  exectr:
+    docker:
+      - image: lonewolfakela/cmake-gcc-compilation:1.3
+jobs:
+  build:
+    executor: exectr
+    steps:
+      - checkout
+      - run:
+          name: Setup cmake and build artifacts
+          command: |
+            mkdir build
+            cd build
+            cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE="~/vcpkg/scripts/buildsystems/vcpkg.cmake" ..
+            make
+      - persist_to_workspace:
+          root: .
+          paths: 
+            - build
+  test:
+    executor: exectr
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Execute Tests
+          command: |
+            cd build
+            ./tests/tests --gtest_output=xml:test_results/report.xml
+      - store_test_results:
+          path: build/test_results
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build

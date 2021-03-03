@@ -13,8 +13,8 @@ jobs:
           command: |
             mkdir build
             cd build
-            cmake -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE="~/vcpkg/scripts/buildsystems/vcpkg.cmake" ..
-            ninja
+            cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE="~/vcpkg/scripts/buildsystems/vcpkg.cmake" ..
+            make
       - persist_to_workspace:
           root: .
           paths: 

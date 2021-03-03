@@ -14,13 +14,14 @@ jobs:
             cd vcpkg
             git submodule init
             git submodule update 
+            ./bootstrap-vcpkg.sh
       - run:
           name: Setup cmake and build artifacts
           command: |
             mkdir build
             cd build
             cmake -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
-            make
+            ninja
       - persist_to_workspace:
           root: .
           paths: 

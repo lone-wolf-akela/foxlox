@@ -28,9 +28,9 @@ jobs:
           name: Execute Tests
           command: |
             cd build
-            ./tests/tests --gtest_output=XML
+            ./tests/tests --gtest_output=xml:test_results/report.xml
       - store_test_results:
-          path: build
+          path: build/test_results
 workflows:
   version: 2
   build-and-test:

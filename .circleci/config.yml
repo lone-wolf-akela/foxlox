@@ -2,7 +2,7 @@ version: 2.1
 executors:
   exectr:
     docker:
-      - image: lonewolfakela/cmake-gcc-compilation
+      - image: lonewolfakela/cmake-gcc-compilation:1.1
 jobs:
   build:
     executor: exectr

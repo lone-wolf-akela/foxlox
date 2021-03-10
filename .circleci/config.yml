@@ -33,12 +33,13 @@ jobs:
       - run:
           name: Execute Tests
           command: |
+            mkdir /root/test_results
             cd build
-            ./tests/tests --gtest_output=xml:~/test_results/report.xml
+            ./tests/tests --gtest_output=xml:/root/test_results/report.xml
             cd ../build_asan
-            ./tests/tests --gtest_output=xml:~/test_results/report_asan.xml
+            ./tests/tests --gtest_output=xml:/root/test_results/report_asan.xml
       - store_test_results:
-          path: ~/test_results
+          path: /root/test_results
 workflows:
   version: 2
   build-and-test:

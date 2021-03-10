@@ -10,7 +10,6 @@
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
-      "variables": [],
       "codeAnalysisRuleset": "${projectDir}\\codeanalysis.ruleset",
       "cmakeToolchain": "${projectDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
     },
@@ -24,7 +23,32 @@
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "msvc_x64_x64" ],
-      "variables": [],
+      "codeAnalysisRuleset": "${projectDir}\\codeanalysis.ruleset",
+      "cmakeToolchain": "${projectDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    },
+    {
+      "name": "x64-Release-Asan",
+      "generator": "Visual Studio 16 2019 Win64",
+      "configurationType": "RelWithDebInfo",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "addressSanitizerEnabled": true,
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": [
+        {
+          "name": "FOXLOX_USE_MIMALLOC",
+          "value": "OFF",
+          "type": "BOOL"
+        },
+        {
+          "name": "FOXLOX_ENABLE_ASAN",
+          "value": "ON",
+          "type": "BOOL"
+        }
+      ],
       "codeAnalysisRuleset": "${projectDir}\\codeanalysis.ruleset",
       "cmakeToolchain": "${projectDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
     },
@@ -40,8 +64,32 @@
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "linux_x64" ],
       "wslPath": "${defaultWSLPath}",
-      "addressSanitizerRuntimeFlags": "detect_leaks=0",
-      "variables": []
+      "addressSanitizerRuntimeFlags": "detect_leaks=0"
+    },
+    {
+      "name": "WSL-GCC-Release-Asan",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeExecutable": "/usr/bin/cmake",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "linux_x64" ],
+      "wslPath": "${defaultWSLPath}",
+      "variables": [
+        {
+          "name": "FOXLOX_USE_MIMALLOC",
+          "value": "OFF",
+          "type": "BOOL"
+        },
+        {
+          "name": "FOXLOX_ENABLE_ASAN",
+          "value": "ON",
+          "type": "BOOL"
+        }
+      ]
     },
     {
       "name": "WSL-GCC-Debug",
@@ -55,8 +103,7 @@
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "linux_x64" ],
       "wslPath": "${defaultWSLPath}",
-      "addressSanitizerRuntimeFlags": "detect_leaks=0",
-      "variables": []
+      "addressSanitizerRuntimeFlags": "detect_leaks=0"
     },
     {
       "name": "Mingw64-Release",
@@ -109,7 +156,6 @@
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "clang_cl_x64_x64" ],
-      "variables": [],
       "cmakeToolchain": "${projectDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
     }
   ]

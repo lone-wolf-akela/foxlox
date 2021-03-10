@@ -6,8 +6,6 @@
 //#define FOXLOX_DEBUG_STRESS_GC
 //#define FOXLOX_DEBUG_LOG_GC
 
-#define FOXLOX_USE_MIMALLOC
-
 constexpr auto STACK_MAX = 1024;
 constexpr auto CALLTRACE_MAX = 256;
 constexpr auto FIRST_GC_HEAP_SIZE = 1024 * 1024;

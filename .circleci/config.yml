@@ -15,10 +15,16 @@ jobs:
             cd build
             cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE="~/vcpkg/scripts/buildsystems/vcpkg.cmake" ..
             make
+            cd ..
+            mkdir build_asan
+            cd build_asan
+            cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DFOXLOX_USE_MIMALLOC=OFF -DFOXLOX_ENABLE_ASAN=ON -DCMAKE_TOOLCHAIN_FILE="~/vcpkg/scripts/buildsystems/vcpkg.cmake" ..
+            make
       - persist_to_workspace:
           root: .
           paths: 
             - build
+            - build_asan
   test:
     executor: exectr
     steps:
@@ -28,9 +34,11 @@ jobs:
           name: Execute Tests
           command: |
             cd build
-            ./tests/tests --gtest_output=xml:test_results/report.xml
+            ./tests/tests --gtest_output=xml:~/test_results/report.xml
+            cd ../build_asan
+            ./tests/tests --gtest_output=xml:~/test_results/report_asan.xml
       - store_test_results:
-          path: build/test_results
+          path: ~/test_results
 workflows:
   version: 2
   build-and-test:

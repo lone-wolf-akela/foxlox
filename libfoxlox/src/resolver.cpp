@@ -70,7 +70,7 @@ namespace foxlox
     scope.vars.emplace(name.lexeme, ValueInfo{ .is_ready = false, .declare{} });
     return &scope.vars.at(name.lexeme);
   }
-  void Resolver::declare_from_varstmt(stmt::Var* stmt)
+  void Resolver::declare_a_var(stmt::VarDeclareBase* stmt)
   {
     ValueInfo* vinfo = declare(stmt->name);
     if (vinfo != nullptr)
@@ -79,17 +79,18 @@ namespace foxlox
       stmt->store_type = stmt::VarStoreType::Stack;
     }
   }
-  void Resolver::declare_from_functionparam(stmt::Function* stmt, gsl::index param_index)
+  void Resolver::declare_var_list(stmt::VarDeclareListBase* stmt)
   {
-    ValueInfo* vinfo = declare(stmt->param.at(param_index));
-    if (vinfo != nullptr)
+    stmt->store_type_list.resize(size(stmt->var_names));
+    for (auto [index, param] : stmt->var_names | ranges::views::enumerate)
     {
-      vinfo->declare = VarDeclareFromList{ .list = stmt, .index = param_index };
-      if (ssize(stmt->store_type_list) <= param_index)
+      ValueInfo* vinfo = declare(stmt->var_names.at(index));
+      if (vinfo != nullptr)
       {
-        stmt->store_type_list.resize(param_index + 1);
-        stmt->store_type_list.at(param_index) = stmt::VarStoreType::Stack;
+        vinfo->declare = VarDeclareFromList{ .list = stmt, .index = gsl::narrow_cast<gsl::index>(index) };
+        stmt->store_type_list.at(index) = stmt::VarStoreType::Stack;
       }
+      define(param);
     }
   }
   void Resolver::declare_from_class(stmt::Class* stmt)
@@ -100,15 +101,6 @@ namespace foxlox
       vinfo->declare = stmt;
       stmt->store_type = stmt::VarStoreType::Stack;
       stmt->this_store_type = stmt::VarStoreType::Stack;
-    }
-  }
-  void Resolver::declare_from_functionname(stmt::Function* stmt)
-  {
-    ValueInfo* vinfo = declare(stmt->name);
-    if (vinfo != nullptr)
-    {
-      vinfo->declare = stmt;
-      stmt->store_type = stmt::VarStoreType::Stack;
     }
   }
   void Resolver::define(Token name)
@@ -168,12 +160,9 @@ namespace foxlox
 
     begin_scope(true);
 
-    for (auto [index, param] : function->param | ranges::views::enumerate)
-    {
-      declare_from_functionparam(function, gsl::narrow_cast<int>(index));
-      define(param);
-    }
+    declare_var_list(function); // declare func params
     resolve(function->body);
+
     end_scope();
 
     current_function = enclosing_func;
@@ -270,12 +259,21 @@ namespace foxlox
   }
   void Resolver::visit_var_stmt(gsl::not_null<stmt::Var*> stmt)
   {
-    declare_from_varstmt(stmt);
+    declare_a_var(stmt);
     if (stmt->initializer.get() != nullptr)
     {
       resolve(stmt->initializer.get());
     }
     define(stmt->name);
+  }
+  void Resolver::visit_import_stmt(gsl::not_null<stmt::Import*> stmt)
+  {
+    declare_a_var(stmt);
+    define(stmt->name);
+  }
+  void Resolver::visit_from_stmt(gsl::not_null<stmt::From*> stmt)
+  {
+    declare_var_list(stmt);
   }
   void Resolver::visit_block_stmt(gsl::not_null<stmt::Block*> stmt)
   {
@@ -315,7 +313,7 @@ namespace foxlox
   }
   void Resolver::visit_function_stmt(gsl::not_null<stmt::Function*> stmt)
   {
-    declare_from_functionname(stmt);
+    declare_a_var(stmt); // delcare the function itself (function params are declared latter)
     define(stmt->name);
     resolve_function(stmt, FunctionType::FUNCTION);
   }

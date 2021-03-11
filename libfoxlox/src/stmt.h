@@ -31,13 +31,17 @@ namespace foxlox::stmt
   class VarDeclareBase : public virtual Stmt
   {
   public:
-    VarStoreType store_type{ VarStoreType::Stack }; // to be filled by resolver
+    VarDeclareBase(Token&& nm) noexcept;
+    Token name;
+    VarStoreType store_type; // to be filled by resolver
     virtual ~VarDeclareBase() = default;
   };
 
   class VarDeclareListBase : public virtual Stmt
   {
   public:
+    VarDeclareListBase(std::vector<Token>&& names) noexcept;
+    std::vector<Token> var_names{};
     std::vector<VarStoreType> store_type_list{}; // to be filled by resolver
     virtual ~VarDeclareListBase() = default;
   };
@@ -53,7 +57,6 @@ namespace foxlox::stmt
   {
   public:
     Var(Token&& tk, std::unique_ptr<expr::Expr>&& init) noexcept;
-    Token name;
     std::unique_ptr<expr::Expr> initializer;
   };
 
@@ -96,8 +99,6 @@ namespace foxlox::stmt
   {
   public:
     Function(Token&& tk, std::vector<Token>&& par, std::vector<std::unique_ptr<Stmt>>&& bd) noexcept;
-    Token name;
-    std::vector<Token> param;
     std::vector<std::unique_ptr<Stmt>> body;
   };
 
@@ -114,8 +115,7 @@ namespace foxlox::stmt
   {
   public:
     Class(Token&& tk, std::unique_ptr<expr::Expr>&& super, std::vector<std::unique_ptr<Function>>&& ms) noexcept;
-    // for error reporting
-    Token name;
+
     std::unique_ptr<expr::Expr> superclass;
     std::vector<std::unique_ptr<Function>> methods;
 
@@ -143,7 +143,7 @@ namespace foxlox::stmt
   {
   public:
     Import(Token&& tk, std::vector<Token>&& path) noexcept;
-    Token name;
+
     std::vector<Token> libpath;
   };
 
@@ -151,7 +151,6 @@ namespace foxlox::stmt
   {
   public:
     From(std::vector<Token>&& vars, std::vector<Token>&& path) noexcept;
-    std::vector<Token> names;
     std::vector<Token> libpath;
   };
 

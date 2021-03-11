@@ -509,7 +509,7 @@ namespace foxlox
     try
     {
       const uint16_t subroutine_idx =
-        chunk.add_subroutine(stmt->name.lexeme, gsl::narrow_cast<int>(ssize(stmt->param)));
+        chunk.add_subroutine(stmt->name.lexeme, gsl::narrow_cast<int>(ssize(stmt->var_names)));
 
       const auto stack_size_before = current_stack_size;
 
@@ -565,7 +565,7 @@ namespace foxlox
         if (store_type == stmt::VarStoreType::Static)
         {
           const uint16_t idx = value_idxs.at(VarDeclareFromList{ stmt, gsl::narrow_cast<int>(i) }).idx;
-          const size_t param_num = (klass != nullptr) ? stmt->param.size() + 1 : stmt->param.size();
+          const size_t param_num = (klass != nullptr) ? stmt->var_names.size() + 1 : stmt->var_names.size();
           emit(OP::LOAD_STACK, gsl::narrow_cast<uint16_t>(param_num - i - 1));
           emit(OP::STORE_STATIC, idx);
           emit(OP::POP);
@@ -704,6 +704,16 @@ namespace foxlox
 
     emit_pop_to(stack_size_before_initializer);
     pop_stack_to(stack_size_before_initializer);
+  }
+  void CodeGen::visit_import_stmt(gsl::not_null<stmt::Import*> stmt)
+  {
+    std::ignore = stmt;
+    throw UnimplementedError("error");
+  }
+  void CodeGen::visit_from_stmt(gsl::not_null<stmt::From*> stmt)
+  {
+    std::ignore = stmt;
+    throw UnimplementedError("error");
   }
   void CodeGen::visit_class_stmt(gsl::not_null<stmt::Class*> stmt)
   {

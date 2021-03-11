@@ -47,10 +47,9 @@ namespace foxlox
     void end_scope() noexcept;
     
     [[nodiscard]] ValueInfo* declare(Token name);
-    void declare_from_varstmt(stmt::Var* stmt);
-    void declare_from_functionparam(stmt::Function* stmt, gsl::index param_index);
+    void declare_a_var(stmt::VarDeclareBase* stmt);
+    void declare_var_list(stmt::VarDeclareListBase* stmt);
     void declare_from_class(stmt::Class* stmt);
-    void declare_from_functionname(stmt::Function* stmt);
     void define(Token name);
     [[nodiscard]] VarDeclareAt resolve_local(Token name);
     void resolve_function(stmt::Function* function, FunctionType type);
@@ -80,5 +79,7 @@ namespace foxlox
     void visit_continue_stmt(gsl::not_null<stmt::Continue*> stmt) final;
     void visit_class_stmt(gsl::not_null<stmt::Class*> stmt) final;
     void visit_for_stmt(gsl::not_null<stmt::For*> stmt) final;
+    void visit_import_stmt(gsl::not_null<stmt::Import*> stmt) final;
+    void visit_from_stmt(gsl::not_null<stmt::From*> stmt) final;
   };
 }

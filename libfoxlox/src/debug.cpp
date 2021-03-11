@@ -102,7 +102,7 @@ namespace foxlox
       const uint16_t str = get_uint16();
       std::cout << fmt::format("{:<16} {:>4}, {}\n", magic_enum::enum_name(op), str, vm.const_string_pool.at(str)->get_view());
 #endif
-      return 2;
+      return 3;
     }
     case OP::CONSTANT:
     {
@@ -146,19 +146,13 @@ namespace foxlox
       return 2;
     }
     case OP::CALL:
-    {
-#ifdef FOXLOX_DEBUG_TRACE_INST
-      const uint16_t arity = get_uint16();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", "CALL", "", arity);
-#endif
-      return 3;
-    }
     case OP::LOAD_STACK:
     case OP::STORE_STACK:
     case OP::LOAD_STATIC:
     case OP::STORE_STATIC:
     case OP::POP_N:
     case OP::TUPLE:
+    case OP::IMPORT:
     {
 #ifdef FOXLOX_DEBUG_TRACE_INST
       std::cout << fmt::format("{:<16} {:>4}\n", magic_enum::enum_name(op), get_uint16());

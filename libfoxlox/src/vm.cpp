@@ -632,6 +632,11 @@ namespace foxlox
         instance->set_property(name, *top());
         DISPATCH();
       }
+      LBL(IMPORT) :
+      {
+        throw UnimplementedError("error");
+        //DISPATCH();
+      }
     }
     catch (const std::exception& e)
     {

@@ -415,34 +415,7 @@ namespace foxlox
       emit(OP::NIL);
       push_stack();
     }
-
-    if (stmt->store_type == stmt::VarStoreType::Stack)
-    {
-      // no code here, just let it stays in stack
-      value_idxs.insert_or_assign(
-        stmt,
-        ValueIdx{ stmt::VarStoreType::Stack, gsl::narrow_cast<uint16_t>(current_stack_size - 1) }
-      );
-    }
-    else
-    {
-      try
-      {
-        const uint16_t alloc_idx = chunk.add_static_value();
-        emit(OP::STORE_STATIC, alloc_idx);
-        pop_stack();
-        emit(OP::POP);
-        value_idxs.insert_or_assign(
-          stmt,
-          ValueIdx{ stmt::VarStoreType::Static, alloc_idx }
-        );
-        current_subroutine().add_referenced_static_value(alloc_idx);
-      }
-      catch (const ChunkOperationError& e)
-      {
-        error(stmt->name, e.what());
-      }
-    }
+    declare_a_var(stmt);
   }
   void CodeGen::visit_block_stmt(gsl::not_null<stmt::Block*> stmt)
   {
@@ -501,6 +474,70 @@ namespace foxlox
     patch_jump(jump_to_end, stmt->right_paren);
 
     loop_start_stack_size = enclosing_loop_start_stack_size;
+  }
+
+  void CodeGen::declare_a_var(gsl::not_null<stmt::VarDeclareBase*> stmt)
+  {
+    current_line = stmt->name.line;
+    if (stmt->store_type == stmt::VarStoreType::Stack)
+    {
+      // no code here, just let it stays in stack
+      value_idxs.insert_or_assign(
+        stmt,
+        ValueIdx{ stmt::VarStoreType::Stack, gsl::narrow_cast<uint16_t>(current_stack_size - 1) }
+      );
+    }
+    else
+    {
+      try
+      {
+        const uint16_t alloc_idx = chunk.add_static_value();
+        emit(OP::STORE_STATIC, alloc_idx);
+        pop_stack();
+        emit(OP::POP);
+        value_idxs.insert_or_assign(
+          stmt,
+          ValueIdx{ stmt::VarStoreType::Static, alloc_idx }
+        );
+        current_subroutine().add_referenced_static_value(alloc_idx);
+      }
+      catch (const ChunkOperationError& e)
+      {
+        error(stmt->name, e.what());
+      }
+    }
+  }
+
+  void CodeGen::declare_a_var_from_list(gsl::not_null<stmt::VarDeclareListBase*> stmt, int index)
+  {
+    current_line = stmt->var_names.at(index).line;
+    if (stmt->store_type_list.at(index) == stmt::VarStoreType::Stack)
+    {
+      // no code here, just let it stays in stack
+      value_idxs.insert_or_assign(
+        VarDeclareFromList{ stmt, index },
+        ValueIdx{ stmt::VarStoreType::Stack, gsl::narrow_cast<uint16_t>(current_stack_size - 1) }
+      );
+    }
+    else
+    {
+      try
+      {
+        const uint16_t alloc_idx = chunk.add_static_value();
+        emit(OP::STORE_STATIC, alloc_idx);
+        pop_stack();
+        emit(OP::POP);
+        value_idxs.insert_or_assign(
+          VarDeclareFromList{ stmt, index },
+          ValueIdx{ stmt::VarStoreType::Static, alloc_idx }
+        );
+        current_subroutine().add_referenced_static_value(alloc_idx);
+      }
+      catch (const ChunkOperationError& e)
+      {
+        error(stmt->var_names.at(index), e.what());
+      }
+    }
   }
 
   uint16_t CodeGen::gen_subroutine(gsl::not_null<stmt::Function*> stmt, stmt::Class* klass)
@@ -707,13 +744,43 @@ namespace foxlox
   }
   void CodeGen::visit_import_stmt(gsl::not_null<stmt::Import*> stmt)
   {
-    std::ignore = stmt;
-    throw UnimplementedError("error");
+    for (const auto& elem : stmt->libpath)
+    {
+      current_line = elem.line;
+      const uint16_t str_index = chunk.add_string(elem.lexeme);
+      emit(OP::STRING, str_index);
+    }
+    emit(OP::IMPORT, gsl::narrow_cast<uint16_t>(stmt->libpath.size()));
+    push_stack();
+
+    declare_a_var(stmt);
   }
   void CodeGen::visit_from_stmt(gsl::not_null<stmt::From*> stmt)
   {
-    std::ignore = stmt;
-    throw UnimplementedError("error");
+    for (const auto& elem : stmt->libpath)
+    {
+      current_line = elem.line;
+      const uint16_t str_index = chunk.add_string(elem.lexeme);
+      emit(OP::STRING, str_index);
+    }
+    emit(OP::IMPORT, gsl::narrow_cast<uint16_t>(stmt->libpath.size()));
+    const auto lib_stack_idx = current_stack_size;
+    push_stack();
+    for (const auto& [i, var] : stmt->var_names | ranges::views::enumerate)
+    {
+      emit(OP::LOAD_STACK, idx_cast(lib_stack_idx));
+      push_stack();
+      const uint16_t str_index = chunk.add_string(var.lexeme);      
+      emit(OP::GET_PROPERTY, str_index);
+      declare_a_var_from_list(stmt, gsl::narrow_cast<int>(i));
+    }
+
+    // the imported lib dict is not useful anymore
+    // but we can not pop it from stack since that would change the position of latter variables
+    // so we set it to nil to empty it
+    emit(OP::NIL);
+    emit(OP::STORE_STACK, lib_stack_idx);
+    emit(OP::POP);
   }
   void CodeGen::visit_class_stmt(gsl::not_null<stmt::Class*> stmt)
   {

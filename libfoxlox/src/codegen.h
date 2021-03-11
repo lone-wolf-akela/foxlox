@@ -64,6 +64,9 @@ namespace foxlox
     std::vector<gsl::index> break_stmts;
     std::vector<gsl::index> continue_stmts;
 
+    void declare_a_var(gsl::not_null<stmt::VarDeclareBase*> stmt);
+    void declare_a_var_from_list(gsl::not_null<stmt::VarDeclareListBase*> stmt, int index);
+
     uint16_t gen_subroutine(gsl::not_null<stmt::Function*> stmt, stmt::Class* klass);
 
     void visit_binary_expr(gsl::not_null<expr::Binary*> expr) final;

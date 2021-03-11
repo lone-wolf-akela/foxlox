@@ -43,7 +43,9 @@
   X(SET_PROPERTY) \
   X(GET_PROPERTY) \
   X(INHERIT) \
-  X(GET_SUPER_METHOD)
+  X(GET_SUPER_METHOD) \
+  X(IMPORT)
+
 namespace foxlox
 {
 #define DEFINE_ENUM(NAME, ENUMX) enum class NAME : uint8_t { ENUMX(ENUM_ENTRY) }

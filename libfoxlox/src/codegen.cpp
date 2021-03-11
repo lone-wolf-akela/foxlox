@@ -513,13 +513,13 @@ namespace foxlox
 
       const auto stack_size_before = current_stack_size;
 
-      for (auto [i, store_type] : stmt->param_store_types | ranges::views::enumerate)
+      for (auto [i, store_type] : stmt->store_type_list | ranges::views::enumerate)
       {
         push_stack();
         if (store_type == stmt::VarStoreType::Stack)
         {
           value_idxs.insert_or_assign(
-            VarDeclareAtFunc{ stmt, gsl::narrow_cast<int>(i) },
+            VarDeclareFromList{ stmt, gsl::narrow_cast<int>(i) },
             ValueIdx{ stmt::VarStoreType::Stack, gsl::narrow_cast<uint16_t>(current_stack_size - 1) }
           );
         }
@@ -529,7 +529,7 @@ namespace foxlox
           {
             const uint16_t alloc_idx = chunk.add_static_value();
             value_idxs.insert_or_assign(
-              VarDeclareAtFunc{ stmt, gsl::narrow_cast<int>(i) },
+              VarDeclareFromList{ stmt, gsl::narrow_cast<int>(i) },
               ValueIdx{ stmt::VarStoreType::Static, alloc_idx }
             );
             current_subroutine().add_referenced_static_value(alloc_idx);
@@ -550,7 +550,7 @@ namespace foxlox
           throw FatalError("Wrong store type for `this'.");
         }
         value_idxs.insert_or_assign(
-          VarDeclareAtClass{ klass },
+          ClassThisDeclare{ klass },
           ValueIdx{ stmt::VarStoreType::Stack, gsl::narrow_cast<uint16_t>(current_stack_size - 1) }
         );
       }
@@ -560,11 +560,11 @@ namespace foxlox
 
       // note: if one of the func args is a static value
       // we should do a store when the function is called
-      for (auto [i, store_type] : stmt->param_store_types | ranges::views::enumerate)
+      for (auto [i, store_type] : stmt->store_type_list | ranges::views::enumerate)
       {
         if (store_type == stmt::VarStoreType::Static)
         {
-          const uint16_t idx = value_idxs.at(VarDeclareAtFunc{ stmt, gsl::narrow_cast<int>(i) }).idx;
+          const uint16_t idx = value_idxs.at(VarDeclareFromList{ stmt, gsl::narrow_cast<int>(i) }).idx;
           const size_t param_num = (klass != nullptr) ? stmt->param.size() + 1 : stmt->param.size();
           emit(OP::LOAD_STACK, gsl::narrow_cast<uint16_t>(param_num - i - 1));
           emit(OP::STORE_STATIC, idx);
@@ -596,7 +596,7 @@ namespace foxlox
     current_line = stmt->name.line;
 
     uint16_t alloc_idx{};
-    if (stmt->name_store_type == stmt::VarStoreType::Stack)
+    if (stmt->store_type == stmt::VarStoreType::Stack)
     {
       // no code here, just let it stays in stack
       push_stack();
@@ -626,7 +626,7 @@ namespace foxlox
     emit(OP::FUNC, subroutine_idx);
 
     current_line = stmt->name.line;
-    if (stmt->name_store_type == stmt::VarStoreType::Stack)
+    if (stmt->store_type == stmt::VarStoreType::Stack)
     {
       // no code here, just let it stays in stack
     }
@@ -710,7 +710,7 @@ namespace foxlox
     current_line = stmt->name.line;
 
     uint16_t alloc_idx{};
-    if (stmt->name_store_type == stmt::VarStoreType::Stack)
+    if (stmt->store_type == stmt::VarStoreType::Stack)
     {
       value_idxs.insert_or_assign(
         stmt,
@@ -768,7 +768,7 @@ namespace foxlox
       pop_stack();
     }
 
-    if (stmt->name_store_type == stmt::VarStoreType::Stack)
+    if (stmt->store_type == stmt::VarStoreType::Stack)
     {
       // no code here, just let it stays in stack
     }

@@ -8,8 +8,7 @@ namespace foxlox::stmt
   }
   Var::Var(Token&& tk, std::unique_ptr<expr::Expr>&& init) noexcept :
     name(std::move(tk)), 
-    initializer(std::move(init)),
-    store_type{}
+    initializer(std::move(init))
   {
   }
   While::While(std::unique_ptr<expr::Expr>&& cond, std::unique_ptr<Stmt>&& bd, Token&& r_paren) noexcept :
@@ -37,8 +36,7 @@ namespace foxlox::stmt
   Function::Function(Token&& tk, std::vector<Token>&& par, std::vector<std::unique_ptr<Stmt>>&& bd) noexcept :
     name(std::move(tk)), 
     param(std::move(par)), 
-    body(std::move(bd)),
-    name_store_type{}
+    body(std::move(bd))
   {
   }
   Return::Return(Token&& tk, std::unique_ptr<expr::Expr>&& v) noexcept :
@@ -50,7 +48,6 @@ namespace foxlox::stmt
     name(std::move(tk)), 
     superclass(std::move(super)), 
     methods(std::move(ms)),
-    name_store_type{},
     this_store_type{}
   {
   }

@@ -28,6 +28,20 @@ namespace foxlox::stmt
     virtual ~Stmt() = default;
   };
 
+  class VarDeclareBase : public virtual Stmt
+  {
+  public:
+    VarStoreType store_type{ VarStoreType::Stack }; // to be filled by resolver
+    virtual ~VarDeclareBase() = default;
+  };
+
+  class VarDeclareListBase : public virtual Stmt
+  {
+  public:
+    std::vector<VarStoreType> store_type_list{}; // to be filled by resolver
+    virtual ~VarDeclareListBase() = default;
+  };
+
   class Expression : public Stmt
   {
   public:
@@ -35,15 +49,12 @@ namespace foxlox::stmt
     std::unique_ptr<expr::Expr> expression;
   };
   
-  class Var : public Stmt
+  class Var : public VarDeclareBase
   {
   public:
     Var(Token&& tk, std::unique_ptr<expr::Expr>&& init) noexcept;
     Token name;
     std::unique_ptr<expr::Expr> initializer;
-
-    // to be filled by resolver
-    VarStoreType store_type;
   };
 
   class While : public Stmt
@@ -81,17 +92,13 @@ namespace foxlox::stmt
     Token right_paren;
   };
 
-  class Function : public Stmt
+  class Function : public VarDeclareBase, public VarDeclareListBase
   {
   public:
     Function(Token&& tk, std::vector<Token>&& par, std::vector<std::unique_ptr<Stmt>>&& bd) noexcept;
     Token name;
     std::vector<Token> param;
     std::vector<std::unique_ptr<Stmt>> body;
-
-    // to be filled by resolver
-    VarStoreType name_store_type;
-    std::vector<VarStoreType> param_store_types;
   };
 
   class Return : public Stmt
@@ -103,7 +110,7 @@ namespace foxlox::stmt
     std::unique_ptr<expr::Expr> value;
   };
 
-  class Class : public Stmt
+  class Class : public VarDeclareBase
   {
   public:
     Class(Token&& tk, std::unique_ptr<expr::Expr>&& super, std::vector<std::unique_ptr<Function>>&& ms) noexcept;
@@ -112,8 +119,6 @@ namespace foxlox::stmt
     std::unique_ptr<expr::Expr> superclass;
     std::vector<std::unique_ptr<Function>> methods;
 
-    // to be filled by resolver, this is refer to the class name as a variable
-    VarStoreType name_store_type;
     // to be filled by resolver, this is refer to the `this' variable
     VarStoreType this_store_type;
   };

@@ -13,25 +13,26 @@
 
 namespace foxlox::stmt
 {
-  class Var;
   class Function;
   class Class;
+  class VarDeclareBase;
+  class VarDeclareListBase;
 }
 
 namespace foxlox
 {
-  struct VarDeclareAtFunc // store function parameters ...
+  struct VarDeclareFromList // store function parameters, etc
   {
-    stmt::Function* func;
-    gsl::index param_index;
-    friend auto operator<=>(const VarDeclareAtFunc& l, const VarDeclareAtFunc& r) = default;
+    stmt::VarDeclareListBase* list;
+    gsl::index index;
+    friend auto operator<=>(const VarDeclareFromList& l, const VarDeclareFromList& r) = default;
   };
-  struct VarDeclareAtClass // store `this' ...
+  struct ClassThisDeclare // store `this' ...
   {
     stmt::Class* klass;
-    friend auto operator<=>(const VarDeclareAtClass& l, const VarDeclareAtClass& r) = default;
+    friend auto operator<=>(const ClassThisDeclare& l, const ClassThisDeclare& r) = default;
   };
-  using VarDeclareAt = std::variant<stmt::Var*, stmt::Class*, stmt::Function*, VarDeclareAtFunc, VarDeclareAtClass>;
+  using VarDeclareAt = std::variant<stmt::VarDeclareBase*, VarDeclareFromList, ClassThisDeclare>;
 }
 
 namespace foxlox::expr

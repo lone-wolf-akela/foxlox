@@ -14,7 +14,6 @@ namespace foxlox
     current_loop(LoopType::NONE),
     current_function(FunctionType::NONE),
     current_class(ClassType::NONE)
-
   {
   }
   AST Resolver::resolve()
@@ -85,11 +84,11 @@ namespace foxlox
     ValueInfo* vinfo = declare(stmt->param.at(param_index));
     if (vinfo != nullptr)
     {
-      vinfo->declare = VarDeclareAtFunc{ .func = stmt, .param_index = param_index };
-      if (ssize(stmt->param_store_types) <= param_index)
+      vinfo->declare = VarDeclareFromList{ .list = stmt, .index = param_index };
+      if (ssize(stmt->store_type_list) <= param_index)
       {
-        stmt->param_store_types.resize(param_index + 1);
-        stmt->param_store_types.at(param_index) = stmt::VarStoreType::Stack;
+        stmt->store_type_list.resize(param_index + 1);
+        stmt->store_type_list.at(param_index) = stmt::VarStoreType::Stack;
       }
     }
   }
@@ -99,7 +98,7 @@ namespace foxlox
     if (vinfo != nullptr)
     {
       vinfo->declare = stmt;
-      stmt->name_store_type = stmt::VarStoreType::Stack;
+      stmt->store_type = stmt::VarStoreType::Stack;
       stmt->this_store_type = stmt::VarStoreType::Stack;
     }
   }
@@ -109,7 +108,7 @@ namespace foxlox
     if (vinfo != nullptr)
     {
       vinfo->declare = stmt;
-      stmt->name_store_type = stmt::VarStoreType::Stack;
+      stmt->store_type = stmt::VarStoreType::Stack;
     }
   }
   void Resolver::define(Token name)
@@ -134,24 +133,16 @@ namespace foxlox
         {
           // access a var from inside of a nested function
           // move the var from stack to closure value pool
-          if (std::holds_alternative<stmt::Var*>(found->second.declare))
+          if (std::holds_alternative<stmt::VarDeclareBase*>(found->second.declare))
           {
-            std::get<stmt::Var*>(found->second.declare)->store_type = stmt::VarStoreType::Static;
+            std::get<stmt::VarDeclareBase*>(found->second.declare)->store_type = stmt::VarStoreType::Static;
           }
-          else if (std::holds_alternative<stmt::Class*>(found->second.declare))
+          else if (std::holds_alternative<VarDeclareFromList>(found->second.declare))
           {
-            std::get<stmt::Class*>(found->second.declare)->name_store_type = stmt::VarStoreType::Static;
+            auto at = std::get<VarDeclareFromList>(found->second.declare);
+            at.list->store_type_list.at(at.index) = stmt::VarStoreType::Static;
           }
-          else if (std::holds_alternative<stmt::Function*>(found->second.declare))
-          {
-            std::get<stmt::Function*>(found->second.declare)->name_store_type = stmt::VarStoreType::Static;
-          }
-          else if (std::holds_alternative<VarDeclareAtFunc>(found->second.declare))
-          {
-            auto at = std::get<VarDeclareAtFunc>(found->second.declare);
-            at.func->param_store_types.at(at.param_index) = stmt::VarStoreType::Static;
-          }
-          else if (std::holds_alternative<VarDeclareAtClass>(found->second.declare))
+          else if (std::holds_alternative<ClassThisDeclare>(found->second.declare))
           {
             if (current_function_level - this_scope.function_level >= 2)
             {
@@ -378,11 +369,11 @@ namespace foxlox
     begin_scope(true);
     if (current_class == ClassType::CLASS || current_class == ClassType::SUBCLASS)
     {
-      scopes.back().vars["this"] = ValueInfo{ .is_ready = true, .declare = VarDeclareAtClass{stmt} };
+      scopes.back().vars["this"] = ValueInfo{ .is_ready = true, .declare = ClassThisDeclare{stmt} };
     }
     if (current_class == ClassType::SUBCLASS)
     {
-      scopes.back().vars["super"] = ValueInfo{ .is_ready = true, .declare = VarDeclareAtClass{stmt} };
+      scopes.back().vars["super"] = ValueInfo{ .is_ready = true, .declare = ClassThisDeclare{stmt} };
     }
     for (auto& method : stmt->methods)
     {

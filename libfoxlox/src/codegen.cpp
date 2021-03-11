@@ -779,8 +779,10 @@ namespace foxlox
     // but we can not pop it from stack since that would change the position of latter variables
     // so we set it to nil to empty it
     emit(OP::NIL);
-    emit(OP::STORE_STACK, lib_stack_idx);
+    push_stack();
+    emit(OP::STORE_STACK, idx_cast(lib_stack_idx));
     emit(OP::POP);
+    pop_stack();
   }
   void CodeGen::visit_class_stmt(gsl::not_null<stmt::Class*> stmt)
   {

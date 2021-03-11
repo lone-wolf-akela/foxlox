@@ -1,3 +1,6 @@
+from fox.io import println;
+from fox.profiler import clock;
+
 class Zoo {
   __init__() {
     this.aarvark  = 1;

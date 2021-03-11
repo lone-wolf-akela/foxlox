@@ -8,12 +8,14 @@
 #include "mem_alloc.h"
 
 #include <fmt/format.h>
+#include <range/v3/all.hpp>
 #include <magic_enum.hpp>
 
 #include <foxlox/except.h>
 #include <foxlox/debug.h>
 #include "object.h"
 #include "common.h"
+#include "runtimelib.h"
 
 #include <foxlox/vm.h>
 
@@ -628,8 +630,7 @@ namespace foxlox
       LBL(GET_PROPERTY) :
       {
         const auto name = const_string_pool.at(read_uint16());
-        auto instance = top()->get_instance();
-        *top() = instance->get_property(name);
+        *top() = top()->get_property(name);
         DISPATCH();
       }
       LBL(SET_PROPERTY) :
@@ -642,8 +643,14 @@ namespace foxlox
       }
       LBL(IMPORT) :
       {
-        throw UnimplementedError("error");
-        //DISPATCH();
+        const uint16_t path_len = read_uint16();
+        Ensures(path_len >= 1);
+        const auto libpath = std::span(top(path_len - 1), next(top()))
+          | ranges::views::transform(&Value::get_strview)
+          | ranges::to<std::vector<std::string_view>>;
+        pop(path_len - 1);
+        *top() = import_lib(libpath);
+        DISPATCH();
       }
     }
     catch (const std::exception& e)
@@ -926,5 +933,25 @@ namespace foxlox
     {
       c.unmark();
     }
+  }
+  Dict* VM::import_lib(std::span<const std::string_view> libpath)
+  {
+    gsl::not_null<Dict*> p = Dict::alloc(allocator, deallocator);
+    gc_index.dict_pool.push_back(p);
+    if (libpath.front() == "fox")
+    {
+      // an internal lib
+      const auto funcs = find_lib(libpath.subspan(1));
+      for (auto& func : funcs)
+      {
+        p->set(string_pool.add_string(func.name), func.func);
+      }
+    }
+    else
+    {
+      // external lib
+      throw UnimplementedError("");
+    }
+    return p;
   }
 }

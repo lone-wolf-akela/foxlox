@@ -1,3 +1,6 @@
+from fox.io import println;
+from fox.profiler import clock;
+
 # This benchmark stresses both field and method lookup.
 
 class Foo {

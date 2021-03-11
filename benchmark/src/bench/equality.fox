@@ -1,3 +1,6 @@
+from fox.io import println;
+from fox.profiler import clock;
+
 var i = 0;
 
 var loopStart = clock();

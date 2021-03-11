@@ -1,8 +1,12 @@
 #include <iostream>
-#include <ranges>
 #include <chrono>
+#include <ranges>
+#include <algorithm>
 
 #include <fmt/format.h>
+#pragma warning(disable:4702) // unreachable code
+#include <range/v3/all.hpp>
+#pragma warning(default:4702)
 
 #include <foxlox/vm.h>
 #include "value.h"
@@ -70,14 +74,46 @@ namespace
     const auto ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
     return ms.count() / 1000.0;
   }
+  Value max(VM& /*vm*/, [[maybe_unused]] std::span<Value> values)
+  {
+    return *std::ranges::max_element(values);
+  }
+  Value min(VM& /*vm*/, [[maybe_unused]] std::span<Value> values)
+  {
+    return *std::ranges::min_element(values);
+  }
 }
 
 namespace foxlox
 {
-  void register_lib(Parser& parser)
+  std::vector<ExportedLibElem> find_lib(std::span<const std::string_view> libpath)
   {
-    parser.define("print", print);
-    parser.define("println", println);
-    parser.define("clock", clock);
+    if (libpath.size() == 1)
+    {
+      if (libpath.front() == "io")
+      {
+        return { 
+          {"print", print}, 
+          {"println", println} 
+        };
+      }
+      if (libpath.front() == "profiler")
+      {
+        return { 
+          {"clock", clock} 
+        };
+      }
+      if (libpath.front() == "algorithm")
+      {
+        return {
+          {"max", max},
+          {"min", min}
+        };
+      }
+    }
+    const auto libpath_str = libpath
+      | ranges::views::join('.')
+      | ranges::to<std::string>;
+    throw RuntimeLibError(fmt::format("Unknown runtime lib with name: {}", libpath_str).c_str());
   }
 }

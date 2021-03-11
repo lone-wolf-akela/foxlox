@@ -1,3 +1,6 @@
+from fox.io import println;
+from fox.profiler import clock;
+
 class Toggle {
   __init__(startState) {
     this.state = startState;

@@ -3,5 +3,10 @@
 
 namespace foxlox
 {
-  void register_lib(Parser& parser);
+  struct ExportedLibElem
+  {
+    std::string name;
+    CppFunc* func;
+  };
+  std::vector<ExportedLibElem> find_lib(std::span<const std::string_view> libpath);
 }

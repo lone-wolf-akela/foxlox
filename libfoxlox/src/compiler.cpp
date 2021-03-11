@@ -3,7 +3,6 @@
 #include "codegen.h"
 #include "resolver.h"
 #include "object.h"
-#include "runtimelib.h"
 
 #include <foxlox/compiler.h>
 
@@ -15,9 +14,6 @@ namespace foxlox
     auto [tokens, src_per_line] = scanner.scan_tokens();
 
     Parser parser(std::move(tokens));
-
-    register_lib(parser);
-
     auto ast = parser.parse();
     if (parser.get_had_error())
     {

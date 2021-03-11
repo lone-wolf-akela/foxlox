@@ -31,9 +31,10 @@ TEST(function, extra_arguments)
 {
   VM vm;
   auto [res, chunk] = compile(R"(
+from fox.io import print, println;
 fun f(a, b) {
   print(a);
-  print(b);
+  println(b);
 }
 f(1, 2, 3, 4);
 )");

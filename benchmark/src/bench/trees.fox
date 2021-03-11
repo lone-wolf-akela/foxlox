@@ -1,3 +1,6 @@
+from fox.io import println;
+from fox.profiler import clock;
+
 class Tree {
   __init__(depth) {
     this.depth = depth;

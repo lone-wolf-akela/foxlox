@@ -11,7 +11,14 @@
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "codeAnalysisRuleset": "${projectDir}\\codeanalysis.ruleset",
-      "cmakeToolchain": "${projectDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+      "cmakeToolchain": "${projectDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "variables": [
+        {
+          "name": "FOXLOX_USE_MIMALLOC",
+          "value": "OFF",
+          "type": "BOOL"
+        }
+      ]
     },
     {
       "name": "x64-Release",

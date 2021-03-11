@@ -233,7 +233,7 @@ namespace foxlox
   public:
     template<Allocator A, Deallocator D>
     Dict(A allocator, D deallocator) :
-      ObjBase(ObjType::INSTANCE),
+      ObjBase(ObjType::DICT),
       gc_mark(false),
       fields(allocator, deallocator)
     {

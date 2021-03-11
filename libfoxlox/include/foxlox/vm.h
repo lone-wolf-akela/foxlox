@@ -118,6 +118,8 @@ namespace foxlox
     void trace_references();
     void sweep();
 
+    Dict* import_lib(std::span<const std::string_view> libpath);
+
     // data pool
     VM_GC_Index gc_index;
     StringPool string_pool;

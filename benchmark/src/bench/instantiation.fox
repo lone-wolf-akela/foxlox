@@ -1,3 +1,6 @@
+from fox.io import println;
+from fox.profiler import clock;
+
 # This benchmark stresses instance creation and initializer calling.
 
 class Foo {

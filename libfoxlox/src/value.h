@@ -99,6 +99,9 @@ namespace foxlox
     template<std::convertible_to<Instance*> T>
     constexpr Value(T instance) noexcept : type(ValueType::OBJ), v{ .instance = instance } {}
 
+    template<std::convertible_to<Dict*> T>
+    constexpr Value(T dict) noexcept : type(ValueType::OBJ), v{ .dict = dict } {}
+
     template<std::convertible_to<Instance*> I, std::convertible_to<Subroutine*> S >
     GSL_SUPPRESS(type.1)
     constexpr Value(I instance, S func) noexcept :
@@ -156,8 +159,10 @@ namespace foxlox
     int64_t get_int64() const;
     
     Instance* get_instance() const;
+    Dict* get_dict() const;
     std::string_view get_strview() const;
     std::span<Value> get_tuplespan() const;
+    Value get_property(gsl::not_null<String*> name);
 
     bool is_truthy() const noexcept;
     Subroutine* method_func() const noexcept;

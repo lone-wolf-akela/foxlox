@@ -167,9 +167,30 @@ namespace foxlox
     {
       return l.v.func == r.v.func ? std::partial_ordering::equivalent : std::partial_ordering::unordered;
     }
+    if (l.type == ValueType::CPP_FUNC && r.type == ValueType::CPP_FUNC)
+    {
+      return l.v.cppfunc == r.v.cppfunc ? std::partial_ordering::equivalent : std::partial_ordering::unordered;
+    }
+    if (l.type == ValueType::METHOD && r.type == ValueType::METHOD)
+    {
+      return l.method_func() == r.method_func() && l.v.instance == r.v.instance ? 
+        std::partial_ordering::equivalent : std::partial_ordering::unordered;
+    }
     if (l.is_class() && r.is_class())
     {
       return l.v.klass == r.v.klass ? std::partial_ordering::equivalent : std::partial_ordering::unordered;
+    }
+    if (l.is_instance() && r.is_instance())
+    {
+      return l.v.instance == r.v.instance ? std::partial_ordering::equivalent : std::partial_ordering::unordered;
+    }
+    if (l.is_dict() && r.is_dict())
+    {
+      return l.v.dict == r.v.dict ? std::partial_ordering::equivalent : std::partial_ordering::unordered;
+    }
+    if (l.is_array() && r.is_array())
+    {
+      throw UnimplementedError("");
     }
     return std::partial_ordering::unordered;
   }
@@ -243,6 +264,7 @@ namespace foxlox
     }
     return static_cast<int64_t>(l.get_double() / r.get_double());
   }
+
   bool operator==(const Value& l, const Value& r)
   {
     if (l.is_str() && r.is_str())
@@ -252,6 +274,12 @@ namespace foxlox
       return l.v.str == r.v.str;
     }
     return (l <=> r) == std::partial_ordering::equivalent;
+  }
+
+  Dict* Value::get_dict() const
+  {
+    type_check(*this, ObjType::DICT);
+    return v.dict;
   }
 
   std::string Value::to_string() const
@@ -305,5 +333,25 @@ namespace foxlox
     default:
       throw FatalError(fmt::format("Unknown ValueType: {}", magic_enum::enum_name(type)));
     }
-  } 
+  }
+  Value Value::get_property(gsl::not_null<String*> name)
+  {
+    if (is_instance())
+    {
+      return v.instance->get_property(name);
+    }
+    if (is_dict())
+    {
+      return v.dict->get(name);
+    }
+    if (is_nil())
+    {
+      throw exception_wrongtype(ObjType::NIL, ObjType::INSTANCE, ObjType::DICT);
+    }
+    if (type != ValueType::OBJ)
+    {
+      throw exception_wrongtype(type, ObjType::INSTANCE, ObjType::DICT);
+    }
+    throw exception_wrongtype(v.obj->type, ObjType::INSTANCE, ObjType::DICT);
+  }
 }

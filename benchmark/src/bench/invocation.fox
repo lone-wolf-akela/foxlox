@@ -1,3 +1,6 @@
+from fox.io import println;
+from fox.profiler import clock;
+
 # This benchmark stresses just method invocation.
 
 class Foo {

@@ -646,7 +646,7 @@ namespace foxlox
         const uint16_t path_len = read_uint16();
         Ensures(path_len >= 1);
         const auto libpath = std::span(top(path_len - 1), next(top()))
-          | ranges::views::transform(&Value::get_strview)
+          | ranges::views::transform([](auto v) { return v.get_strview(); })
           | ranges::to<std::vector<std::string_view>>;
         pop(path_len - 1);
         *top() = import_lib(libpath);

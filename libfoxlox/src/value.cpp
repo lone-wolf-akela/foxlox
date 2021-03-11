@@ -294,6 +294,10 @@ namespace foxlox
         return fmt::format("<class {}>", v.klass->get_name());
       case ObjType::INSTANCE:
         return fmt::format("<{} instance>", v.instance->get_class()->get_name());
+      case ObjType::DICT:
+        return "<dict>";
+      case ObjType::ARRAY:
+        return "<array>";
       default:
         throw FatalError(fmt::format("Unknown ObjType: {}", magic_enum::enum_name(v.obj->type)));
       }

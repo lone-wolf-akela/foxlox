@@ -227,4 +227,46 @@ namespace foxlox
       return p;
     }
   }
+
+  class Dict : public ObjBase
+  {
+  public:
+    template<Allocator A, Deallocator D>
+    Dict(A allocator, D deallocator) :
+      ObjBase(ObjType::INSTANCE),
+      gc_mark(false),
+      fields(allocator, deallocator)
+    {
+    }
+    Dict(const Instance&) = delete;
+    Dict(Instance&&) = delete;
+    Dict& operator=(const Instance&) = delete;
+    Dict& operator=(Instance&&) = delete;
+    ~Dict() = default;
+    Value get(gsl::not_null<String*> name);
+    HashTable<Value>& get_hash_table() noexcept;
+    void set(gsl::not_null<String*> name, Value value);
+    bool is_marked() const noexcept;
+    void mark() noexcept;
+    void unmark() noexcept;
+
+    template<Allocator A, Deallocator D>
+    static gsl::not_null<Dict*> alloc(A allocator, D deallocator)
+    {
+      const gsl::not_null<char*> data = allocator(sizeof(Dict));
+      return new(data) Dict(allocator, deallocator);
+    }
+
+    template<Deallocator F>
+    static void free(F deallocator, gsl::not_null<Dict*> p)
+    {
+      // call dtor to delete the map inside
+      p->~Dict();
+      GSL_SUPPRESS(type.1)
+        deallocator(reinterpret_cast<char*>(p.get()), sizeof(Dict));
+    }
+  private:
+    bool gc_mark;
+    HashTable<Value> fields;
+  };
 }

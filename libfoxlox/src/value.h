@@ -37,13 +37,14 @@ namespace foxlox
   class Subroutine;
   class Class;
   class Instance;
+  class Dict;
   struct Value;
   class VM;
   class Chunk;
 
   enum class ObjType : uint8_t
   {
-    NIL, STR, TUPLE, CLASS, INSTANCE
+    NIL, STR, TUPLE, CLASS, INSTANCE, DICT, ARRAY
   };
   enum class ValueType : uintptr_t
   {
@@ -76,6 +77,7 @@ namespace foxlox
       CppFunc* cppfunc;
       Class* klass;
       Instance* instance;
+      Dict* dict;
       ObjBase* obj;
     } v;
 
@@ -138,6 +140,16 @@ namespace foxlox
     constexpr bool is_instance() const noexcept
     {
       return (type == ValueType::OBJ) && (v.obj != nullptr) && (v.obj->type == ObjType::INSTANCE);
+    }
+
+    constexpr bool is_dict() const noexcept
+    {
+      return (type == ValueType::OBJ) && (v.obj != nullptr) && (v.obj->type == ObjType::DICT);
+    }
+
+    constexpr bool is_array() const noexcept
+    {
+      return (type == ValueType::OBJ) && (v.obj != nullptr) && (v.obj->type == ObjType::ARRAY);
     }
 
     double get_double() const;

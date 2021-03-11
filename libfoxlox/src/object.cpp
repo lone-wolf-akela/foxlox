@@ -56,15 +56,8 @@ namespace foxlox
       GSL_SUPPRESS(lifetime.3)
       return Value(this, *func);
     }
-    if(auto value = fields.get_value(name); value.has_value())
-    {
-      return *value;
-    }
-    else
-    {
-      // return nil when the field is not found
-      return Value();
-    }
+    // return nil when the field is not found
+    return fields.get_value(name).value_or(Value());
   }
   Value Instance::get_super_method(gsl::not_null<String*> name)
   {
@@ -150,6 +143,31 @@ namespace foxlox
     gc_mark = true;
   }
   void Class::unmark() noexcept
+  {
+    gc_mark = false;
+  }
+  Value Dict::get(gsl::not_null<String*> name)
+  {
+    // return nil when the field is not found
+    return fields.get_value(name).value_or(Value());
+  }
+  HashTable<Value>& Dict::get_hash_table() noexcept
+  {
+    return fields;
+  }
+  void Dict::set(gsl::not_null<String*> name, Value value)
+  {
+    fields.set_entry(name, value);
+  }
+  bool Dict::is_marked() const noexcept
+  {
+    return gc_mark;
+  }
+  void Dict::mark() noexcept
+  {
+    gc_mark = true;
+  }
+  void Dict::unmark() noexcept
   {
     gc_mark = false;
   }

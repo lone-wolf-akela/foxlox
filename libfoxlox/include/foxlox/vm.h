@@ -46,6 +46,7 @@ namespace foxlox
     // and need special move func / dtor
     std::vector<Tuple*> tuple_pool;
     std::vector<Instance*> instance_pool;
+    std::vector<Dict*> dict_pool;
 
     VM_GC_Index(VM* v) noexcept;
     ~VM_GC_Index();
@@ -111,6 +112,7 @@ namespace foxlox
     void mark_roots();
     void mark_value(Value& v);
     void mark_class(Class& c);
+    void mark_dict(Dict& d);
     void mark_subroutine(Subroutine& s);
     std::stack<Value*> gray_stack;
     void trace_references();

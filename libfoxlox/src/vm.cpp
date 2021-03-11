@@ -65,6 +65,10 @@ namespace foxlox
     {
       Instance::free(vm->deallocator, p);
     }
+    for (auto p : dict_pool)
+    {
+      Dict::free(vm->deallocator, p);
+    }
   }
   VM_GC_Index::~VM_GC_Index()
   {
@@ -80,12 +84,14 @@ namespace foxlox
   VM_GC_Index::VM_GC_Index(VM_GC_Index&& o) noexcept :
     tuple_pool(std::move(o.tuple_pool)),
     instance_pool(std::move(o.instance_pool)),
+    dict_pool(std::move(o.dict_pool)),
     vm(o.vm)
   {
     // replace the moved vector to new empty ones
     // this prevents the moved VM_GC_Index's destructor do anything
     o.tuple_pool = std::vector<Tuple*>{};
     o.instance_pool = std::vector<Instance*>{};
+    o.dict_pool = std::vector<Dict*>{};
   }
   VM_GC_Index& VM_GC_Index::operator=(VM_GC_Index&& o) noexcept
   {
@@ -95,11 +101,13 @@ namespace foxlox
       clean();
       tuple_pool = std::move(o.tuple_pool);
       instance_pool = std::move(o.instance_pool);
+      dict_pool = std::move(o.dict_pool);
       vm = o.vm;
       // replace the moved vector to new empty ones
       // this prevents the moved VM_GC_Index's destructor do anything
       o.tuple_pool = std::vector<Tuple*>{};
       o.instance_pool = std::vector<Instance*>{};
+      o.dict_pool = std::vector<Dict*>{};
       return *this;
     }
     catch (...)
@@ -771,6 +779,10 @@ namespace foxlox
     {
       std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.instance), v.v.instance->is_marked() ? "is_marked" : "not_marked", v.to_string());
     }
+    if (v.is_dict())
+    {
+      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.dict), v.v.dict->is_marked() ? "is_marked" : "not_marked", v.to_string());
+    }
     if (v.type == ValueType::FUNC)
     {
       std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.func), v.v.func->is_marked() ? "is_marked" : "not_marked", v.to_string());
@@ -804,6 +816,18 @@ namespace foxlox
     {
       mark_class(*v.v.klass);
     }
+    else if (v.is_dict())
+    {
+      if (!v.v.dict->is_marked())
+      {
+        gray_stack.push(&v);
+        v.v.dict->mark();
+      }
+    }
+    else if (v.is_array())
+    {
+      throw UnimplementedError("");
+    }
     else if (v.type == ValueType::FUNC)
     {
       mark_subroutine(*v.v.func);
@@ -830,6 +854,13 @@ namespace foxlox
         for (auto& tuple_elem : v->v.tuple->get_span())
         {
           mark_value(tuple_elem);
+        }
+      }
+      else if (v->is_dict())
+      {
+        for (auto& entry : v->v.dict->get_hash_table())
+        {
+          mark_value(entry.value);
         }
       }
       else // if (v->is_instance() || v->type == ValueType::METHOD)
@@ -870,6 +901,19 @@ namespace foxlox
         return true;
       }
       instance->unmark();
+      return false;
+      });
+    // dict_pool
+    std::erase_if(gc_index.dict_pool, [this](gsl::not_null<Dict*> dict) {
+#ifdef FOXLOX_DEBUG_LOG_GC
+      std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(dict), dict->is_marked() ? "is_marked" : "not_marked", Value(dict).to_string());
+#endif
+      if (!dict->is_marked())
+      {
+        Dict::free(deallocator, dict);
+        return true;
+      }
+      dict->unmark();
       return false;
       });
     // whiten all subroutines

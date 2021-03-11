@@ -48,6 +48,9 @@ namespace
     { U"while", TokenType::WHILE },
     { U"break", TokenType::BREAK},
     { U"continue", TokenType::CONTINUE},
+    { U"from", TokenType::FROM},
+    { U"import", TokenType::IMPORT},
+    { U"as", TokenType::AS},
   };
 }
 

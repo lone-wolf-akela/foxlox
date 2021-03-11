@@ -139,6 +139,22 @@ namespace foxlox::stmt
     Token keyword;
   };
 
+  class Import : public VarDeclareBase
+  {
+  public:
+    Import(Token&& tk, std::vector<Token>&& path) noexcept;
+    Token name;
+    std::vector<Token> libpath;
+  };
+
+  class From : public VarDeclareListBase
+  {
+  public:
+    From(std::vector<Token>&& vars, std::vector<Token>&& path) noexcept;
+    std::vector<Token> names;
+    std::vector<Token> libpath;
+  };
+
   class For : public Stmt
   {
   public:
@@ -173,6 +189,8 @@ namespace foxlox::stmt
     virtual R visit_continue_stmt(gsl::not_null<Continue*> stmt) = 0;
     virtual R visit_class_stmt(gsl::not_null<Class*> stmt) = 0;
     virtual R visit_for_stmt(gsl::not_null<For*> stmt) = 0;
+    virtual R visit_import_stmt(gsl::not_null<Import*> stmt) = 0;
+    virtual R visit_from_stmt(gsl::not_null<From*> stmt) = 0;
 
     GSL_SUPPRESS(c.21)
     virtual ~IVisitor() = default;
@@ -226,6 +244,14 @@ namespace foxlox::stmt
       if (auto p = dynamic_cast<For*>(stmt); p != nullptr)
       {
         return visit_for_stmt(p);
+      }
+      if (auto p = dynamic_cast<Import*>(stmt); p != nullptr)
+      {
+        return visit_import_stmt(p);
+      }
+      if (auto p = dynamic_cast<From*>(stmt); p != nullptr)
+      {
+        return visit_from_stmt(p);
       }
       throw FatalError("Unknown stmt type");
     }

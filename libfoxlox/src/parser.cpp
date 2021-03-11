@@ -56,6 +56,8 @@ namespace foxlox
       if (match(TokenType::CLASS)) { return class_declaration(); }
       if (match(TokenType::FUN)) { return function("function"); }
       if (match(TokenType::VAR)) { return var_declaration(); }
+      if (match(TokenType::FROM)) { return from_declaration(); }
+      if (match(TokenType::IMPORT)) { return import_declaration(); }
       return statement();
     }
     catch (ParseError)
@@ -83,6 +85,34 @@ namespace foxlox
     consume(TokenType::RIGHT_BRACE, "Expect `}' after class body.");
 
     return std::make_unique<stmt::Class>(std::move(name), std::move(superclass), std::move(methods));
+  }
+  std::unique_ptr<stmt::Stmt> Parser::from_declaration()
+  {
+    std::vector<Token> path;
+    do
+    {
+      path.emplace_back(consume(TokenType::IDENTIFIER, "Expect valid lib path."));
+    } while (match(TokenType::DOT));
+    consume(TokenType::IMPORT, "Expect `import'.");
+    std::vector<Token> vars;
+    do
+    {
+      vars.emplace_back(consume(TokenType::IDENTIFIER, "Expect valid variable name."));
+    } while (match(TokenType::COMMA));
+    consume(TokenType::SEMICOLON, "Expect `;' after `from' statement.");
+    return std::make_unique<stmt::From>(std::move(vars), std::move(path));
+  }
+  std::unique_ptr<stmt::Stmt> Parser::import_declaration()
+  {
+    std::vector<Token> path;
+    do
+    {
+      path.emplace_back(consume(TokenType::IDENTIFIER, "Expect valid lib path."));
+    } while (match(TokenType::DOT));
+    Token name = match(TokenType::AS) ? 
+      consume(TokenType::IDENTIFIER, "Expect variable name.") : path.back();
+    consume(TokenType::SEMICOLON, "Expect `;' after `import' statement.");
+    return std::make_unique<stmt::Import>(std::move(name), std::move(path));
   }
   std::unique_ptr<stmt::Function> Parser::function(std::string_view kind)
   {

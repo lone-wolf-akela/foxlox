@@ -73,4 +73,14 @@ namespace foxlox::stmt
     right_paren(std::move(r_paren))
   {
   }
+  Import::Import(Token&& tk, std::vector<Token>&& path) noexcept :
+    name(std::move(tk)),
+    libpath(std::move(path))
+  {
+  }
+  From::From(std::vector<Token>&& vars, std::vector<Token>&& path) noexcept :
+    names(std::move(vars)),
+    libpath(std::move(path))
+  {
+  }
 }

@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 #include <span>
+#include <istream>
+#include <ostream>
 
 #include <gsl/gsl>
 
@@ -17,14 +19,20 @@ namespace foxlox
   class LineInfo
   {
   public:
+    void dump(std::ostream& strm) const;
+    static LineInfo load(std::istream& strm);
+
     void add_line(gsl::index code_index, int line_num);
     int get_line(gsl::index code_index) const noexcept;
   private:
     struct LineNum
     {
-      LineNum(gsl::index code_idx, int line_n) noexcept;
-      gsl::index code_index;
-      int line_num;
+      void dump(std::ostream& strm) const;
+      static LineNum load(std::istream& strm);
+
+      LineNum(int64_t code_idx, int line_n) noexcept;
+      int64_t code_index;
+      int32_t line_num;
     };
     std::vector<LineNum> lines;
   };
@@ -33,6 +41,9 @@ namespace foxlox
   class alignas(8) Subroutine
   {
   public:
+    void dump(std::ostream& strm);
+    void load(std::istream& strm);
+
     Subroutine(std::string_view func_name, int num_of_params);
     std::span<const uint8_t> get_code() const noexcept;
     void add_code(bool c, int line_num);
@@ -74,15 +85,19 @@ namespace foxlox
   class Chunk
   {
   public:
+    void dump(std::ostream& strm);
+    void load(std::istream& strm);
+
     std::vector<Subroutine>& get_subroutines() noexcept;
     std::span<const Subroutine> get_subroutines() const noexcept;
     std::span<const CompiletimeClass> get_classes() const noexcept;
-    std::span<const Value> get_constants() const;
+    Value get_constant(uint16_t idx) const;
     std::span<const std::string> get_const_strings() const;
     void set_source(std::vector<std::string>&& src) noexcept;
     std::string_view get_source(gsl::index line_num) const;
 
-    uint16_t add_constant(Value v);
+    uint16_t add_constant(int64_t v);
+    uint16_t add_constant(double v);
     uint16_t add_subroutine(std::string_view func_name, int num_of_params);
     uint16_t add_class(CompiletimeClass&& klass);
     uint16_t add_string(std::string_view str);
@@ -94,7 +109,7 @@ namespace foxlox
     std::vector<Subroutine> subroutines;
     std::vector<CompiletimeClass> classes;
 
-    std::vector<Value> constants;
+    std::vector<std::variant<int64_t, double>> constants;
     std::vector<std::string> const_strings;
 
     uint16_t static_value_num = 0;

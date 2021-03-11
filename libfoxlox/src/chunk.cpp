@@ -7,6 +7,7 @@
 
 #include <foxlox/except.h>
 #include "object.h"
+#include "serialization.h"
 
 #include <foxlox/chunk.h>
 
@@ -40,9 +41,17 @@ namespace foxlox
   {
     return subroutines;
   }
-  std::span<const Value> Chunk::get_constants() const
+  Value Chunk::get_constant(uint16_t idx) const
   {
-    return constants;
+    const auto v = constants.at(idx);
+    if (std::holds_alternative<int64_t>(v))
+    {
+      return std::get<int64_t>(v);
+    }
+    else // double
+    {
+      return std::get<double>(v);
+    }
   }
   std::span<const std::string> Chunk::get_const_strings() const
   {
@@ -109,13 +118,18 @@ namespace foxlox
   {
     gc_mark = false;
   }
-  uint16_t Chunk::add_constant(Value v)
+  uint16_t Chunk::add_constant(int64_t v)
   {
-    if (v.type != ValueType::F64 && v.type != ValueType::I64 && v.type != ValueType::CPP_FUNC)
+    constants.push_back(v);
+    const auto index = constants.size() - 1;
+    if (index > std::numeric_limits<uint16_t>::max())
     {
-      throw FatalError("Wrong constant type.");
+      throw ChunkOperationError("Too many constants. Chunk constant table is full.");
     }
-
+    return gsl::narrow_cast<uint16_t>(index);
+  }
+  uint16_t Chunk::add_constant(double v)
+  {
     constants.push_back(v);
     const auto index = constants.size() - 1;
     if (index > std::numeric_limits<uint16_t>::max())
@@ -175,10 +189,19 @@ namespace foxlox
     if (ssize(source) < line_num) { return ""; }
     return source.at(line_num - 1);
   }
-  LineInfo::LineNum::LineNum(gsl::index code_idx, int line_n) noexcept:
+  LineInfo::LineNum::LineNum(int64_t code_idx, int line_n) noexcept:
     code_index(code_idx),
     line_num(line_n)
   {
+  }
+  void LineInfo::LineNum::dump(std::ostream& strm) const
+  {
+    dump_int64(strm, code_index);
+    dump_int32(strm, line_num);
+  }
+  LineInfo::LineNum LineInfo::LineNum::load(std::istream& strm)
+  {
+    return LineNum(load_int64(strm), load_int32(strm));
   }
   const LineInfo& Subroutine::get_lines() const noexcept
   {
@@ -212,5 +235,23 @@ namespace foxlox
   std::span<const CompiletimeClass> Chunk::get_classes() const noexcept
   {
     return classes;
+  }
+  void LineInfo::dump(std::ostream& strm) const
+  {
+    dump_int64(strm, ssize(lines));
+    for (const auto& line : lines)
+    {
+      line.dump(strm);
+    }
+  }
+  LineInfo LineInfo::load(std::istream& strm)
+  {
+    LineInfo info;
+    const int64_t n = load_int64(strm);
+    for (int64_t i = 0; i < n; i++)
+    {
+      info.lines.emplace_back(LineNum::load(strm));
+    }
+    return info;
   }
 }

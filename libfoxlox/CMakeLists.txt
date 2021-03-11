@@ -31,7 +31,8 @@ target_sources(${PROJECT_NAME} PRIVATE
   "src/runtimelib.cpp"
   "src/cppinterop.cpp"
   "src/hash_table.cpp"
-  "src/mem_alloc.cpp")
+  "src/mem_alloc.cpp" 
+  "src/serialization.cpp")
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>

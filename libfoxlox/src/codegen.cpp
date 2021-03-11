@@ -218,12 +218,12 @@ namespace foxlox
       }
       else if (std::holds_alternative<double>(v))
       {
-        const uint16_t constant = chunk.add_constant(Value(std::get<double>(v)));
+        const uint16_t constant = chunk.add_constant(std::get<double>(v));
         emit(OP::CONSTANT, constant);
       }
       else if (std::holds_alternative<int64_t>(v))
       {
-        const uint16_t constant = chunk.add_constant(Value(std::get<int64_t>(v)));
+        const uint16_t constant = chunk.add_constant(std::get<int64_t>(v));
         emit(OP::CONSTANT, constant);
       }
       else if (std::holds_alternative<std::string>(v))
@@ -234,12 +234,6 @@ namespace foxlox
       else if (std::holds_alternative<bool>(v))
       {
         emit(OP::BOOL, std::get<bool>(v));
-      }
-      else if (std::holds_alternative<CppFunc*>(v))
-      {
-        const auto func = std::get<CppFunc*>(v);
-        const uint16_t constant = chunk.add_constant(Value(func));
-        emit(OP::CONSTANT, constant);
       }
       else
       {

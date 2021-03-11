@@ -376,8 +376,7 @@ namespace foxlox
       LBL(CONSTANT) :
       {
         push();
-        const std::span constants = chunk->get_constants();
-        *top() = gsl::at(constants, read_uint16());
+        *top() = chunk->get_constant(read_uint16());
         DISPATCH();
       }
       LBL(FUNC) :

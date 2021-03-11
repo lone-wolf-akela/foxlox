@@ -26,10 +26,6 @@ namespace foxlox
   {
     v = b;
   }
-  CompiletimeValue::CompiletimeValue(CppFunc* cppfunc) noexcept
-  {
-    v = cppfunc;
-  }
   std::string CompiletimeValue::to_string() const
   {
     if (std::holds_alternative<std::nullptr_t>(v))

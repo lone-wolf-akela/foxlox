@@ -51,6 +51,33 @@ namespace foxlox
     throw FatalError("Unknown value type.");
   }
 
+  void CompiletimeClass::dump(std::ostream& strm) const
+  {
+    dump_str(strm, classname);
+    dump_int64(strm, ssize(methods));
+    for (const auto& [name_idx, func_idx] : methods)
+    {
+      dump_uint16(strm, name_idx);
+      dump_uint16(strm, func_idx);
+    }
+  }
+
+  CompiletimeClass CompiletimeClass::load(std::istream& strm)
+  {
+    const std::string name = load_str(strm);
+    CompiletimeClass klass(name);
+
+    const int64_t len = load_int64(strm);
+    klass.methods.reserve(len);
+    for (int64_t i = 0; i < len; i++)
+    {
+      const uint16_t name_idx = load_uint16(strm);
+      const uint16_t func_idx = load_uint16(strm);
+      klass.methods.emplace_back(name_idx, func_idx);
+    }
+    return klass;
+  }
+
   CompiletimeClass::CompiletimeClass(std::string_view name) :
     classname(name)
   {

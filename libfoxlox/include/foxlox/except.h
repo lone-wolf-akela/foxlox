@@ -26,6 +26,11 @@ namespace foxlox
   public:
     using std::runtime_error::runtime_error;
   };
+  class VMError : public std::runtime_error
+  {
+  public:
+    using std::runtime_error::runtime_error;
+  };
   class RuntimeError : public std::runtime_error
   {
   public:

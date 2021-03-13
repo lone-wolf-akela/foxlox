@@ -68,7 +68,7 @@ namespace foxlox
     VM(VM&& r) noexcept = default;
     VM& operator=(VM&& r) noexcept = default;
 
-    Value interpret(Chunk& c);
+    Value interpret(const std::vector<char>& binary);
 
     // stack ops
     using Stack = std::vector<Value>;
@@ -88,7 +88,7 @@ namespace foxlox
     Subroutine* current_subroutine;
     using IP = std::span<const uint8_t>::iterator;
     IP ip;
-    Chunk* chunk;
+    Chunk chunk;
 
     Stack stack;
     Stack::iterator stack_top;

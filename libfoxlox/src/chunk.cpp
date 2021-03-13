@@ -1,3 +1,4 @@
+#include <cassert>
 #include <string_view>
 #include <algorithm>
 #include <limits>
@@ -248,10 +249,134 @@ namespace foxlox
   {
     LineInfo info;
     const int64_t n = load_int64(strm);
+    info.lines.reserve(n);
     for (int64_t i = 0; i < n; i++)
     {
       info.lines.emplace_back(LineNum::load(strm));
     }
     return info;
+  }
+  void Subroutine::dump(std::ostream& strm) const
+  {
+    dump_int32(strm, arity);
+    dump_int64(strm, ssize(code));
+    for (const auto c : code)
+    {
+      dump_uint8(strm, c);
+    }
+    dump_str(strm, name);
+    lines.dump(strm);
+    dump_int64(strm, ssize(referenced_static_values));
+    for (const auto v : referenced_static_values)
+    {
+      dump_uint16(strm, v);
+    }
+  }
+  Subroutine Subroutine::load(std::istream& strm)
+  {
+    const int32_t arity = load_int32(strm);
+    const int64_t code_len = load_int64(strm);
+    std::vector<uint8_t> code;
+    code.reserve(code_len);
+    for (int64_t i = 0; i < code_len; i++)
+    {
+      code.emplace_back(load_uint8(strm));
+    }
+    const std::string name = load_str(strm);
+    Subroutine routine(name, arity);
+    routine.code = std::move(code);
+    routine.lines = LineInfo::load(strm);
+    const int64_t referenced_len = load_int64(strm);
+    routine.referenced_static_values.reserve(referenced_len);
+    for (int64_t i = 0; i < referenced_len; i++)
+    {
+      routine.referenced_static_values.emplace_back(load_uint16(strm));
+    }
+    return routine;
+  }
+  void Chunk::dump(std::ostream& strm) const
+  {
+    dump_int64(strm, ssize(source));
+    for (const auto& str : source)
+    {
+      dump_str(strm, str);
+    }
+    dump_int64(strm, ssize(subroutines));
+    for (const auto& routine : subroutines)
+    {
+      routine.dump(strm);
+    }
+    dump_int64(strm, ssize(classes));
+    for (const auto& klass : classes)
+    {
+      klass.dump(strm);
+    }
+    dump_int64(strm, ssize(constants));
+    for (const auto& v : constants)
+    {
+      if (std::holds_alternative<int64_t>(v))
+      {
+        dump_uint8(strm, 0);
+        dump_int64(strm, std::get<int64_t>(v));
+      }
+      else
+      {
+        assert(std::holds_alternative<double>(v));
+        dump_uint8(strm, 1);
+        dump_double(strm, std::get<double>(v));
+      }
+    }
+    dump_int64(strm, ssize(const_strings));
+    for (const auto& str : const_strings)
+    {
+      dump_str(strm, str);
+    }
+    dump_uint16(strm, static_value_num);
+  }
+  Chunk Chunk::load(std::istream& strm)
+  {
+    Chunk chunk;
+    const int64_t src_len = load_int64(strm);
+    chunk.source.reserve(src_len);
+    for (int64_t i = 0; i < src_len; i++)
+    {
+      chunk.source.emplace_back(load_str(strm));
+    }
+    const int64_t subr_len = load_int64(strm);
+    chunk.subroutines.reserve(subr_len);
+    for (int64_t i = 0; i < subr_len; i++)
+    {
+      chunk.subroutines.emplace_back(Subroutine::load(strm));
+    }
+    const int64_t classes_len = load_int64(strm);
+    chunk.classes.reserve(classes_len);
+    for (int64_t i = 0; i < classes_len; i++)
+    {
+      chunk.classes.emplace_back(CompiletimeClass::load(strm));
+    }
+    const int64_t const_len = load_int64(strm);
+    chunk.constants.reserve(const_len);
+    for (int64_t i = 0; i < const_len; i++)
+    {
+      uint8_t type = load_uint8(strm);
+      if (type == 0)
+      {
+        chunk.constants.emplace_back(load_int64(strm));
+      }
+      else
+      {
+        assert(type == 1);
+        chunk.constants.emplace_back(load_double(strm));
+      }
+    }
+    const int64_t const_str_len = load_int64(strm);
+    chunk.const_strings.reserve(const_str_len);
+    for (int64_t i = 0; i < const_str_len; i++)
+    {
+      chunk.const_strings.emplace_back(load_str(strm));
+    }
+    chunk.static_value_num = load_uint16(strm);
+
+    return chunk;
   }
 }

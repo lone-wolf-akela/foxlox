@@ -41,8 +41,8 @@ namespace foxlox
   class alignas(8) Subroutine
   {
   public:
-    void dump(std::ostream& strm);
-    void load(std::istream& strm);
+    void dump(std::ostream& strm) const;
+    static Subroutine load(std::istream& strm);
 
     Subroutine(std::string_view func_name, int num_of_params);
     std::span<const uint8_t> get_code() const noexcept;
@@ -64,7 +64,7 @@ namespace foxlox
     void mark() noexcept;
     void unmark() noexcept;
   private:
-    const int arity;
+    const int32_t arity;
     std::vector<uint8_t> code;
     
     // for error report
@@ -85,8 +85,8 @@ namespace foxlox
   class Chunk
   {
   public:
-    void dump(std::ostream& strm);
-    void load(std::istream& strm);
+    void dump(std::ostream& strm) const;
+    static Chunk load(std::istream& strm);
 
     std::vector<Subroutine>& get_subroutines() noexcept;
     std::span<const Subroutine> get_subroutines() const noexcept;

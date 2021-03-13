@@ -3,6 +3,8 @@
 #include <functional>
 #include <utility>
 #include <iostream>
+#include <sstream>
+#include <algorithm>
 
 #include <foxlox/config.h>
 #include "mem_alloc.h"
@@ -120,7 +122,7 @@ namespace foxlox
   GSL_SUPPRESS(f.6)
     VM::VM() noexcept :
     current_subroutine(nullptr),
-    chunk(nullptr),
+    chunk(),
     stack(STACK_MAX),
     calltrace(CALLTRACE_MAX),
     current_heap_size(0),
@@ -133,17 +135,28 @@ namespace foxlox
   {
   }
 
-  Value VM::interpret(Chunk& c)
+  Value VM::interpret(const std::vector<char>& binary)
   {
-    chunk = &c;
-    auto& subroutines = chunk->get_subroutines();
+    if (
+      ssize(binary) < ssize(BINARY_HEADER) ||
+      !std::equal(begin(BINARY_HEADER), end(BINARY_HEADER), begin(binary))
+      )
+    {
+      throw VMError("Wrong binary format.");
+    }
+    std::string tmp_str(begin(binary) + ssize(BINARY_HEADER), end(binary));
+    std::istringstream strm;
+    strm.str(std::move(tmp_str));
+    chunk = Chunk::load(strm);
+
+    auto& subroutines = chunk.get_subroutines();
     current_subroutine = &subroutines.at(0);
     ip = current_subroutine->get_code().begin();
-    static_value_pool.resize(chunk->get_static_value_num());
+    static_value_pool.resize(chunk.get_static_value_num());
     static_value_pool.shrink_to_fit();
 
     const_string_pool.clear();
-    for (auto& str : c.get_const_strings())
+    for (auto& str : chunk.get_const_strings())
     {
       const_string_pool.push_back(string_pool.add_string(str));
     }
@@ -151,13 +164,13 @@ namespace foxlox
     const_string_pool.push_back(str__init__);
 
     class_pool.clear();
-    for (auto& compiletime_class : c.get_classes())
+    for (auto& compiletime_class : chunk.get_classes())
     {
       class_pool.emplace_back(compiletime_class.get_name());
       for (const auto& [name_idx, subroutine_idx] : compiletime_class.get_methods())
       {
         class_pool.back().add_method(
-          const_string_pool.at(name_idx), &chunk->get_subroutines().at(subroutine_idx));
+          const_string_pool.at(name_idx), &chunk.get_subroutines().at(subroutine_idx));
       }
     }
 
@@ -376,13 +389,13 @@ namespace foxlox
       LBL(CONSTANT) :
       {
         push();
-        *top() = chunk->get_constant(read_uint16());
+        *top() = chunk.get_constant(read_uint16());
         DISPATCH();
       }
       LBL(FUNC) :
       {
         push();
-        auto& subroutines = chunk->get_subroutines();
+        auto& subroutines = chunk.get_subroutines();
         *top() = &subroutines.at(read_uint16());
         DISPATCH();
       }
@@ -656,7 +669,7 @@ namespace foxlox
     {
       const auto code_idx = std::distance(current_subroutine->get_code().begin(), ip);
       const auto line_num = current_subroutine->get_lines().get_line(code_idx);
-      const auto src = chunk->get_source(line_num);
+      const auto src = chunk.get_source(line_num);
       throw RuntimeError(e.what(), line_num, src);
     }
   }
@@ -923,7 +936,7 @@ namespace foxlox
       return false;
       });
     // whiten all subroutines
-    for (auto& s : chunk->get_subroutines())
+    for (auto& s : chunk.get_subroutines())
     {
       s.unmark();
     }

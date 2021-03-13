@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "value.h"
+#include "serialization.h"
 
 namespace foxlox
 {
@@ -25,6 +26,9 @@ namespace foxlox
   class CompiletimeClass
   {
   public:
+    void dump(std::ostream& strm) const;
+    static CompiletimeClass load(std::istream& strm);
+
     CompiletimeClass(std::string_view name);
     void add_method(uint16_t name_idx, uint16_t subroutine_idx);
     std::string_view get_name() const noexcept;

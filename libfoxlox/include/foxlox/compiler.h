@@ -1,9 +1,7 @@
 #pragma once
-
 #include <tuple>
 #include <string_view>
-
-#include <foxlox/chunk.h>
+#include <vector>
 
 namespace foxlox
 {
@@ -12,6 +10,6 @@ namespace foxlox
     OK,
     COMPILE_ERROR
   };
-  std::tuple<CompilerResult, Chunk> compile(std::string_view source);
+  std::tuple<CompilerResult, std::vector<char>> compile(std::string_view source);
 }
 

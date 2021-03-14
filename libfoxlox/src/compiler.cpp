@@ -43,6 +43,11 @@ namespace foxlox
     std::ostringstream strm;
     strm.write(BINARY_HEADER.data(), BINARY_HEADER.size());
     chunk.dump(strm);
+#if !defined(_MSC_VER) && (__GNUC__ <= 10)
+#pragma message("using g++ <= 10, there's no std::ostringstream.view()")
+    return std::make_tuple(CompilerResult::OK, strm.str() | ranges::to<std::vector<char>>);
+#else
     return std::make_tuple(CompilerResult::OK, strm.view() | ranges::to<std::vector<char>>);
+#endif
   }
 }

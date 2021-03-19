@@ -12,6 +12,6 @@ return nil;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = vm.interpret(chunk);
+  auto v = vm.run(chunk);
   ASSERT_TRUE(v.is_nil());
 }

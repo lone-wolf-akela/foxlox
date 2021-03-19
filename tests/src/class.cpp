@@ -14,7 +14,7 @@ class Foo {}
 return Foo;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_TRUE(std::holds_alternative<Class*>(v));
 }
 
@@ -54,7 +54,7 @@ baz.inBaz(); # expect: in baz
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
   auto s = std::get<TupleSpan>(v);
   ASSERT_EQ(to_variant(s[0]), FoxValue("in foo"));
@@ -76,7 +76,7 @@ fun f() {
 return f()().f(); # expect: "in b"
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_EQ(v, FoxValue("in b"));
 }
 
@@ -110,7 +110,7 @@ var r;
 return r().bar();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_EQ(v, FoxValue("foo_self"));
 }
 
@@ -131,6 +131,6 @@ class Foo {
 return Foo().returnSelf()().bar();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_EQ(v, FoxValue("foo_self"));
 }

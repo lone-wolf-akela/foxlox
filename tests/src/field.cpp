@@ -24,7 +24,7 @@ return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
   auto s = std::get<TupleSpan>(v);
   ASSERT_EQ(to_variant(s[0]), FoxValue("bar"));
@@ -42,7 +42,7 @@ foo.bar = "not fn";
 foo.bar();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(field, rewrite_method)
@@ -57,7 +57,7 @@ foo.method = foo.other;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(field, get_on_bool)
@@ -67,7 +67,7 @@ true.foo;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(field, get_on_class)
@@ -78,7 +78,7 @@ Foo.bar;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(field, get_on_function)
@@ -89,7 +89,7 @@ foo.bar;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(field, get_on_nil)
@@ -99,7 +99,7 @@ nil.foo;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(field, get_on_num)
@@ -109,7 +109,7 @@ TEST(field, get_on_num)
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(field, get_on_string)
@@ -119,7 +119,7 @@ TEST(field, get_on_string)
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(field, many)
@@ -297,7 +297,7 @@ return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
   auto s = std::get<TupleSpan>(v);
   ASSERT_EQ(ssize(s), 79);
@@ -398,7 +398,7 @@ return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_EQ(v, FoxValue("bararg"));
 }
 
@@ -426,7 +426,7 @@ return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
   auto s = std::get<TupleSpan>(v);
   ASSERT_EQ(to_variant(s[0]), FoxValue("foo1"));
@@ -447,7 +447,7 @@ return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
   auto s = std::get<TupleSpan>(v);
   ASSERT_EQ(to_variant(s[0]), FoxValue("bar value"));
@@ -463,7 +463,7 @@ true.foo = "value";
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(field, set_on_class)
@@ -474,7 +474,7 @@ Foo.bar = "value";
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(field, set_on_function)
@@ -485,7 +485,7 @@ foo.bar = "value";
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(field, set_on_nil)
@@ -495,7 +495,7 @@ nil.foo = "value";
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(field, set_on_num)
@@ -505,7 +505,7 @@ TEST(field, set_on_num)
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(field, set_on_string)
@@ -515,7 +515,7 @@ TEST(field, set_on_string)
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(field, undefined)
@@ -527,6 +527,6 @@ return foo.bar;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_EQ(v, FoxValue(nil));
 }

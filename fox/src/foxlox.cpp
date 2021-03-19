@@ -32,7 +32,7 @@ void run(std::string_view source, VM& vm, bool exit_on_error)
   }
   try
   {
-    vm.interpret(chunk);
+    vm.run(chunk);
   }
   catch (RuntimeError& e)
   {
@@ -89,7 +89,9 @@ int main(int argc, const char* argv[])
   }
   else if (argc == 1)
   {
-    run_prompt(vm);
+    fmt::print("prompt mode not implemented.\n");
+    std::exit(64);
+    // run_prompt(vm);
   }
   else
   {

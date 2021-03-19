@@ -11,7 +11,7 @@ TEST(basic, empty_file)
   VM vm;
   auto [res, chunk] = compile(R"()");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_EQ(v, FoxValue(nil));
 }
 
@@ -62,7 +62,7 @@ r +=  (2 * (6 - (2 + 2))); # expect: 4
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
   auto s = std::get<TupleSpan>(v);
   ASSERT_EQ(ssize(s), 15);

@@ -87,7 +87,7 @@ int main()
       if (res == foxlox::CompilerResult::OK)
       {
         foxlox::VM vm;
-        vm.interpret(chunk);
+        vm.run(chunk);
         std::cout << "Finished.\n\n";
       }
       else

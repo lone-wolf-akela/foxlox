@@ -14,7 +14,7 @@ TEST(call, bool_)
 true();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(call, nil)
@@ -24,7 +24,7 @@ TEST(call, nil)
 nil();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(call, int64)
@@ -34,7 +34,7 @@ TEST(call, int64)
 123();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(call, float64)
@@ -44,7 +44,7 @@ TEST(call, float64)
 123.0();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(call, object)
@@ -56,7 +56,7 @@ var foo = Foo();
 foo();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(call, string)
@@ -66,5 +66,5 @@ TEST(call, string)
 "str"();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }

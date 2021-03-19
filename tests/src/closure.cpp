@@ -41,7 +41,7 @@ g();
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.interpret(chunk));
+    auto v = to_variant(vm.run(chunk));
     ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
     auto s = std::get<TupleSpan>(v);
     ASSERT_EQ(to_variant(s[0]), FoxValue("local"));
@@ -70,7 +70,7 @@ r += a; # expect: assigned
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.interpret(chunk));
+    auto v = to_variant(vm.run(chunk));
     ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
     auto s = std::get<TupleSpan>(v);
     ASSERT_EQ(to_variant(s[0]), FoxValue("inner"));
@@ -96,7 +96,7 @@ f(); # expect: param
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.interpret(chunk));
+    auto v = to_variant(vm.run(chunk));
     ASSERT_EQ(v, FoxValue("param"));
   }
 }
@@ -125,7 +125,7 @@ f();
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.interpret(chunk));
+    auto v = to_variant(vm.run(chunk));
     ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
     auto s = std::get<TupleSpan>(v);
     ASSERT_EQ(to_variant(s[0]), FoxValue("b"));
@@ -154,7 +154,7 @@ f(); # expect: param
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.interpret(chunk));
+    auto v = to_variant(vm.run(chunk));
     ASSERT_EQ(v, FoxValue("param"));
   }
 }
@@ -177,7 +177,7 @@ f(); # expect: local
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.interpret(chunk));
+    auto v = to_variant(vm.run(chunk));
     ASSERT_EQ(v, FoxValue("local"));
   }
 }
@@ -214,7 +214,7 @@ f();
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.interpret(chunk));
+    auto v = to_variant(vm.run(chunk));
     ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
     auto s = std::get<TupleSpan>(v);
     ASSERT_EQ(to_variant(s[0]), FoxValue("a"));
@@ -239,7 +239,7 @@ var r;
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.interpret(chunk));
+    auto v = to_variant(vm.run(chunk));
     ASSERT_EQ(v, FoxValue("local"));
   }
 }
@@ -265,7 +265,7 @@ f();
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.interpret(chunk));
+    auto v = to_variant(vm.run(chunk));
     ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
     auto s = std::get<TupleSpan>(v);
     ASSERT_EQ(to_variant(s[0]), FoxValue("a"));
@@ -297,7 +297,7 @@ var r;
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.interpret(chunk));
+    auto v = to_variant(vm.run(chunk));
     ASSERT_EQ(v, FoxValue("a"));
   }
 }
@@ -323,7 +323,7 @@ var r = ();
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.interpret(chunk));
+    auto v = to_variant(vm.run(chunk));
     ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
     auto s = std::get<TupleSpan>(v);
     ASSERT_EQ(to_variant(s[0]), FoxValue("closure"));
@@ -351,7 +351,7 @@ TEST(closure, unused_closure)
 return "ok";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.interpret(chunk));
+    auto v = to_variant(vm.run(chunk));
     ASSERT_EQ(v, FoxValue("ok"));
   }
 }
@@ -387,7 +387,7 @@ var closure;
 }
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.interpret(chunk));
+    auto v = to_variant(vm.run(chunk));
     ASSERT_EQ(v, FoxValue("a"));
   }
 }

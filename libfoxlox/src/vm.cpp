@@ -122,7 +122,7 @@ namespace foxlox
   GSL_SUPPRESS(f.6)
     VM::VM() noexcept :
     current_subroutine(nullptr),
-    chunk(),
+    current_chunk(nullptr),
     stack(STACK_MAX),
     calltrace(CALLTRACE_MAX),
     current_heap_size(0),
@@ -135,7 +135,7 @@ namespace foxlox
   {
   }
 
-  Value VM::interpret(const std::vector<char>& binary)
+  void VM::load_binary(const std::vector<char>& binary)
   {
     if (
       ssize(binary) < ssize(BINARY_HEADER) ||
@@ -147,35 +147,34 @@ namespace foxlox
     std::string tmp_str(begin(binary) + ssize(BINARY_HEADER), end(binary));
     std::istringstream strm;
     strm.str(std::move(tmp_str));
-    chunk = Chunk::load(strm);
+    chunks.push_back(Chunk::load(strm));
 
-    auto& subroutines = chunk.get_subroutines();
-    current_subroutine = &subroutines.at(0);
-    ip = current_subroutine->get_code().begin();
-    static_value_pool.resize(chunk.get_static_value_num());
-    static_value_pool.shrink_to_fit();
+    static_value_pool.resize(static_value_pool.size() + chunks.back().get_static_value_num());
 
-    const_string_pool.clear();
-    for (auto& str : chunk.get_const_strings())
+    for (auto& str : chunks.back().get_const_strings())
     {
       const_string_pool.push_back(string_pool.add_string(str));
     }
     str__init__ = string_pool.add_string("__init__");
     const_string_pool.push_back(str__init__);
 
-    class_pool.clear();
-    for (auto& compiletime_class : chunk.get_classes())
+    for (auto& compiletime_class : chunks.back().get_classes())
     {
       class_pool.emplace_back(compiletime_class.get_name());
       for (const auto& [name_idx, subroutine_idx] : compiletime_class.get_methods())
       {
         class_pool.back().add_method(
-          const_string_pool.at(name_idx), &chunk.get_subroutines().at(subroutine_idx));
+          const_string_pool.at(name_idx), &chunks.back().get_subroutines().at(subroutine_idx));
       }
     }
-
-    stack_top = stack.begin();
-    p_calltrace = calltrace.begin();
+  }
+  Value VM::run(const std::vector<char>& binary)
+  {
+    if (!chunks.empty())
+    {
+      throw VMError("The VM has already been loaded with some other binary.");
+    }
+    load_binary(binary);
     return run();
   }
   size_t VM::get_stack_size()
@@ -208,6 +207,13 @@ namespace foxlox
 #else
 #define DBG_PRINT_INST
 #endif
+
+    stack_top = stack.begin();
+    p_calltrace = calltrace.begin();
+    current_chunk = &chunks.front();
+    current_subroutine = &current_chunk->get_subroutines().front();
+    ip = current_subroutine->get_code().begin();
+
     try
     {
     // switched goto from https://bullno1.com/blog/switched-goto
@@ -389,13 +395,13 @@ namespace foxlox
       LBL(CONSTANT) :
       {
         push();
-        *top() = chunk.get_constant(read_uint16());
+        *top() = current_chunk->get_constant(read_uint16());
         DISPATCH();
       }
       LBL(FUNC) :
       {
         push();
-        auto& subroutines = chunk.get_subroutines();
+        auto& subroutines = current_chunk->get_subroutines();
         *top() = &subroutines.at(read_uint16());
         DISPATCH();
       }
@@ -669,7 +675,7 @@ namespace foxlox
     {
       const auto code_idx = std::distance(current_subroutine->get_code().begin(), ip);
       const auto line_num = current_subroutine->get_lines().get_line(code_idx);
-      const auto src = chunk.get_source(line_num);
+      const auto src = current_chunk->get_source(line_num);
       throw RuntimeError(e.what(), line_num, src);
     }
   }
@@ -936,7 +942,7 @@ namespace foxlox
       return false;
       });
     // whiten all subroutines
-    for (auto& s : chunk.get_subroutines())
+    for (auto& s : current_chunk->get_subroutines())
     {
       s.unmark();
     }

@@ -23,7 +23,7 @@ fun f() {}
 return f();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_EQ(v, FoxValue(nil));
 }
 
@@ -39,7 +39,7 @@ fun f(a, b) {
 f(1, 2, 3, 4);
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(function, local_mutual_recursion)
@@ -76,7 +76,7 @@ TEST(function, local_recursion)
 }
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_EQ(v, FoxValue(21_i64));
 }
 
@@ -88,7 +88,7 @@ fun f(a, b) {}
 f(1);
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(function, missing_comma_in_parameters)
@@ -139,7 +139,7 @@ isOdd = isOdd_impl;
 return (isEven(4), isOdd(3));
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
   auto s = std::get<TupleSpan>(v);
   ASSERT_EQ(to_variant(s[0]), FoxValue(true));
@@ -182,7 +182,7 @@ r += f8(1, 2, 3, 4, 5, 6, 7, 8); # expect: 36
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
   auto s = std::get<TupleSpan>(v);
   int i = 0;
@@ -208,7 +208,7 @@ fun fib(n) {
 return fib(8);
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_EQ(v, FoxValue(21_i64));
 }
 

@@ -25,7 +25,7 @@ r += foo.b; # expect: 2
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
   auto s = std::get<TupleSpan>(v);
   ASSERT_EQ(ssize(s), 3);
@@ -50,7 +50,7 @@ var foo = Foo(); # expect: init
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_EQ(v, FoxValue("init"));
 }
 
@@ -106,7 +106,7 @@ var foo = Foo();
 return Bar().method();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_EQ(v, FoxValue("method"));
 }
 
@@ -118,7 +118,7 @@ class Foo {}
 var foo = Foo(1, 2, 3);
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(constructor, extra_arguments)
@@ -134,7 +134,7 @@ class Foo {
 var foo = Foo(1, 2, 3, 4); 
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(constructor, init_not_method)
@@ -154,7 +154,7 @@ __init__("func");
 return  r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_EQ(v, FoxValue("non_class_func"));
 }
 
@@ -171,7 +171,7 @@ class Foo {
 var foo = Foo(1); 
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_THROW(vm.interpret(chunk), RuntimeError);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
 }
 
 TEST(constructor, return_in_nested_function)
@@ -197,7 +197,7 @@ r += r2; # expect: method
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.interpret(chunk));
+  auto v = to_variant(vm.run(chunk));
   ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
   auto s = std::get<TupleSpan>(v);
   ASSERT_EQ(ssize(s), 2);

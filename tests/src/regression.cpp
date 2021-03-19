@@ -24,7 +24,7 @@ var foo = Foo();
 foo.inFoo();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_NO_THROW(vm.interpret(chunk));
+  ASSERT_NO_THROW(vm.run(chunk));
 }
 
 TEST(regression, wrong_jump_length)
@@ -44,7 +44,7 @@ else
 }
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_NO_THROW(vm.interpret(chunk));
+  ASSERT_NO_THROW(vm.run(chunk));
 }
 
 TEST(regression, init_not_found_after_rehash)
@@ -71,5 +71,5 @@ class C {
 C(0);
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_NO_THROW(vm.interpret(chunk));
+  ASSERT_NO_THROW(vm.run(chunk));
 }

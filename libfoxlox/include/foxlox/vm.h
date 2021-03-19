@@ -68,7 +68,9 @@ namespace foxlox
     VM(VM&& r) noexcept = default;
     VM& operator=(VM&& r) noexcept = default;
 
-    Value interpret(const std::vector<char>& binary);
+    void load_binary(const std::vector<char>& binary);
+    Value run();
+    Value run(const std::vector<char>& binary);
 
     // stack ops
     using Stack = std::vector<Value>;
@@ -78,7 +80,7 @@ namespace foxlox
     void push() noexcept;
     void pop(uint16_t n = 1) noexcept;
   private:
-    Value run();
+    
     OP read_inst() noexcept;
     int16_t read_int16() noexcept;
     bool read_bool() noexcept;
@@ -86,9 +88,10 @@ namespace foxlox
     uint16_t read_uint16() noexcept;
 
     Subroutine* current_subroutine;
+    Chunk* current_chunk;
     using IP = std::span<const uint8_t>::iterator;
     IP ip;
-    Chunk chunk;
+    std::vector<Chunk> chunks;
 
     Stack stack;
     Stack::iterator stack_top;

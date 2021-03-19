@@ -73,6 +73,8 @@ namespace foxlox
     
     // for memory management
     std::vector<uint16_t> referenced_static_values;
+
+    // runtime info, do not dump or load
     bool gc_mark;
   };
 
@@ -113,6 +115,11 @@ namespace foxlox
     std::vector<std::string> const_strings;
 
     uint16_t static_value_num = 0;
+
+    // runtime info, do not dump or load
+    size_t static_value_idx_base{};
+    size_t class_idx_base{};
+    size_t n{};
   };
 }
 

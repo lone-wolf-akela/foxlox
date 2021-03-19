@@ -20,6 +20,6 @@
 
 namespace foxlox
 {
-  constexpr std::array BINARY_HEADER = { '\004', '\002', 'F', 'O', 'X', 'L', 'O', 'X' };
+  [[maybe_unused]] constexpr std::array BINARY_HEADER = { '\004', '\002', 'F', 'O', 'X', 'L', 'O', 'X' };
   void format_error(Token token, std::string_view message);
 }

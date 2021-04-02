@@ -8,6 +8,9 @@
     "magic-enum",
     "gtest",
     "icu",
-    "mimalloc"
+    {
+      "name": "mimalloc",
+      "platform": "!(arm|uwp)"
+    }
   ]
 }

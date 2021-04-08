@@ -73,6 +73,11 @@ namespace foxlox::stmt
     right_paren(std::move(r_paren))
   {
   }
+  Export::Export(Token&& tk, std::unique_ptr<stmt::Stmt>&& d) noexcept :
+    keyword(std::move(tk)),
+    declare(std::move(d))
+  {
+  }
   Import::Import(Token&& tk, std::vector<Token>&& path) noexcept :
     VarDeclareBase(std::move(tk)),
     libpath(std::move(path))

@@ -275,6 +275,17 @@ namespace foxlox
   {
     declare_var_list(stmt);
   }
+  void Resolver::visit_export_stmt(gsl::not_null<stmt::Export*> stmt)
+  {
+    resolve(stmt->declare.get());
+    // exported values must be static values
+    auto declare = dynamic_cast<stmt::VarDeclareBase*>(stmt->declare.get());
+    if (declare == nullptr)
+    {
+      throw FatalError("Not a valid declaration in the `export' statement.");
+    }
+    declare->store_type = stmt::VarStoreType::Static;
+  }
   void Resolver::visit_block_stmt(gsl::not_null<stmt::Block*> stmt)
   {
     begin_scope(false);

@@ -37,4 +37,11 @@ namespace foxlox
     std::string classname;
     std::vector<std::pair<uint16_t, uint16_t>> methods; // store the name str idx & subroutine idx
   };
+
+  struct CompiletimeExport
+  {
+    CompiletimeExport(uint16_t name, uint16_t value);
+    uint16_t name_idx;
+    uint16_t value_idx;
+  };
 }

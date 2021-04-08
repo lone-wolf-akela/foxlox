@@ -53,6 +53,7 @@ namespace foxlox
   {
     try
     {
+      if (match(TokenType::EXPORT)) { return export_declaration(); }
       if (match(TokenType::CLASS)) { return class_declaration(); }
       if (match(TokenType::FUN)) { return function("function"); }
       if (match(TokenType::VAR)) { return var_declaration(); }
@@ -65,6 +66,16 @@ namespace foxlox
       synchronize();
       return nullptr;
     }
+  }
+  std::unique_ptr<stmt::Stmt> Parser::export_declaration()
+  {
+    auto keyword = previous();
+    std::unique_ptr<stmt::Stmt> dec = declaration();
+    if (dynamic_cast<stmt::VarDeclareBase*>(dec.get()) == nullptr)
+    {
+      error(keyword, "Export from a `from' statement is not allowed.");
+    }
+    return std::make_unique<stmt::Export>(std::move(keyword), std::move(dec));
   }
   std::unique_ptr<stmt::Stmt> Parser::class_declaration()
   {

@@ -103,6 +103,9 @@ namespace foxlox
     void dump(std::ostream& strm) const;
     static Chunk load(std::istream& strm);
 
+    std::string_view get_src_path() const noexcept;
+    void set_src_path(std::string_view path);
+
     std::vector<Subroutine>& get_subroutines() noexcept;
     std::span<const Subroutine> get_subroutines() const noexcept;
     std::span<const CompiletimeClass> get_classes() const noexcept;
@@ -119,6 +122,9 @@ namespace foxlox
     uint16_t add_static_value();
     uint16_t get_static_value_num() const noexcept;
 
+    void add_export(std::string_view name, uint16_t idx);
+    std::span<const CompiletimeExport> get_export_list() const noexcept;
+
     void set_static_value_idx_base(size_t n) noexcept;
     size_t get_static_value_idx_base() const noexcept;
     void set_class_idx_base(size_t n) noexcept;
@@ -126,11 +132,12 @@ namespace foxlox
     void set_const_string_idx_base(size_t n) noexcept;
     size_t get_const_string_idx_base() const noexcept;
   private:
+    std::string source_path; // for import lookup
     std::vector<std::string> source;
 
     std::vector<Subroutine> subroutines;
     std::vector<CompiletimeClass> classes;
-
+    std::vector<CompiletimeExport> export_list;
     std::vector<std::variant<int64_t, double>> constants;
     std::vector<std::string> const_strings;
 

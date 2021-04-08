@@ -96,5 +96,6 @@ namespace foxlox
     void visit_for_stmt(gsl::not_null<stmt::For*> stmt) final;
     void visit_import_stmt(gsl::not_null<stmt::Import*> stmt) final;
     void visit_from_stmt(gsl::not_null<stmt::From*> stmt) final;
+    void visit_export_stmt(gsl::not_null<stmt::Export*> stmt) final;
   };
 }

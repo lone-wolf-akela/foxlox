@@ -1,4 +1,6 @@
 #include <numbers>
+#include <fstream>
+#include <filesystem>
 
 #include <gtest/gtest.h>
 
@@ -80,3 +82,83 @@ return pi;
   ASSERT_EQ(v, FoxValue(std::numbers::pi));
 }
 
+TEST(import_, export_int)
+{
+  {
+    std::ofstream ofs("exported.fox");
+    ASSERT_TRUE(!!ofs);
+    ofs << R"(
+export var Ultimate_Answer = 42;
+)";
+  }
+  {
+    VM vm;
+    auto [res, chunk] = compile(R"(
+from exported import Ultimate_Answer;
+return Ultimate_Answer;
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = to_variant(vm.run(chunk));
+    ASSERT_EQ(v, FoxValue(42_i64));
+  }
+  std::filesystem::remove("exported.fox");
+}
+
+TEST(import_, export_func)
+{
+  {
+    std::ofstream ofs("exported.fox");
+    ASSERT_TRUE(!!ofs);
+    ofs << R"(
+export fun Ultimate_Answer(in)
+{
+  return in - 42;
+}
+)";
+  }
+  {
+    VM vm;
+    auto [res, chunk] = compile(R"(
+from exported import Ultimate_Answer;
+return Ultimate_Answer(100);
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = to_variant(vm.run(chunk));
+    ASSERT_EQ(v, FoxValue(58_i64));
+  }
+  std::filesystem::remove("exported.fox");
+}
+
+TEST(import_, export_class)
+{
+  {
+    std::ofstream ofs("exported.fox");
+    ASSERT_TRUE(!!ofs);
+    ofs << R"(
+export class Ultimate_Answer
+{
+  __init__(first)
+  {
+    this.first = first;
+  }
+  calc(second)
+  {
+    return second - this.first;
+  }
+}
+)";
+  }
+  {
+    VM vm;
+    auto [res, chunk] = compile(R"(
+from fox.io import println;
+from exported import Ultimate_Answer;
+var k = Ultimate_Answer(42);
+return k.calc(100);
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = to_variant(vm.run(chunk));
+    ASSERT_EQ(v, FoxValue(58_i64));
+  }
+  std::filesystem::remove("exported.fox");
+}

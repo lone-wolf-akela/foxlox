@@ -46,6 +46,14 @@ namespace foxlox::stmt
     virtual ~VarDeclareListBase() = default;
   };
 
+  class Export : public Stmt
+  {
+  public:
+    Export(Token&& tk, std::unique_ptr<stmt::Stmt>&& d) noexcept;
+    Token keyword;
+    std::unique_ptr<stmt::Stmt> declare;
+  };
+
   class Expression : public Stmt
   {
   public:
@@ -190,6 +198,7 @@ namespace foxlox::stmt
     virtual R visit_for_stmt(gsl::not_null<For*> stmt) = 0;
     virtual R visit_import_stmt(gsl::not_null<Import*> stmt) = 0;
     virtual R visit_from_stmt(gsl::not_null<From*> stmt) = 0;
+    virtual R visit_export_stmt(gsl::not_null<Export*> stmt) = 0;
 
     GSL_SUPPRESS(c.21)
     virtual ~IVisitor() = default;
@@ -251,6 +260,10 @@ namespace foxlox::stmt
       if (auto p = dynamic_cast<From*>(stmt); p != nullptr)
       {
         return visit_from_stmt(p);
+      }
+      if (auto p = dynamic_cast<Export*>(stmt); p != nullptr)
+      {
+        return visit_export_stmt(p);
       }
       throw FatalError("Unknown stmt type");
     }

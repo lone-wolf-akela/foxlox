@@ -778,6 +778,22 @@ namespace foxlox
     emit(OP::POP);
     pop_stack();
   }
+  void CodeGen::visit_export_stmt(gsl::not_null<stmt::Export*> stmt)
+  {
+    compile(stmt->declare.get());
+    const auto declare = dynamic_cast<stmt::VarDeclareBase*>(stmt->declare.get());
+    if (declare == nullptr)
+    {
+      throw FatalError("Not a valid declaration in the `export' statement.");
+    }
+    const auto value_id = value_idxs.at(declare);
+    if (value_id.type != stmt::VarStoreType::Static)
+    {
+      throw FatalError("Exported value must be static storage.");
+    }
+    const uint16_t alloc_idx = value_id.idx;
+    chunk.add_export(declare->name.lexeme, alloc_idx);
+  }
   void CodeGen::visit_class_stmt(gsl::not_null<stmt::Class*> stmt)
   {
     current_line = stmt->name.line;

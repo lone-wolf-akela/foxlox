@@ -74,6 +74,9 @@ find_package(magic_enum CONFIG REQUIRED)
 find_package(ICU REQUIRED COMPONENTS uc)
 target_link_libraries(${PROJECT_NAME} PRIVATE ICU::uc)
 
+find_package(Boost REQUIRED COMPONENTS filesystem)
+target_link_libraries(${PROJECT_NAME} PRIVATE Boost::filesystem)
+
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 if(MSVC)
   if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")

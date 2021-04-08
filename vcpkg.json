@@ -8,6 +8,7 @@
     "magic-enum",
     "gtest",
     "icu",
+    "boost-dll",
     {
       "name": "mimalloc",
       "platform": "!(arm|uwp)"

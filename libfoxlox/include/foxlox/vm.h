@@ -1,6 +1,7 @@
 #pragma once
 #include <stdexcept>
 #include <array>
+#include <filesystem>
 #include <vector>
 #include <stack>
 
@@ -121,7 +122,9 @@ namespace foxlox
     void trace_references();
     void sweep();
 
+    std::filesystem::path findlib(std::span<const std::string_view> libpath);
     Dict* import_lib(std::span<const std::string_view> libpath);
+    Dict* gen_export_dict();
     void jump_to_func(Subroutine* func) noexcept;
     void pop_calltrace() noexcept;
     void push_calltrace(uint16_t num_of_params) noexcept;

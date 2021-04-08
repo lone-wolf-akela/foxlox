@@ -12,9 +12,11 @@
 #include <fmt/format.h>
 #include <range/v3/all.hpp>
 #include <magic_enum.hpp>
+#include <boost/dll/runtime_symbol_info.hpp>
 
 #include <foxlox/except.h>
 #include <foxlox/debug.h>
+#include <foxlox/compiler.h>
 #include "object.h"
 #include "common.h"
 #include "runtimelib.h"
@@ -186,6 +188,9 @@ namespace foxlox
       throw VMError("The VM has already been loaded with some other binary.");
     }
     load_binary(binary);
+    stack_top = stack.begin();
+    p_calltrace = calltrace.begin();
+    jump_to_func(&chunks.front().get_subroutines().front());
     return run();
   }
   size_t VM::get_stack_size()
@@ -219,10 +224,6 @@ namespace foxlox
 #define DBG_PRINT_INST
 #endif
 
-    stack_top = stack.begin();
-    p_calltrace = calltrace.begin();
-    jump_to_func(&chunks.front().get_subroutines().front());
-
     try
     {
     // switched goto from https://bullno1.com/blog/switched-goto
@@ -247,20 +248,27 @@ namespace foxlox
       }
       LBL(RETURN) :
       {
-        if (p_calltrace == calltrace.begin()) { return Value(); }
+        if (current_subroutine == &current_chunk->get_subroutines().front()) 
+        { 
+          collect_garbage();
+          return Value(); 
+        }
         pop_calltrace();
         // return a nil
         push();
         *top() = Value();
-
         collect_garbage();
         DISPATCH();
       }
       LBL(RETURN_V) :
       {
         const auto v = *top();
+        if (current_subroutine == &current_chunk->get_subroutines().front())
+        {
+          collect_garbage();
+          return v;
+        }
 
-        if (p_calltrace == calltrace.begin()) { return v; }
         pop_calltrace();
         // return a val
         push();
@@ -945,23 +953,37 @@ namespace foxlox
   }
   Dict* VM::import_lib(std::span<const std::string_view> libpath)
   {
-    gsl::not_null<Dict*> p = Dict::alloc(allocator, deallocator);
-    gc_index.dict_pool.push_back(p);
     if (libpath.front() == "fox")
     {
       // an internal lib
+      gsl::not_null<Dict*> p = Dict::alloc(allocator, deallocator);
+      gc_index.dict_pool.push_back(p);
+
       const auto vals = find_lib(libpath.subspan(1));
       for (auto& val : vals)
       {
         p->set(string_pool.add_string(val.name), val.val);
       }
+      return p;
     }
     else
     {
       // external lib
-      throw UnimplementedError("");
+      const auto filepath = findlib(libpath);
+      auto [res, chunkdata] = compile_file(filepath);
+      if (res != CompilerResult::OK)
+      {
+        throw InternalRuntimeError(fmt::format("Failed to load file: {}.", filepath.string()));
+      }
+      load_binary(chunkdata);
+      Chunk& loaded_chunk = chunks.back();
+      push_calltrace(0);
+      jump_to_func(&loaded_chunk.get_subroutines().front());
+      run();
+      const gsl::not_null<Dict*> p = gen_export_dict();
+      pop_calltrace();
+      return p;
     }
-    return p;
   }
   void VM::jump_to_func(Subroutine* func) noexcept
   {
@@ -983,5 +1005,44 @@ namespace foxlox
     p_calltrace->ip = ip;
     p_calltrace->stack_top = stack_top - num_of_params;
     p_calltrace++;
+  }
+  Dict* VM::gen_export_dict()
+  {
+    gsl::not_null<Dict*> dict = Dict::alloc(allocator, deallocator);
+    gc_index.dict_pool.push_back(dict);
+    for (const auto& exp : current_chunk->get_export_list())
+    {
+      auto name = const_string_pool.at(current_chunk->get_const_string_idx_base() + exp.name_idx);
+      auto val = static_value_pool.at(current_chunk->get_static_value_idx_base() + exp.value_idx);
+      dict->set(name, val);
+    }
+    return dict;
+  }
+  std::filesystem::path VM::findlib(std::span<const std::string_view> libpath)
+  {
+    namespace fs = std::filesystem;
+    auto pathstr = libpath
+      | ranges::views::join('/')
+      | ranges::to<std::string>;
+    fs::path pathobj(pathstr + ".fox");
+    // relative to current chunk
+    if (auto p = fs::path(current_chunk->get_src_path()).parent_path() / pathobj;
+      fs::is_regular_file(p))
+    {
+      return p;
+    }
+    // relative to current path
+    if (auto p = fs::current_path() / pathobj;
+      fs::is_regular_file(p))
+    {
+      return p;
+    }
+    // relative to exe  
+    if (auto p = boost::dll::program_location().string() / pathobj;
+      fs::is_regular_file(p))
+    {
+      return p;
+    }
+    throw InternalRuntimeError(fmt::format("Failed to find file: {}.", pathobj.string()));
   }
 }

@@ -25,6 +25,7 @@ namespace foxlox
     bool had_error;
 
     std::unique_ptr<stmt::Stmt> declaration();
+    std::unique_ptr<stmt::Stmt> export_declaration();
     std::unique_ptr<stmt::Stmt> class_declaration();
     std::unique_ptr<stmt::Stmt> from_declaration();
     std::unique_ptr<stmt::Stmt> import_declaration();

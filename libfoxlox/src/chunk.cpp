@@ -304,6 +304,7 @@ namespace foxlox
   }
   void Chunk::dump(std::ostream& strm) const
   {
+    dump_str(strm, source_path);
     dump_int64(strm, ssize(source));
     for (const auto& str : source)
     {
@@ -318,6 +319,12 @@ namespace foxlox
     for (const auto& klass : classes)
     {
       klass.dump(strm);
+    }
+    dump_int64(strm, ssize(export_list));
+    for (const auto& exp : export_list)
+    {
+      dump_uint16(strm, exp.name_idx);
+      dump_uint16(strm, exp.value_idx);
     }
     dump_int64(strm, ssize(constants));
     for (const auto& v : constants)
@@ -344,6 +351,7 @@ namespace foxlox
   Chunk Chunk::load(std::istream& strm)
   {
     Chunk chunk;
+    chunk.source_path = load_str(strm);
     const int64_t src_len = load_int64(strm);
     chunk.source.reserve(src_len);
     for (int64_t i = 0; i < src_len; i++)
@@ -362,6 +370,14 @@ namespace foxlox
     for (int64_t i = 0; i < classes_len; i++)
     {
       chunk.classes.emplace_back(CompiletimeClass::load(strm));
+    }
+    const int64_t export_len = load_int64(strm);
+    chunk.export_list.reserve(export_len);
+    for (int64_t i = 0; i < export_len; i++)
+    {
+      auto name_idx = load_uint16(strm);
+      auto value_idx = load_uint16(strm);
+      chunk.export_list.emplace_back(name_idx, value_idx);
     }
     const int64_t const_len = load_int64(strm);
     chunk.constants.reserve(const_len);
@@ -389,9 +405,11 @@ namespace foxlox
     return chunk;
   }
   Chunk::Chunk(Chunk&& o) noexcept :
+    source_path(std::move(o.source_path)),
     source(std::move(o.source)),
     subroutines(std::move(o.subroutines)),
     classes(std::move(o.classes)),
+    export_list(std::move(o.export_list)),
     constants(std::move(o.constants)),
     const_strings(std::move(o.const_strings)),
     static_value_num(o.static_value_num),
@@ -406,9 +424,11 @@ namespace foxlox
   }
   Chunk& Chunk::operator=(Chunk&& o) noexcept
   {
+    source_path = std::move(o.source_path);
     source = std::move(o.source);
     subroutines = std::move(o.subroutines);
     classes = std::move(o.classes);
+    export_list = std::move(o.export_list);
     constants = std::move(o.constants);
     const_strings = std::move(o.const_strings);
     static_value_num = o.static_value_num;
@@ -444,5 +464,21 @@ namespace foxlox
   size_t Chunk::get_const_string_idx_base() const noexcept
   {
     return const_string_idx_base;
+  }
+  void Chunk::add_export(std::string_view name, uint16_t idx)
+  {
+    export_list.emplace_back(add_string(name), idx);
+  }
+  std::span<const CompiletimeExport> Chunk::get_export_list() const noexcept
+  {
+    return export_list;
+  }
+  std::string_view Chunk::get_src_path() const noexcept
+  {
+    return source_path;
+  }
+  void Chunk::set_src_path(std::string_view path)
+  {
+    source_path = path;
   }
 }

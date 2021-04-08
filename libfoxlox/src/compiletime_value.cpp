@@ -94,4 +94,9 @@ namespace foxlox
   {
     return methods;
   }
+  CompiletimeExport::CompiletimeExport(uint16_t name, uint16_t value) :
+    name_idx(name),
+    value_idx(value)
+  {
+  }
 }

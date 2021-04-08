@@ -1,6 +1,7 @@
 {
   "name": "foxlox",
   "version-string": "0.0.1",
+  "builtin-baseline": "fddf97411017bfcd7dd988d754b25efc3d6a1c3e",
   "dependencies": [
     "fmt",
     "ms-gsl",

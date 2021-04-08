@@ -1,3 +1,4 @@
+#include <array>
 #include <concepts>
 
 #include <gsl/gsl>
@@ -269,9 +270,11 @@ namespace foxlox
   {
     // directly compare raw data 
     // TODO: use bit_cast when gcc supports
-    auto pl = reinterpret_cast<const uint64_t*>(&l);
-    auto pr = reinterpret_cast<const uint64_t*>(&r);
-    return (pl[0] == pr[0]) && (pl[1] == pr[1]);
+    std::array<uint64_t, 2> u64s_l;
+    std::array<uint64_t, 2> u64s_r;
+    std::memcpy(&u64s_l, &l, sizeof(l));
+    std::memcpy(&u64s_r, &r, sizeof(r));
+    return (u64s_l[0] == u64s_r[0]) && (u64s_l[1] == u64s_r[1]);
   }
 
   Dict* Value::get_dict() const

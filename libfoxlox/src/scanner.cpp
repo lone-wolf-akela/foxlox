@@ -46,11 +46,12 @@ namespace
     { U"true", TokenType::TRUE },
     { U"var", TokenType::VAR },
     { U"while", TokenType::WHILE },
-    { U"break", TokenType::BREAK},
-    { U"continue", TokenType::CONTINUE},
-    { U"from", TokenType::FROM},
-    { U"import", TokenType::IMPORT},
-    { U"as", TokenType::AS},
+    { U"break", TokenType::BREAK },
+    { U"continue", TokenType::CONTINUE },
+    { U"from", TokenType::FROM },
+    { U"import", TokenType::IMPORT },
+    { U"as", TokenType::AS },
+    { U"export", TokenType::EXPORT }
   };
 }
 

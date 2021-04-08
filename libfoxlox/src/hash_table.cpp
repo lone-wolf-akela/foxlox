@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstring>
+#include <array>
 #include <algorithm>
 #include <bit>
 #include <iostream>
@@ -78,17 +79,15 @@ namespace
     // from https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
     
     // TODO: use bit_cast when gcc supports.
-    const uint32_t* data = reinterpret_cast<uint32_t*>(&v);
-    constexpr int nblocks = 4;
+    std::array<uint32_t, 4> data;
+    std::memcpy(data.data(), &v, sizeof(v));
     constexpr uint32_t seed = 0;
     uint32_t h1 = seed;
 
     //----------
     // body
-    for (int i = 0; i < nblocks; i++)
+    for (uint32_t k1 : data)
     {
-      uint32_t k1 = data[i];
-
       k1 *= 0xcc9e2d51;
       k1 = std::rotl(k1, 15);
       k1 *= 0x1b873593;

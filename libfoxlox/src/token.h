@@ -31,7 +31,7 @@ namespace foxlox
     AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR,
     RETURN, SUPER, THIS, TRUE, VAR, WHILE,
     BREAK, CONTINUE,
-    FROM, IMPORT, AS,
+    FROM, IMPORT, AS, EXPORT,
 
     TKERROR, TKEOF
   };

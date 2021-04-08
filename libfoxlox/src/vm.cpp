@@ -10,7 +10,9 @@
 #include "mem_alloc.h"
 
 #include <fmt/format.h>
+#pragma warning(disable:4702) // unreachable code
 #include <range/v3/all.hpp>
+#pragma warning(default:4702) 
 #include <magic_enum.hpp>
 #include <boost/dll/runtime_symbol_info.hpp>
 

@@ -134,7 +134,7 @@ namespace foxlox
     Class* get_super() noexcept;
     bool has_method(String* name);
     std::optional<Subroutine*> get_method(String* name);
-    HashTable<Subroutine*>& get_hash_table() noexcept;
+    HashTable<String*, Subroutine*>& get_hash_table() noexcept;
 
     bool is_marked() const noexcept;
     void mark() noexcept;
@@ -143,7 +143,7 @@ namespace foxlox
     bool gc_mark;
     Class* superclass;
     std::string class_name;
-    HashTable<Subroutine*> methods;
+    HashTable<String*, Subroutine*> methods;
   };
 
   class Instance : public ObjBase
@@ -165,7 +165,7 @@ namespace foxlox
     Class* get_class() const noexcept;
     Value get_property(gsl::not_null<String*> name);
     Value get_super_method(gsl::not_null<String*> name);
-    HashTable<Value>& get_hash_table() noexcept;
+    HashTable<String*, Value>& get_hash_table() noexcept;
     void set_property(gsl::not_null<String*> name, Value value);
     bool is_marked() const noexcept;
     void mark() noexcept;
@@ -189,7 +189,7 @@ namespace foxlox
   private:
     bool gc_mark;
     Class* klass;
-    HashTable<Value> fields;
+    HashTable<String*, Value> fields;
   };
 
   template<Allocator F>
@@ -244,7 +244,7 @@ namespace foxlox
     Dict& operator=(Instance&&) = delete;
     ~Dict() = default;
     Value get(gsl::not_null<String*> name);
-    HashTable<Value>& get_hash_table() noexcept;
+    HashTable<Value, Value>& get_hash_table() noexcept;
     void set(gsl::not_null<String*> name, Value value);
     bool is_marked() const noexcept;
     void mark() noexcept;
@@ -267,6 +267,6 @@ namespace foxlox
     }
   private:
     bool gc_mark;
-    HashTable<Value> fields;
+    HashTable<Value, Value> fields;
   };
 }

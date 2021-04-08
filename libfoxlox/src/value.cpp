@@ -267,13 +267,11 @@ namespace foxlox
 
   bool operator==(const Value& l, const Value& r)
   {
-    if (l.is_str() && r.is_str())
-    {
-      // directly compare pointer value, as the same string will 
-      // always share a storage in the string pool
-      return l.v.str == r.v.str;
-    }
-    return (l <=> r) == std::partial_ordering::equivalent;
+    // directly compare raw data 
+    // TODO: use bit_cast when gcc supports
+    auto pl = reinterpret_cast<const uint64_t*>(&l);
+    auto pr = reinterpret_cast<const uint64_t*>(&r);
+    return (pl[0] == pr[0]) && (pl[1] == pr[1]);
   }
 
   Dict* Value::get_dict() const

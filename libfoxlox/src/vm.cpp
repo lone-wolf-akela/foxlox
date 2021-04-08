@@ -130,9 +130,17 @@ namespace foxlox
     allocator(&current_heap_size),
     deallocator(&current_heap_size),
     gc_index(this),
-    string_pool(allocator, deallocator),
-    str__init__(nullptr)
+    string_pool(allocator, deallocator)
   {
+    try
+    {
+      str__init__ = string_pool.add_string("__init__");
+      const_string_pool.push_back(str__init__);
+    }
+    catch (...)
+    {
+      std::terminate();
+    }
   }
 
   void VM::load_binary(const std::vector<char>& binary)
@@ -149,22 +157,25 @@ namespace foxlox
     strm.str(std::move(tmp_str));
     chunks.push_back(Chunk::load(strm));
 
+    chunks.back().set_static_value_idx_base(static_value_pool.size());
     static_value_pool.resize(static_value_pool.size() + chunks.back().get_static_value_num());
 
+    chunks.back().set_const_string_idx_base(const_string_pool.size());
     for (auto& str : chunks.back().get_const_strings())
     {
       const_string_pool.push_back(string_pool.add_string(str));
     }
-    str__init__ = string_pool.add_string("__init__");
-    const_string_pool.push_back(str__init__);
 
+    chunks.back().set_class_idx_base(class_pool.size());
     for (auto& compiletime_class : chunks.back().get_classes())
     {
       class_pool.emplace_back(compiletime_class.get_name());
       for (const auto& [name_idx, subroutine_idx] : compiletime_class.get_methods())
       {
         class_pool.back().add_method(
-          const_string_pool.at(name_idx), &chunks.back().get_subroutines().at(subroutine_idx));
+          const_string_pool.at(chunks.back().get_const_string_idx_base() + name_idx),
+          &chunks.back().get_subroutines().at(subroutine_idx)
+        );
       }
     }
   }
@@ -210,9 +221,7 @@ namespace foxlox
 
     stack_top = stack.begin();
     p_calltrace = calltrace.begin();
-    current_chunk = &chunks.front();
-    current_subroutine = &current_chunk->get_subroutines().front();
-    ip = current_subroutine->get_code().begin();
+    jump_to_func(&chunks.front().get_subroutines().front());
 
     try
     {
@@ -239,10 +248,7 @@ namespace foxlox
       LBL(RETURN) :
       {
         if (p_calltrace == calltrace.begin()) { return Value(); }
-        p_calltrace--;
-        current_subroutine = p_calltrace->subroutine;
-        ip = p_calltrace->ip;
-        stack_top = p_calltrace->stack_top;
+        pop_calltrace();
         // return a nil
         push();
         *top() = Value();
@@ -255,10 +261,7 @@ namespace foxlox
         const auto v = *top();
 
         if (p_calltrace == calltrace.begin()) { return v; }
-        p_calltrace--;
-        current_subroutine = p_calltrace->subroutine;
-        ip = p_calltrace->ip;
-        stack_top = p_calltrace->stack_top;
+        pop_calltrace();
         // return a val
         push();
         *top() = v;
@@ -408,7 +411,7 @@ namespace foxlox
       LBL(CLASS) :
       {
         push();
-        *top() = &class_pool.at(read_uint16());
+        *top() = &class_pool.at(current_chunk->get_class_idx_base() + read_uint16());
         DISPATCH();
       }
       LBL(INHERIT) :
@@ -426,7 +429,7 @@ namespace foxlox
       LBL(STRING) :
       {
         push();
-        *top() = const_string_pool.at(read_uint16());
+        *top() = const_string_pool.at(current_chunk->get_const_string_idx_base() + read_uint16());
         DISPATCH();
       }
       LBL(BOOL) :
@@ -470,14 +473,14 @@ namespace foxlox
       {
         const auto idx = read_uint16();
         push();
-        *top() = static_value_pool.at(idx);
+        *top() = static_value_pool.at(current_chunk->get_static_value_idx_base() + idx);
         DISPATCH();
       }
       LBL(STORE_STATIC) :
       {
         const auto idx = read_uint16();
         const auto r = top();
-        static_value_pool.at(idx) = *r;
+        static_value_pool.at(current_chunk->get_static_value_idx_base() + idx) = *r;
         DISPATCH();
       }
       LBL(JUMP) :
@@ -546,17 +549,13 @@ namespace foxlox
         case ValueType::FUNC:
         {
           const auto func_to_call = v.v.func;
-          p_calltrace->subroutine = current_subroutine;
-          p_calltrace->ip = ip;
-          p_calltrace->stack_top = stack_top - num_of_params;
-          p_calltrace++;
+          push_calltrace(num_of_params);
 
           if (func_to_call->get_arity() != num_of_params)
           {
             throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
           }
-          current_subroutine = func_to_call;
-          ip = current_subroutine->get_code().begin();
+          jump_to_func(func_to_call);
           break;
         }
         case ValueType::CPP_FUNC:
@@ -572,10 +571,7 @@ namespace foxlox
         case ValueType::METHOD:
         {
           const auto func_to_call = v.method_func();
-          p_calltrace->subroutine = current_subroutine;
-          p_calltrace->ip = ip;
-          p_calltrace->stack_top = stack_top - num_of_params;
-          p_calltrace++;
+          push_calltrace(num_of_params);
 
           push();
           *top() = v.v.instance; // `this'
@@ -584,8 +580,7 @@ namespace foxlox
           {
             throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
           }
-          current_subroutine = func_to_call;
-          ip = current_subroutine->get_code().begin();
+          jump_to_func(func_to_call);
           break;
         }
         case ValueType::OBJ:
@@ -604,10 +599,7 @@ namespace foxlox
           gc_index.instance_pool.push_back(instance);
           if (auto func_to_call = klass->get_method(str__init__); func_to_call.has_value())
           {
-            p_calltrace->subroutine = current_subroutine;
-            p_calltrace->ip = ip;
-            p_calltrace->stack_top = stack_top - num_of_params;
-            p_calltrace++;
+            push_calltrace(num_of_params);
 
             push();
             *top() = instance; // `this'
@@ -616,8 +608,7 @@ namespace foxlox
             {
               throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", (*func_to_call)->get_arity(), num_of_params));
             }
-            current_subroutine = *func_to_call;
-            ip = current_subroutine->get_code().begin();
+            jump_to_func(*func_to_call);
           }
           else
           {
@@ -640,20 +631,20 @@ namespace foxlox
       }
       LBL(GET_SUPER_METHOD) :
       {
-        const auto name = const_string_pool.at(read_uint16());
+        const auto name = const_string_pool.at(current_chunk->get_const_string_idx_base() + read_uint16());
         auto instance = top()->get_instance();
         *top() = instance->get_super_method(name);
         DISPATCH();
       }
       LBL(GET_PROPERTY) :
       {
-        const auto name = const_string_pool.at(read_uint16());
+        const auto name = const_string_pool.at(current_chunk->get_const_string_idx_base() + read_uint16());
         *top() = top()->get_property(name);
         DISPATCH();
       }
       LBL(SET_PROPERTY) :
       {
-        const auto name = const_string_pool.at(read_uint16());
+        const auto name = const_string_pool.at(current_chunk->get_const_string_idx_base() + read_uint16());
         auto instance = top()->get_instance();
         pop();
         instance->set_property(name, *top());
@@ -770,7 +761,7 @@ namespace foxlox
     s.mark();
     for (auto idx : s.get_referenced_static_values())
     {
-      mark_value(static_value_pool.at(idx));
+      mark_value(static_value_pool.at(s.get_chunk()->get_static_value_idx_base() + idx));
     }
   }
   void VM::mark_class(Class& c)
@@ -959,10 +950,10 @@ namespace foxlox
     if (libpath.front() == "fox")
     {
       // an internal lib
-      const auto funcs = find_lib(libpath.subspan(1));
-      for (auto& func : funcs)
+      const auto vals = find_lib(libpath.subspan(1));
+      for (auto& val : vals)
       {
-        p->set(string_pool.add_string(func.name), func.func);
+        p->set(string_pool.add_string(val.name), val.val);
       }
     }
     else
@@ -971,5 +962,26 @@ namespace foxlox
       throw UnimplementedError("");
     }
     return p;
+  }
+  void VM::jump_to_func(Subroutine* func) noexcept
+  {
+    current_subroutine = func;
+    current_chunk = current_subroutine->get_chunk();
+    ip = current_subroutine->get_code().begin();
+  }
+  void VM::pop_calltrace() noexcept
+  {
+    p_calltrace--;
+    current_subroutine = p_calltrace->subroutine;
+    current_chunk = current_subroutine->get_chunk();
+    ip = p_calltrace->ip;
+    stack_top = p_calltrace->stack_top;
+  }
+  void VM::push_calltrace(uint16_t num_of_params) noexcept
+  {
+    p_calltrace->subroutine = current_subroutine;
+    p_calltrace->ip = ip;
+    p_calltrace->stack_top = stack_top - num_of_params;
+    p_calltrace++;
   }
 }

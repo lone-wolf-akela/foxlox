@@ -122,6 +122,9 @@ namespace foxlox
     void sweep();
 
     Dict* import_lib(std::span<const std::string_view> libpath);
+    void jump_to_func(Subroutine* func) noexcept;
+    void pop_calltrace() noexcept;
+    void push_calltrace(uint16_t num_of_params) noexcept;
 
     // data pool
     VM_GC_Index gc_index;

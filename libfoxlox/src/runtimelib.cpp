@@ -2,6 +2,7 @@
 #include <chrono>
 #include <ranges>
 #include <algorithm>
+#include <numbers>
 
 #include <fmt/format.h>
 #pragma warning(disable:4702) // unreachable code
@@ -14,9 +15,8 @@
 
 #include "runtimelib.h"
 
-namespace
+namespace foxlox::runtimelib
 {
-  using namespace foxlox;
   Value print(VM& /*vm*/, std::span<Value> values)
   {
     if (values.empty())
@@ -93,21 +93,27 @@ namespace foxlox
       if (libpath.front() == "io")
       {
         return { 
-          {"print", print}, 
-          {"println", println} 
+          {"print", runtimelib::print},
+          {"println", runtimelib::println}
         };
       }
       if (libpath.front() == "profiler")
       {
         return { 
-          {"clock", clock} 
+          {"clock", runtimelib::clock}
         };
       }
       if (libpath.front() == "algorithm")
       {
         return {
-          {"max", max},
-          {"min", min}
+          {"max", runtimelib::max},
+          {"min", runtimelib::min}
+        };
+      }
+      if (libpath.front() == "math")
+      {
+        return {
+          {"pi", std::numbers::pi}
         };
       }
     }

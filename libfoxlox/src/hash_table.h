@@ -15,6 +15,8 @@ namespace foxlox
     uint32_t hash;
     bool tombstone;
     String* str;
+
+    bool key_is_null();
   };
 
   class StringPool
@@ -54,32 +56,34 @@ namespace foxlox
     friend void grow_capacity(U* table);
   };
 
-  template<typename T>
+  template<typename K, typename V>
   struct HashTableEntry
   {
     uint32_t hash;
     bool tombstone;
-    String* str;
-    T value;
+    K key;
+    V value;
+
+    bool key_is_null();
   };
 
-  template<typename T> requires std::same_as<T, Subroutine*> || std::same_as<T, Value>
+  template<typename K, typename V>
   class HashTable;
 
-  template<typename T> requires std::same_as<T, Subroutine*> || std::same_as<T, Value>
+  template<typename K, typename V>
   class HashTableIter
   {
   public:
-    HashTableIter(HashTable<T>* table, HashTableEntry<T>* entry) noexcept;
-    bool operator==(const HashTableIter<T>& rhs) const noexcept;
-    HashTableEntry<T>& operator*() const noexcept;
-    HashTableIter<T>& operator++() noexcept;
+    HashTableIter(HashTable<K, V>* table, HashTableEntry<K, V>* entry) noexcept;
+    bool operator==(const HashTableIter& rhs) const noexcept;
+    HashTableEntry<K, V>& operator*() const noexcept;
+    HashTableIter& operator++() noexcept;
   private:
-    HashTable<T>* p_table;
-    HashTableEntry<T>* p_entry;
+    HashTable<K, V>* p_table;
+    HashTableEntry<K, V>* p_entry;
   };
 
-  template<typename T> requires std::same_as<T, Subroutine*> || std::same_as<T, Value>
+  template<typename K, typename V>
   class HashTable
   {
   public:
@@ -91,6 +95,11 @@ namespace foxlox
       count(0),
       capacity{}
     {
+      static_assert(
+        (std::same_as<K, String*>&& std::same_as<V, Subroutine*>) ||
+        (std::same_as<K, String*> && std::same_as<V, Value>) ||
+        (std::same_as<K, Value> && std::same_as<V, Value>)
+        );
       init_entries();
     }
     HashTable(const HashTable&) = delete;
@@ -99,28 +108,28 @@ namespace foxlox
     HashTable& operator=(HashTable&& o) noexcept;
     ~HashTable();
 
-    void set_entry(String* name, T value);
-    void try_add_entry(String* name, T value);
-    std::optional<T> get_value(String* name);
+    void set_entry(K key, V value);
+    void try_add_entry(K key, V value);
+    std::optional<V> get_value(K key);
 
-    HashTableIter<T> begin() noexcept;
-    HashTableIter<T> end() noexcept;
+    HashTableIter<K, V> begin() noexcept;
+    HashTableIter<K, V> end() noexcept;
   private:
     void init_entries();
     void clean();
-    gsl::not_null<HashTableEntry<T>*> find_entry(gsl::not_null<String*> name, uint32_t hash) noexcept;   
-    void delete_entry(HashTableEntry<T>& e) noexcept;
-    HashTableEntry<T>* next_entry(HashTableEntry<T>* p) noexcept;
+    gsl::not_null<HashTableEntry<K, V>*> find_entry(K key, uint32_t hash) noexcept;   
+    void delete_entry(HashTableEntry<K, V>& e) noexcept;
+    HashTableEntry<K, V>* next_entry(HashTableEntry<K, V>* p) noexcept;
 
     std::function<char* (size_t)> allocator;
     std::function<void(char* const, size_t)> deallocator;
-    HashTableEntry<T>* entries;
+    HashTableEntry<K, V>* entries;
     uint32_t count;
     uint32_t capacity;
 
     template<typename U>
     friend void grow_capacity(U* table);
 
-    friend class HashTableIter<T>;
+    friend class HashTableIter<K ,V>;
   };
 }

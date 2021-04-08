@@ -71,7 +71,7 @@ namespace foxlox
       throw ValueError(fmt::format("Super class has no method with name `{}'", name->get_view()));
     }
   }
-  HashTable<Value>& Instance::get_hash_table() noexcept
+  HashTable<String*, Value>& Instance::get_hash_table() noexcept
   {
     return fields;
   }
@@ -115,7 +115,7 @@ namespace foxlox
     {
       // if we already have a method with the same name,
       // do nothing (to shadow the base class method)
-      methods.try_add_entry(entry.str, entry.value);
+      methods.try_add_entry(entry.key, entry.value);
     }
   }
   Class* Class::get_super() noexcept
@@ -130,7 +130,7 @@ namespace foxlox
   {
     return methods.get_value(name);
   }
-  HashTable<Subroutine*>& Class::get_hash_table() noexcept
+  HashTable<String*, Subroutine*>& Class::get_hash_table() noexcept
   {
     return methods;
   }
@@ -151,7 +151,7 @@ namespace foxlox
     // return nil when the field is not found
     return fields.get_value(name).value_or(Value());
   }
-  HashTable<Value>& Dict::get_hash_table() noexcept
+  HashTable<Value, Value>& Dict::get_hash_table() noexcept
   {
     return fields;
   }

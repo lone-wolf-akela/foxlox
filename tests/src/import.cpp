@@ -1,3 +1,5 @@
+#include <numbers>
+
 #include <gtest/gtest.h>
 
 #include <foxlox/vm.h>
@@ -64,5 +66,17 @@ return (max(4,7,5,-3), min(4,7,5,-3),);
   ASSERT_EQ(ssize(s), 2);
   ASSERT_EQ(to_variant(s[0]), FoxValue(7_i64));
   ASSERT_EQ(to_variant(s[1]), FoxValue(-3_i64));
+}
+
+TEST(import_, value_)
+{
+  VM vm;
+  auto [res, chunk] = compile(R"(
+from fox.math import pi;
+return pi;
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  auto v = to_variant(vm.run(chunk));
+  ASSERT_EQ(v, FoxValue(std::numbers::pi));
 }
 

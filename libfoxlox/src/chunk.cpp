@@ -119,6 +119,14 @@ namespace foxlox
   {
     gc_mark = false;
   }
+  Chunk* Subroutine::get_chunk() const noexcept
+  {
+    return chunk;
+  }
+  void Subroutine::set_chunk(Chunk* c) noexcept
+  {
+    chunk = c;
+  }
   uint16_t Chunk::add_constant(int64_t v)
   {
     constants.push_back(v);
@@ -347,6 +355,7 @@ namespace foxlox
     for (int64_t i = 0; i < subr_len; i++)
     {
       chunk.subroutines.emplace_back(Subroutine::load(strm));
+      chunk.subroutines.back().set_chunk(&chunk);
     }
     const int64_t classes_len = load_int64(strm);
     chunk.classes.reserve(classes_len);
@@ -378,5 +387,62 @@ namespace foxlox
     chunk.static_value_num = load_uint16(strm);
 
     return chunk;
+  }
+  Chunk::Chunk(Chunk&& o) noexcept :
+    source(std::move(o.source)),
+    subroutines(std::move(o.subroutines)),
+    classes(std::move(o.classes)),
+    constants(std::move(o.constants)),
+    const_strings(std::move(o.const_strings)),
+    static_value_num(o.static_value_num),
+    static_value_idx_base(o.static_value_idx_base),
+    class_idx_base(o.class_idx_base),
+    const_string_idx_base(o.const_string_idx_base)
+  {
+    for (auto& subr : subroutines)
+    {
+      subr.set_chunk(this);
+    }
+  }
+  Chunk& Chunk::operator=(Chunk&& o) noexcept
+  {
+    source = std::move(o.source);
+    subroutines = std::move(o.subroutines);
+    classes = std::move(o.classes);
+    constants = std::move(o.constants);
+    const_strings = std::move(o.const_strings);
+    static_value_num = o.static_value_num;
+    static_value_idx_base = o.static_value_idx_base;
+    class_idx_base = o.class_idx_base;
+    const_string_idx_base = o.const_string_idx_base;
+    for (auto& subr : subroutines)
+    {
+      subr.set_chunk(this);
+    }
+    return *this;
+  }
+  void Chunk::set_static_value_idx_base(size_t n) noexcept
+  {
+    static_value_idx_base = n;
+  }
+  size_t Chunk::get_static_value_idx_base() const noexcept
+  {
+    return static_value_idx_base;
+  }
+  void Chunk::set_class_idx_base(size_t n) noexcept
+  {
+    class_idx_base = n;
+  }
+  size_t Chunk::get_class_idx_base() const noexcept
+  {
+    return class_idx_base;
+  }
+  void Chunk::set_const_string_idx_base(size_t n) noexcept
+  {
+    const_string_idx_base = n;
+  }
+  size_t Chunk::get_const_string_idx_base() const noexcept
+  {
+    return const_string_idx_base;
   }
 }

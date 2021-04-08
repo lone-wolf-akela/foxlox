@@ -63,6 +63,9 @@ namespace foxlox
     bool is_marked() const noexcept;
     void mark() noexcept;
     void unmark() noexcept;
+
+    Chunk* get_chunk() const noexcept;
+    void set_chunk(Chunk* c) noexcept;
   private:
     const int32_t arity;
     std::vector<uint8_t> code;
@@ -74,8 +77,11 @@ namespace foxlox
     // for memory management
     std::vector<uint16_t> referenced_static_values;
 
+    // to be filled when the parent chunk object is loaded 
+    Chunk* chunk;
+
     // runtime info, do not dump or load
-    bool gc_mark;
+    bool gc_mark; 
   };
 
   class ChunkOperationError : public std::runtime_error
@@ -87,6 +93,13 @@ namespace foxlox
   class Chunk
   {
   public:
+    Chunk() noexcept = default;
+    Chunk(const Chunk&) = delete;
+    Chunk& operator=(const Chunk&) = delete;
+    Chunk(Chunk&& o) noexcept;
+    Chunk& operator=(Chunk&& o) noexcept;
+    ~Chunk() = default;
+
     void dump(std::ostream& strm) const;
     static Chunk load(std::istream& strm);
 
@@ -105,6 +118,13 @@ namespace foxlox
     uint16_t add_string(std::string_view str);
     uint16_t add_static_value();
     uint16_t get_static_value_num() const noexcept;
+
+    void set_static_value_idx_base(size_t n) noexcept;
+    size_t get_static_value_idx_base() const noexcept;
+    void set_class_idx_base(size_t n) noexcept;
+    size_t get_class_idx_base() const noexcept;
+    void set_const_string_idx_base(size_t n) noexcept;
+    size_t get_const_string_idx_base() const noexcept;
   private:
     std::vector<std::string> source;
 
@@ -119,7 +139,7 @@ namespace foxlox
     // runtime info, do not dump or load
     size_t static_value_idx_base{};
     size_t class_idx_base{};
-    size_t n{};
+    size_t const_string_idx_base{};
   };
 }
 

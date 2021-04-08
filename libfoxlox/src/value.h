@@ -82,43 +82,89 @@ namespace foxlox
     } v;
 
 
-    constexpr Value() noexcept : method_func_ptr(0), type(ValueType::OBJ), v{ .obj = nullptr } {}
+    constexpr Value() noexcept : 
+      method_func_ptr(0), 
+      type(ValueType::OBJ), 
+      v{ .obj = nullptr } 
+    {}
 
     template<std::convertible_to<String*> T>
-    constexpr Value(T str) noexcept : type(ValueType::OBJ), v{ .str = str } {}
+    constexpr Value(T str) noexcept : 
+      method_func_ptr(0), 
+      type(ValueType::OBJ), 
+      v{ .str = str } 
+    {}
 
     template<std::convertible_to<Tuple*> T>
-    constexpr Value(T tuple) noexcept : type(ValueType::OBJ), v{ .tuple = tuple } {}
+    constexpr Value(T tuple) noexcept : 
+      method_func_ptr(0), 
+      type(ValueType::OBJ), 
+      v{ .tuple = tuple } 
+    {}
 
     template<std::convertible_to<Subroutine*> T>
-    constexpr Value(T func) noexcept : type(ValueType::FUNC), v{ .func = func } {}
+    constexpr Value(T func) noexcept : 
+      method_func_ptr(0), 
+      type(ValueType::FUNC), 
+      v{ .func = func } 
+    {}
 
     template<std::convertible_to<CppFunc*> T>
-    constexpr Value(T cppfunc) noexcept : type(ValueType::CPP_FUNC), v{ .cppfunc = cppfunc } {}
+    constexpr Value(T cppfunc) noexcept : 
+      method_func_ptr(0), 
+      type(ValueType::CPP_FUNC), 
+      v{ .cppfunc = cppfunc } 
+    {}
 
     template<std::convertible_to<Instance*> T>
-    constexpr Value(T instance) noexcept : type(ValueType::OBJ), v{ .instance = instance } {}
+    constexpr Value(T instance) noexcept : 
+      method_func_ptr(0), 
+      type(ValueType::OBJ), 
+      v{ .instance = instance } 
+    {}
 
     template<std::convertible_to<Dict*> T>
-    constexpr Value(T dict) noexcept : type(ValueType::OBJ), v{ .dict = dict } {}
+    constexpr Value(T dict) noexcept : 
+      method_func_ptr(0), 
+      type(ValueType::OBJ), 
+      v{ .dict = dict } 
+    {}
 
     template<std::convertible_to<Instance*> I, std::convertible_to<Subroutine*> S >
     GSL_SUPPRESS(type.1)
     constexpr Value(I instance, S func) noexcept :
       method_func_ptr(reinterpret_cast<uintptr_t>(static_cast<Subroutine*>(func)) >> method_func_shift),
-      type(ValueType::METHOD), v{ .instance = instance } {}
+      type(ValueType::METHOD), 
+      v{ .instance = instance } 
+    {}
 
     template<std::convertible_to<Class*> T>
-    constexpr Value(T klass) noexcept : type(ValueType::OBJ), v{ .klass = klass } {}
+    constexpr Value(T klass) noexcept : 
+      method_func_ptr(0), 
+      type(ValueType::OBJ), 
+      v{ .klass = klass } 
+    {}
 
     template<remove_cv_same_as<bool> T>
-    constexpr Value(T b) noexcept : type(ValueType::BOOL), v{ .b = b } {}
+    constexpr Value(T b) noexcept : 
+      method_func_ptr(0), 
+      type(ValueType::BOOL), 
+      v{ .b = b } 
+    {}
 
     template<std::floating_point T>
-    constexpr Value(T f64) noexcept : type(ValueType::F64), v{ .f64 = f64 } {}
+    constexpr Value(T f64) noexcept : 
+      method_func_ptr(0), 
+      type(ValueType::F64), 
+      v{ .f64 = f64 } 
+    {}
 
     template<IntegralExcludeBool T>
-    constexpr Value(T i64) noexcept : type(ValueType::I64), v{ .i64 = i64 } {}
+    constexpr Value(T i64) noexcept : 
+      method_func_ptr(0), 
+      type(ValueType::I64), 
+      v{ .i64 = i64 } 
+    {}
 
     constexpr bool is_nil() const noexcept
     {

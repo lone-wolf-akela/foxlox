@@ -32,7 +32,7 @@ namespace foxlox
 #ifdef FOXLOX_DEBUG_TRACE_SRC
     if (this_line_num != last_line_num)
     {
-      auto src = vm.chunk->get_source(this_line_num);
+      auto src = vm.current_chunk->get_source(this_line_num);
       if (src != "")
       {
         const auto formatted = fmt::format("{:>5} {:15} {:>4} {}", "[src]", formated_funcname, this_line_num, src);
@@ -108,8 +108,7 @@ namespace foxlox
     {
 #ifdef FOXLOX_DEBUG_TRACE_INST
       const uint16_t constant = get_uint16();
-      const auto constants = vm.chunk->get_constants();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", "CONSTANT", constant, gsl::at(constants, constant).to_string());
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "CONSTANT", constant, vm.current_chunk->get_constant(constant).to_string());
 #endif
       return 3;
     }
@@ -117,7 +116,7 @@ namespace foxlox
     {
 #ifdef FOXLOX_DEBUG_TRACE_INST
       const uint16_t subroutine_idx = get_uint16();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", "FUNC", subroutine_idx, vm.chunk->get_subroutines().at(subroutine_idx).get_funcname());
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "FUNC", subroutine_idx, vm.current_chunk->get_subroutines().at(subroutine_idx).get_funcname());
 #endif
       return 3;
     }

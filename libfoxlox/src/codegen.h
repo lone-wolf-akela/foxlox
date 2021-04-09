@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <string_view>
 
 #include <foxlox/except.h>
 #include <foxlox/chunk.h>
@@ -16,13 +17,15 @@ namespace foxlox
   {
   public:
     explicit CodeGen(AST&& a);
-    Chunk gen();
+    Chunk gen(std::string_view src_name);
     bool get_had_error() noexcept;
   private:
     AST ast;
     Chunk chunk;
     int current_line;
     uint16_t current_subroutine_idx;
+    std::string_view source_name;
+
     Subroutine& current_subroutine();
 
     bool had_error;

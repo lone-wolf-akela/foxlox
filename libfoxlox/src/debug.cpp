@@ -35,8 +35,8 @@ namespace foxlox
       auto src = vm.current_chunk->get_source(this_line_num);
       if (src != "")
       {
-        const auto formatted = fmt::format("{:>5} {:15} {:>4} {}", "[src]", formated_funcname, this_line_num, src);
-        std::cout << fmt::format(colored ? "\x1b[46m\x1b[30m{:80}\x1b[0m\n" : "{}\n", formatted);
+        const auto formatted = fmt::format("{:>5} {:25} {:>4} {}", "[src]", formated_funcname, this_line_num, src);
+        std::cout << fmt::format(colored ? "\x1b[46m\x1b[30m{:100}\x1b[0m\n" : "{}\n", formatted);
         print_line_num_before_inst = false;
       }
     }
@@ -44,11 +44,11 @@ namespace foxlox
 #ifdef FOXLOX_DEBUG_TRACE_INST
     if (print_line_num_before_inst)
     {
-      std::cout << fmt::format("{:05} {:15} {:>4} ", index, formated_funcname, this_line_num);
+      std::cout << fmt::format("{:05} {:25} {:>4} ", index, formated_funcname, this_line_num);
     }
     else
     {
-      std::cout << fmt::format("{:05} {:15} {:>4} ", index, formated_funcname, '|');
+      std::cout << fmt::format("{:05} {:25} {:>4} ", index, formated_funcname, '|');
     }
 #endif
     const auto codes = subroutine.get_code();
@@ -184,7 +184,7 @@ namespace foxlox
   }
   void Debugger::print_vm_stack(VM& vm)
   {
-    fmt::print("{:>26}", '|');
+    fmt::print("{:>36}", '|');
     for (auto v : std::span(vm.stack.begin(), vm.stack_top))
     {
       fmt::print("[{}] ", v.to_string());

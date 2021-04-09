@@ -151,7 +151,6 @@ export class Ultimate_Answer
   {
     VM vm;
     auto [res, chunk] = compile(R"(
-from fox.io import println;
 from exported import Ultimate_Answer;
 var k = Ultimate_Answer(42);
 return k.calc(100);

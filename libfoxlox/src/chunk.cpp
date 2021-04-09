@@ -210,7 +210,9 @@ namespace foxlox
   }
   LineInfo::LineNum LineInfo::LineNum::load(std::istream& strm)
   {
-    return LineNum(load_int64(strm), load_int32(strm));
+    const int64_t code_index = load_int64(strm);
+    const int32_t line_num = load_int32(strm);
+    return LineNum(code_index, line_num);
   }
   const LineInfo& Subroutine::get_lines() const noexcept
   {

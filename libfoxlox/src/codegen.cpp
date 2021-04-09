@@ -1,4 +1,5 @@
 #include <range/v3/all.hpp>
+#include <fmt/format.h>
 
 #include "codegen.h"
 
@@ -13,11 +14,12 @@ namespace foxlox
 
     had_error = false;
   }
-  Chunk CodeGen::gen()
+  Chunk CodeGen::gen(std::string_view src_name)
   {
+    source_name = src_name;
     try
     {
-      current_subroutine_idx = chunk.add_subroutine("script", 0);
+      current_subroutine_idx = chunk.add_subroutine(source_name, 0);
     }
     catch (ChunkOperationError&)
     {
@@ -540,7 +542,7 @@ namespace foxlox
     try
     {
       const uint16_t subroutine_idx =
-        chunk.add_subroutine(stmt->name.lexeme, gsl::narrow_cast<int>(ssize(stmt->var_names)));
+        chunk.add_subroutine(fmt::format("{}:{}", source_name, stmt->name.lexeme), gsl::narrow_cast<int>(ssize(stmt->var_names)));
 
       const auto stack_size_before = current_stack_size;
 

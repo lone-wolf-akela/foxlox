@@ -15,7 +15,7 @@
 namespace
 {
   using namespace foxlox;
-  std::tuple<CompilerResult, std::vector<char>> compile_impl(std::string_view source, std::string_view src_path)
+  std::tuple<CompilerResult, std::vector<char>> compile_impl(std::string_view source, std::string_view src_path, std::string_view src_name)
   {
     Scanner scanner(u8_to_u32(source));
     auto [tokens, src_per_line] = scanner.scan_tokens();
@@ -35,7 +35,7 @@ namespace
     }
 
     CodeGen codegen(std::move(resolved_ast));
-    auto chunk = codegen.gen();
+    auto chunk = codegen.gen(src_name);
     if (codegen.get_had_error())
     {
       return std::make_tuple(CompilerResult::COMPILE_ERROR, std::vector<char>{});
@@ -59,7 +59,7 @@ namespace foxlox
 {
   std::tuple<CompilerResult, std::vector<char>> compile(std::string_view source)
   {
-    return compile_impl(source, ".");
+    return compile_impl(source, ".", "script");
   }
 
   std::tuple<CompilerResult, std::vector<char>> compile_file(const std::filesystem::path& path)
@@ -71,6 +71,6 @@ namespace foxlox
     }
     std::string str(std::istreambuf_iterator<char>{ifs}, {});
     ifs.close();
-    return compile_impl(str, path.string());
+    return compile_impl(str, path.string(), path.stem().string());
   }
 }

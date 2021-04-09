@@ -71,8 +71,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC range-v3)
 find_package(magic_enum CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC magic_enum::magic_enum)
 
-find_package(ICU REQUIRED COMPONENTS uc)
-target_link_libraries(${PROJECT_NAME} PUBLIC ICU::uc)
+find_package(ICU REQUIRED COMPONENTS uc dt)
+target_link_libraries(${PROJECT_NAME} PUBLIC ICU::uc ICU::dt)
 
 find_package(Boost REQUIRED COMPONENTS filesystem)
 target_link_libraries(${PROJECT_NAME} PUBLIC Boost::filesystem)

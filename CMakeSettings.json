@@ -34,6 +34,26 @@
       "cmakeToolchain": "${projectDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
     },
     {
+      "name": "x64-Release-Singlefile",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "codeAnalysisRuleset": "${projectDir}\\codeanalysis.ruleset",
+      "cmakeToolchain": "${projectDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "variables": [
+        {
+          "name": "VCPKG_TARGET_TRIPLET",
+          "value": "x64-windows-static-md",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
       "name": "x64-Profiling",
       "generator": "Ninja",
       "configurationType": "RelWithDebInfo",
@@ -184,6 +204,25 @@
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "clang_cl_x64_x64" ],
       "cmakeToolchain": "${projectDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    },
+    {
+      "name": "x64-Clang-Release-Singlefile",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "clang_cl_x64_x64" ],
+      "cmakeToolchain": "${projectDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "variables": [
+        {
+          "name": "VCPKG_TARGET_TRIPLET",
+          "value": "x64-windows-static-md",
+          "type": "STRING"
+        }
+      ]
     },
     {
       "name": "arm64-Release",

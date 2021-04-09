@@ -61,21 +61,21 @@ endif()
 OPTION(FOXLOX_ENABLE_ASAN "Use addressSanitizer" OFF)
 
 find_package(Microsoft.GSL CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC Microsoft.GSL::GSL)
 
 find_package(fmt CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
+target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt-header-only)
 
 find_package(range-v3 CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE range-v3)
+target_link_libraries(${PROJECT_NAME} PUBLIC range-v3)
 
 find_package(magic_enum CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC magic_enum::magic_enum)
 
 find_package(ICU REQUIRED COMPONENTS uc)
-target_link_libraries(${PROJECT_NAME} PRIVATE ICU::uc)
+target_link_libraries(${PROJECT_NAME} PUBLIC ICU::uc)
 
 find_package(Boost REQUIRED COMPONENTS filesystem)
-target_link_libraries(${PROJECT_NAME} PRIVATE Boost::filesystem)
+target_link_libraries(${PROJECT_NAME} PUBLIC Boost::filesystem)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 if(MSVC)

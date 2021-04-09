@@ -8,6 +8,54 @@ set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/
 set(VCPKG_FEATURE_FLAGS versions)
 project(foxlox)
 
+OPTION(FOXLOX_MSVC_PROFILING "Slower but easy to do profiling mode" OFF)
+
+if(MSVC)
+  if(FOXLOX_MSVC_PROFILING)
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO 
+      "/O1 /DNDEBUG /Zi /Gy /Ob1" 
+      CACHE STRING "compile flags for release build" 
+      FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE 
+      "/O1 /DNDEBUG /Zi /Gy /Ob1" 
+      CACHE STRING "compile flags for release build" 
+      FORCE)
+  else() # !FOXLOX_MSVC_PROFILING
+    if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO 
+        "/O2 /DNDEBUG /Zi /Gy /Ob2" 
+        CACHE STRING "compile flags for release build" 
+        FORCE)
+      set(CMAKE_CXX_FLAGS_RELEASE 
+        "/O2 /DNDEBUG /Zi /Gy /Ob2" 
+        CACHE STRING "compile flags for release build" 
+        FORCE)
+    else() # !Clang
+      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO 
+        "/O2 /DNDEBUG /Zi /Gy /Ob3" 
+        CACHE STRING "compile flags for release build" 
+        FORCE)
+      set(CMAKE_CXX_FLAGS_RELEASE 
+        "/O2 /DNDEBUG /Zi /Gy /Ob3" 
+        CACHE STRING "compile flags for release build" 
+        FORCE)
+    endif() # Clang
+  endif() # FOXLOX_MSVC_PROFILING
+  set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO 
+    "/DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF" 
+    CACHE STRING "link flags for release build" 
+    FORCE)
+  set(CMAKE_EXE_LINKER_FLAGS_RELEASE 
+    "/DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF" 
+    CACHE STRING "link flags for release build" 
+    FORCE)
+else()
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO 
+    "-O3 -g -DNDEBUG" 
+    CACHE STRING "compile flags for release build" 
+    FORCE)
+endif()
+
 # 包含子项目。
 add_subdirectory("libfoxlox")
 add_subdirectory("fox")

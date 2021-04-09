@@ -77,9 +77,11 @@ namespace foxlox
     using Stack = std::vector<Value>;
     size_t get_stack_size();
     size_t get_stack_capacity() noexcept;
-    Stack::iterator top(int from_top = 0) noexcept;
+    Stack::iterator top() noexcept;
+    Stack::iterator top(int from_top) noexcept;
     void push() noexcept;
-    void pop(uint16_t n = 1) noexcept;
+    void pop() noexcept;
+    void pop(uint16_t n) noexcept;
   private:
     
     OP read_inst() noexcept;

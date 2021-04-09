@@ -706,6 +706,10 @@ namespace foxlox
     u |= read_uint8();
     return u;
   }
+  VM::Stack::iterator VM::top() noexcept
+  {
+    return stack_top - 1;
+  }
   VM::Stack::iterator VM::top(int from_top) noexcept
   {
     return stack_top - from_top - 1;
@@ -713,6 +717,10 @@ namespace foxlox
   void VM::push() noexcept
   {
     stack_top++;
+  }
+  void VM::pop() noexcept
+  {
+    stack_top -= 1;
   }
   void VM::pop(uint16_t n) noexcept
   {

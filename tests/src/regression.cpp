@@ -1,3 +1,5 @@
+#include <fstream>
+
 #include <gtest/gtest.h>
 
 #include <foxlox/vm.h>
@@ -72,4 +74,57 @@ C(0);
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   ASSERT_NO_THROW(vm.run(chunk));
+}
+
+TEST(regression, class_pool_vector_pusback_invalid)
+{
+  // the class pool in vm was once a vector
+  // pointer to class would bu invalid
+  // if we call push_back on that vector
+  {
+    std::ofstream ofs("lib.fox");
+    ASSERT_TRUE(!!ofs);
+    ofs << R"(
+export import fox.io;
+class World {
+  __init__(id) {
+    this.id = id;
+  }
+  print()	{}
+}
+export class Program : World {
+  __init__(name) {
+    super.__init__(42);
+    this.name = name;
+  }
+  print() {
+    super.print();
+  }
+}
+export fun fib(n) {
+  var first = 1;
+  var second = 0;
+  for(var i = 0; i < n; ++i) {
+    var t = second;
+    second = first + second;
+  first = t;
+  }
+  return second;
+})";
+  }
+  {
+    VM vm;
+    auto [res, chunk] = compile(R"(
+import lib;
+from lib import fib;
+fun main() {
+  var prog = lib.Program("A_Name");
+  prog.print();
+}
+main();
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    ASSERT_NO_THROW(vm.run(chunk));
+  }
+  std::filesystem::remove("lib.fox");
 }

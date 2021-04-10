@@ -335,6 +335,46 @@ namespace foxlox
       throw FatalError(fmt::format("Unknown ValueType: {}", magic_enum::enum_name(type)));
     }
   }
+  bool Value::debug_type_is_valid() noexcept
+  {
+    if (type == ValueType::OBJ)
+    {
+      // NIL, STR, TUPLE, CLASS, INSTANCE, DICT, ARRAY
+      if (v.obj == nullptr)
+      {
+        return true;
+      }
+      return (v.obj->type == ObjType::STR)
+        || (v.obj->type == ObjType::TUPLE)
+        || (v.obj->type == ObjType::CLASS)
+        || (v.obj->type == ObjType::INSTANCE)
+        || (v.obj->type == ObjType::DICT);
+    }
+    if (type == ValueType::BOOL)
+    {
+      return (v.i64 == 0) || (v.i64 == 1);
+    }
+    if (type == ValueType::F64 || type == ValueType::I64)
+    {
+      return true;
+    }
+    if (type == ValueType::FUNC)
+    {
+      return (v.func != nullptr) && (reinterpret_cast<uintptr_t>(v.func) % alignof(decltype(*v.func)) == 0);
+    }
+    if (type == ValueType::CPP_FUNC)
+    {
+      return v.cppfunc != nullptr;
+    }
+    if (type == ValueType::METHOD)
+    {
+      return (v.instance != nullptr)
+        && (reinterpret_cast<uintptr_t>(v.instance) % alignof(decltype(*v.instance)) == 0)
+        && (method_func() != nullptr)
+        && (reinterpret_cast<uintptr_t>(method_func()) % alignof(decltype(*method_func())) == 0);
+    }
+    return false;
+  }
   Value Value::get_property(gsl::not_null<String*> name)
   {
     if (is_instance())

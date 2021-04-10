@@ -228,5 +228,7 @@ namespace foxlox
     friend bool operator==(const Value& l, const Value& r);
 
     std::string to_string() const;
+
+    bool debug_type_is_valid() noexcept;
   };
 }

@@ -9,6 +9,7 @@ set(VCPKG_FEATURE_FLAGS versions)
 project(foxlox)
 
 OPTION(FOXLOX_MSVC_PROFILING "Slower but easy to do profiling mode" OFF)
+OPTION(FOXLOX_ENABLE_ASAN "Use addressSanitizer" OFF)
 
 if(MSVC)
   if(FOXLOX_MSVC_PROFILING)
@@ -54,6 +55,10 @@ else()
     "-O3 -g -DNDEBUG" 
     CACHE STRING "compile flags for release build" 
     FORCE)
+endif()
+
+if(FOXLOX_ENABLE_ASAN)
+  STRING (REGEX REPLACE "/RTC[^ ]*" "" CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG}") 
 endif()
 
 # 包含子项目。

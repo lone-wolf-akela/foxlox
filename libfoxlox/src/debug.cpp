@@ -100,7 +100,7 @@ namespace foxlox
     {
 #ifdef FOXLOX_DEBUG_TRACE_INST
       const uint16_t str = get_uint16();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", magic_enum::enum_name(op), str, vm.const_string_pool.at(str)->get_view());
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", magic_enum::enum_name(op), str, vm.const_string_pool.at(vm.current_chunk->get_const_string_idx_base() + str)->get_view());
 #endif
       return 3;
     }
@@ -132,7 +132,7 @@ namespace foxlox
     {
 #ifdef FOXLOX_DEBUG_TRACE_INST
       const uint16_t str = get_uint16();
-      std::cout << fmt::format("{:<16} {:>4}, {}\n", "STRING", str, vm.const_string_pool.at(str)->get_view());
+      std::cout << fmt::format("{:<16} {:>4}, {}\n", "STRING", str, vm.const_string_pool.at(vm.current_chunk->get_const_string_idx_base() + str)->get_view());
 #endif
       return 3;
     }

@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <vector>
 #include <stack>
+#include <deque>
 
 #include <foxlox/chunk.h>
 #include <foxlox/debug.h>
@@ -138,7 +139,9 @@ namespace foxlox
     // note: we don't need sweep static_value_pool during gc
     std::vector<Value> static_value_pool;
     // this pool is generated during chunk loading
-    std::vector<Class> class_pool;
+    // use deque instead of vector here, as there're values the hold pointer to class
+    // so it shouldn't be invalid after push_back
+    std::deque<Class> class_pool;
     // this pool is generated during chunk loading; do not gc this
     // also need mark all of elem in it during gc marking
     std::vector<String*> const_string_pool;

@@ -11,6 +11,7 @@
 #include <foxlox/except.h>
 #include <foxlox/config.h>
 #include "object.h"
+#include "util.h"
 
 #include "hash_table.h"
 
@@ -162,6 +163,21 @@ namespace foxlox
         GSL_SUPPRESS(bounds.1)
         if (new_entries[idx].key_is_null())
         {
+          /* DEBUG: check input is valid */
+          if constexpr (is_specialization_v<std::remove_cvref_t<decltype(e)>, HashTableEntry>)
+          {
+            if constexpr (std::same_as<decltype(e.key), Value>)
+            {
+              assert(e.key.debug_type_is_valid());
+            }
+          }
+          if constexpr (is_specialization_v<std::remove_cvref_t<decltype(e)>, HashTableEntry>)
+          {
+            if constexpr (std::same_as<decltype(e.value), Value>)
+            {
+              assert(e.value.debug_type_is_valid());
+            }
+          }
           new_entries[idx] = e;
           break;
         }
@@ -367,6 +383,16 @@ namespace foxlox
   template<typename K, typename V>
   void HashTable<K, V>::set_entry(K key, V value)
   {
+    /* DEBUG: check input is valid */
+    if constexpr (std::same_as<K, Value>)
+    {
+      assert(key.debug_type_is_valid());
+    }
+    if constexpr (std::same_as<V, Value>)
+    {
+      assert(value.debug_type_is_valid());
+    }
+    /*******************************/
     if (count + 1 > capacity * STRING_POOL_MAX_LOAD)
     {
       grow_capacity(this);
@@ -396,6 +422,16 @@ namespace foxlox
   template<typename K, typename V>
   void HashTable<K, V>::try_add_entry(K key, V value)
   {
+    /* DEBUG: check input is valid */
+    if constexpr (std::same_as<K, Value>)
+    {
+      assert(key.debug_type_is_valid());
+    }
+    if constexpr (std::same_as<V, Value>)
+    {
+      assert(value.debug_type_is_valid());
+    }
+    /*******************************/
     if (count + 1 > capacity * STRING_POOL_MAX_LOAD)
     {
       grow_capacity(this);
@@ -422,11 +458,23 @@ namespace foxlox
   template<typename K, typename V>
   std::optional<V> HashTable<K, V>::get_value(K key)
   {
+    /* DEBUG: check input is valid */
+    if constexpr (std::same_as<K, Value>)
+    {
+      assert(key.debug_type_is_valid());
+    }
+    /*******************************/
     const uint32_t hash = nonstr_hash(key);
     const auto entry = find_entry(key, hash);
     if (!entry->key_is_null() && !entry->tombstone)
     {
       // key found
+      /* DEBUG: check output is valid */
+      if constexpr (std::same_as<V, Value>)
+      {
+        assert(entry->value.debug_type_is_valid());
+      }
+      /********************************/
       return entry->value;
     }
     return std::nullopt;
@@ -438,6 +486,16 @@ namespace foxlox
     {
       if (!e.key_is_null() && !e.tombstone)
       {
+        /* DEBUG: check input is valid */
+        if constexpr (std::same_as<K, Value>)
+        {
+          assert(e.key.debug_type_is_valid());
+        }
+        if constexpr (std::same_as<V, Value>)
+        {
+          assert(e.value.debug_type_is_valid());
+        }
+        /*******************************/
         return HashTableIter<K, V>(this, &e);
       }
      }
@@ -561,6 +619,16 @@ namespace foxlox
   template<typename K, typename V>
   HashTableEntry<K, V>& HashTableIter<K, V>::operator*() const noexcept
   {
+    /* DEBUG: check input is valid */
+    if constexpr (std::same_as<K, Value>)
+    {
+      assert(p_entry->key.debug_type_is_valid());
+    }
+    if constexpr (std::same_as<V, Value>)
+    {
+      assert(p_entry->value.debug_type_is_valid());
+    }
+    /*******************************/
     return *p_entry;
   }
 
@@ -568,6 +636,16 @@ namespace foxlox
   HashTableIter<K, V>& HashTableIter<K, V>::operator++() noexcept
   {
     p_entry = p_table->next_entry(p_entry);
+    /* DEBUG: check input is valid */
+    if constexpr (std::same_as<K, Value>)
+    {
+      assert(p_entry->key.debug_type_is_valid());
+    }
+    if constexpr (std::same_as<V, Value>)
+    {
+      assert(p_entry->value.debug_type_is_valid());
+    }
+    /*******************************/
     return *this;
   }
 

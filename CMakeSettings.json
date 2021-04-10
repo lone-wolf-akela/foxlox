@@ -21,6 +21,31 @@
       ]
     },
     {
+      "name": "x64-Debug-Asan",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "codeAnalysisRuleset": "${projectDir}\\codeanalysis.ruleset",
+      "cmakeToolchain": "${projectDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "variables": [
+        {
+          "name": "FOXLOX_USE_MIMALLOC",
+          "value": "OFF",
+          "type": "BOOL"
+        },
+        {
+          "name": "FOXLOX_ENABLE_ASAN",
+          "value": "ON",
+          "type": "BOOL"
+        }
+      ]
+    },
+    {
       "name": "x64-Release",
       "generator": "Ninja",
       "configurationType": "RelWithDebInfo",

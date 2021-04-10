@@ -58,6 +58,11 @@ if(FOXLOX_USE_MIMALLOC)
   target_link_libraries(${PROJECT_NAME} PUBLIC mimalloc)
 endif()
 
+OPTION(FOXLOX_DEBUG_STRESS_GC "Trigger GC after every INST for debugging" OFF)
+if(FOXLOX_DEBUG_STRESS_GC)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE FOXLOX_DEBUG_STRESS_GC)
+endif()
+
 OPTION(FOXLOX_ENABLE_ASAN "Use addressSanitizer" OFF)
 
 find_package(Microsoft.GSL CONFIG REQUIRED)

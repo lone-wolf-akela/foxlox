@@ -42,6 +42,11 @@
           "name": "FOXLOX_ENABLE_ASAN",
           "value": "ON",
           "type": "BOOL"
+        },
+        {
+          "name": "FOXLOX_DEBUG_STRESS_GC",
+          "value": "ON",
+          "type": "BOOL"
         }
       ]
     },

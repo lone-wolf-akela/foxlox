@@ -3,8 +3,11 @@
 //#define FOXLOX_DEBUG_TRACE_STACK
 //#define FOXLOX_DEBUG_TRACE_INST
 //#define FOXLOX_DEBUG_TRACE_SRC
-//#define FOXLOX_DEBUG_STRESS_GC
 //#define FOXLOX_DEBUG_LOG_GC
+
+#ifndef FOXLOX_DEBUG_STRESS_GC
+//#define FOXLOX_DEBUG_STRESS_GC
+#endif
 
 constexpr auto STACK_MAX = 1024;
 constexpr auto CALLTRACE_MAX = 256;

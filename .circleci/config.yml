@@ -18,7 +18,7 @@ jobs:
             cd ..
             mkdir build_asan
             cd build_asan
-            cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DFOXLOX_USE_MIMALLOC=OFF -DFOXLOX_ENABLE_ASAN=ON -DCMAKE_TOOLCHAIN_FILE="~/vcpkg/scripts/buildsystems/vcpkg.cmake" ..
+            cmake -DCMAKE_BUILD_TYPE=Debug -DFOXLOX_DEBUG_STRESS_GC=ON -DFOXLOX_USE_MIMALLOC=OFF -DFOXLOX_ENABLE_ASAN=ON -DCMAKE_TOOLCHAIN_FILE="~/vcpkg/scripts/buildsystems/vcpkg.cmake" ..
             make
       - persist_to_workspace:
           root: .

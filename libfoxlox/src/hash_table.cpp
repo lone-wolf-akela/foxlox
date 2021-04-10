@@ -639,11 +639,11 @@ namespace foxlox
     /* DEBUG: check input is valid */
     if constexpr (std::same_as<K, Value>)
     {
-      assert(p_entry->key.debug_type_is_valid());
+      assert(p_entry == nullptr || p_entry->key.debug_type_is_valid());
     }
     if constexpr (std::same_as<V, Value>)
     {
-      assert(p_entry->value.debug_type_is_valid());
+      assert(p_entry == nullptr || p_entry->value.debug_type_is_valid());
     }
     /*******************************/
     return *this;

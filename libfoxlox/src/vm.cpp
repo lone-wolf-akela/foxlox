@@ -894,6 +894,7 @@ namespace foxlox
       {
         for (auto& entry : v->v.dict->get_hash_table())
         {
+          mark_value(entry.key);
           mark_value(entry.value);
         }
       }
@@ -951,9 +952,12 @@ namespace foxlox
       return false;
       });
     // whiten all subroutines
-    for (auto& s : current_chunk->get_subroutines())
+    for (auto& c : chunks)
     {
-      s.unmark();
+      for (auto& s : c.get_subroutines())
+      {
+        s.unmark();
+      }
     }
     // whiten all classes
     for (auto& c : class_pool)

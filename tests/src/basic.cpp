@@ -39,6 +39,7 @@ r +=  2 + 6 // 3; # expect: 4
 r +=  2 - 6 // 3; # expect: 0
 
 # < has higher precedence than ==.
+
 r +=  false == 2 < 1; # expect: true
 
 # > has higher precedence than ==.
@@ -66,22 +67,21 @@ return r;
   ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
   auto s = std::get<TupleSpan>(v);
   ASSERT_EQ(ssize(s), 15);
-  int i = 0;
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(14_i64));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(8_i64));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(4.0));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(0.0));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(4_i64));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(0_i64));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(true));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(true));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(true));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(true));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(0_i64));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(0_i64));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(0_i64));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(0_i64));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(4_i64));
+  ASSERT_EQ(to_variant(s[0]), FoxValue(14_i64));
+  ASSERT_EQ(to_variant(s[1]), FoxValue(8_i64));
+  ASSERT_EQ(to_variant(s[2]), FoxValue(4.0));
+  ASSERT_EQ(to_variant(s[3]), FoxValue(0.0));
+  ASSERT_EQ(to_variant(s[4]), FoxValue(4_i64));
+  ASSERT_EQ(to_variant(s[5]), FoxValue(0_i64));
+  ASSERT_EQ(to_variant(s[6]), FoxValue(true));
+  ASSERT_EQ(to_variant(s[7]), FoxValue(true));
+  ASSERT_EQ(to_variant(s[8]), FoxValue(true));
+  ASSERT_EQ(to_variant(s[9]), FoxValue(true));
+  ASSERT_EQ(to_variant(s[10]), FoxValue(0_i64));
+  ASSERT_EQ(to_variant(s[11]), FoxValue(0_i64));
+  ASSERT_EQ(to_variant(s[12]), FoxValue(0_i64));
+  ASSERT_EQ(to_variant(s[13]), FoxValue(0_i64));
+  ASSERT_EQ(to_variant(s[14]), FoxValue(4_i64));
 }
 
 TEST(basic, unexpected_character)

@@ -44,11 +44,15 @@ namespace foxlox
 
   enum class ObjType : uint8_t
   {
-    NIL, STR, TUPLE, CLASS, INSTANCE, DICT, ARRAY
+    STR, TUPLE, CLASS, INSTANCE, DICT, 
+    // Not Impl yet:
+    ARRAY, BYTES
   };
   enum class ValueType : uintptr_t
   {
-    OBJ, BOOL, F64, I64, FUNC, CPP_FUNC, METHOD
+    NIL, OBJ, BOOL, F64, I64, FUNC, CPP_FUNC, METHOD,
+    // Not Impl yet:
+    CPP_INSTANCE, CPP_CLASS
   };
   class ObjBase
   {
@@ -61,10 +65,14 @@ namespace foxlox
 
   struct Value
   {
-    // pointer packing
-    constexpr static auto method_func_shift = 3;
-    uintptr_t method_func_ptr : sizeof(uintptr_t)* CHAR_BIT - method_func_shift;
-    ValueType type : method_func_shift;
+    /* pointer packing */
+    // according to https://unix.stackexchange.com/questions/509607/how-a-64-bit-process-virtual-address-space-is-divided-in-linux
+    // and https://docs.microsoft.com/en-us/windows-hardware/drivers/gettingstarted/virtual-address-spaces
+    // on both windows & linux, and on both amd64 and arm64
+    // the userspace address range is not longer than 56bit
+    constexpr static auto userspace_addr_bits = 56;
+    ValueType type : sizeof(uintptr_t)* CHAR_BIT - userspace_addr_bits;
+    uintptr_t method_func_ptr : userspace_addr_bits;
 
     union
     {
@@ -83,92 +91,92 @@ namespace foxlox
 
 
     constexpr Value() noexcept : 
-      method_func_ptr(0), 
-      type(ValueType::OBJ), 
-      v{ .obj = nullptr } 
+      type(ValueType::NIL), 
+      method_func_ptr(0),
+      v{ .i64 = 0 } 
     {}
 
     template<std::convertible_to<String*> T>
     constexpr Value(T str) noexcept : 
-      method_func_ptr(0), 
       type(ValueType::OBJ), 
+      method_func_ptr(0),
       v{ .str = str } 
     {}
 
     template<std::convertible_to<Tuple*> T>
     constexpr Value(T tuple) noexcept : 
-      method_func_ptr(0), 
-      type(ValueType::OBJ), 
+      type(ValueType::OBJ),
+      method_func_ptr(0),
       v{ .tuple = tuple } 
     {}
 
     template<std::convertible_to<Subroutine*> T>
     constexpr Value(T func) noexcept : 
-      method_func_ptr(0), 
       type(ValueType::FUNC), 
+      method_func_ptr(0),
       v{ .func = func } 
     {}
 
     template<std::convertible_to<CppFunc*> T>
     constexpr Value(T cppfunc) noexcept : 
-      method_func_ptr(0), 
       type(ValueType::CPP_FUNC), 
+      method_func_ptr(0),
       v{ .cppfunc = cppfunc } 
     {}
 
     template<std::convertible_to<Instance*> T>
-    constexpr Value(T instance) noexcept : 
-      method_func_ptr(0), 
+    constexpr Value(T instance) noexcept :  
       type(ValueType::OBJ), 
+      method_func_ptr(0),
       v{ .instance = instance } 
     {}
 
     template<std::convertible_to<Dict*> T>
     constexpr Value(T dict) noexcept : 
-      method_func_ptr(0), 
       type(ValueType::OBJ), 
+      method_func_ptr(0),
       v{ .dict = dict } 
     {}
 
     template<std::convertible_to<Instance*> I, std::convertible_to<Subroutine*> S >
     GSL_SUPPRESS(type.1)
     constexpr Value(I instance, S func) noexcept :
-      method_func_ptr(reinterpret_cast<uintptr_t>(static_cast<Subroutine*>(func)) >> method_func_shift),
       type(ValueType::METHOD), 
+      method_func_ptr(reinterpret_cast<uintptr_t>(static_cast<Subroutine*>(func))),
       v{ .instance = instance } 
     {}
 
     template<std::convertible_to<Class*> T>
     constexpr Value(T klass) noexcept : 
-      method_func_ptr(0), 
       type(ValueType::OBJ), 
+      method_func_ptr(0),
       v{ .klass = klass } 
     {}
 
     template<remove_cv_same_as<bool> T>
     constexpr Value(T b) noexcept : 
-      method_func_ptr(0), 
       type(ValueType::BOOL), 
+      method_func_ptr(0),
       v{ .b = b } 
     {}
 
     template<std::floating_point T>
     constexpr Value(T f64) noexcept : 
-      method_func_ptr(0), 
       type(ValueType::F64), 
+      method_func_ptr(0),
       v{ .f64 = f64 } 
     {}
 
     template<IntegralExcludeBool T>
     constexpr Value(T i64) noexcept : 
-      method_func_ptr(0), 
       type(ValueType::I64), 
+      method_func_ptr(0),
       v{ .i64 = i64 } 
     {}
 
     constexpr bool is_nil() const noexcept
     {
-      return (type == ValueType::OBJ) && (v.obj == nullptr);
+      return (type == ValueType::NIL);
     }
 
     constexpr bool is_str() const noexcept
@@ -225,7 +233,7 @@ namespace foxlox
     friend bool operator!(const Value& val);
     friend int64_t intdiv(const Value& l, const Value& r);
     friend std::partial_ordering operator<=>(const Value& l, const Value& r);
-    friend bool operator==(const Value& l, const Value& r);
+    friend bool operator==(const Value& l, const Value& r) noexcept;
 
     std::string to_string() const;
 

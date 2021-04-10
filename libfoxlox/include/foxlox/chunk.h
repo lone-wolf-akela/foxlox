@@ -37,8 +37,7 @@ namespace foxlox
     std::vector<LineNum> lines;
   };
 
-  // need this alignas for Value to work correctly
-  class alignas(8) Subroutine
+  class Subroutine
   {
   public:
     void dump(std::ostream& strm) const;

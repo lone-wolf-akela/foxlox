@@ -14,10 +14,6 @@
 
 namespace foxlox
 {
-
-  // need this for Value to work correctly
-  static_assert(std::alignment_of_v<Subroutine> >= (1u << Value::method_func_shift));
-
   Subroutine::Subroutine(std::string_view func_name, int num_of_params) :
     arity(num_of_params), name(func_name), gc_mark(false)
   {

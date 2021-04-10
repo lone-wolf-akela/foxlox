@@ -59,10 +59,7 @@ namespace
     {
       throw exception_wrongtype(got.type, expected);
     }
-    if (got.v.obj == nullptr)
-    {
-      throw exception_wrongtype(ObjType::NIL, expected);
-    }
+    Expects(got.v.obj != nullptr);
     if (got.v.obj->type != expected)
     {
       throw exception_wrongtype(got.v.obj->type, expected);
@@ -72,6 +69,9 @@ namespace
 
 namespace foxlox
 {
+  // we only support 64bit arch
+  static_assert(CHAR_BIT == 8);
+  static_assert(sizeof(void*) * CHAR_BIT == 64);
   // keep Value small and fast!
   static_assert(sizeof(Value) == 16);
   static_assert(std::is_trivially_copyable_v<Value>);
@@ -105,8 +105,7 @@ namespace foxlox
 
   bool Value::is_truthy() const noexcept
   {
-    if ((type == ValueType::OBJ && v.obj == nullptr) ||
-      (type == ValueType::BOOL && v.b == false))
+    if (type == ValueType::NIL || (type == ValueType::BOOL && v.b == false))
     {
       return false;
     }
@@ -134,7 +133,7 @@ namespace foxlox
   Subroutine* Value::method_func() const noexcept
   {
     GSL_SUPPRESS(type.1)
-    return reinterpret_cast<Subroutine*>(method_func_ptr << method_func_shift);
+    return reinterpret_cast<Subroutine*>(method_func_ptr);
   }
 
   std::partial_ordering operator<=>(const Value& l, const Value& r)
@@ -266,15 +265,36 @@ namespace foxlox
     return static_cast<int64_t>(l.get_double() / r.get_double());
   }
 
-  bool operator==(const Value& l, const Value& r)
+  bool operator==(const Value& l, const Value& r) noexcept
   {
-    // directly compare raw data 
-    // TODO: use bit_cast when gcc supports
-    std::array<uint64_t, 2> u64s_l;
-    std::array<uint64_t, 2> u64s_r;
-    std::memcpy(&u64s_l, &l, sizeof(l));
-    std::memcpy(&u64s_r, &r, sizeof(r));
-    return (u64s_l[0] == u64s_r[0]) && (u64s_l[1] == u64s_r[1]);
+    // we can not directly compare raw data 
+    // as the same boolean may have different representation
+    if (l.type != r.type)
+    {
+      return false;
+    }
+    switch (l.type)
+    {
+      //NIL, OBJ, BOOL, F64, I64, FUNC, CPP_FUNC, METHOD,
+    case ValueType::NIL:
+      return true;
+    case ValueType::OBJ:
+      return l.v.obj == r.v.obj;
+    case ValueType::BOOL:
+      return l.v.b == r.v.b;
+    case ValueType::F64:
+      return l.v.f64 == r.v.f64;
+    case ValueType::I64:
+      return l.v.i64 == r.v.i64;
+    case ValueType::FUNC:
+      return l.v.func == r.v.func;
+    case ValueType::CPP_FUNC:
+      return l.v.cppfunc == r.v.cppfunc;
+    case ValueType::METHOD:
+      return (l.method_func_ptr == r.method_func_ptr) && (l.v.instance == r.v.instance);
+    default: // ???
+      return false;
+    }
   }
 
   Dict* Value::get_dict() const
@@ -339,16 +359,19 @@ namespace foxlox
   {
     if (type == ValueType::OBJ)
     {
-      // NIL, STR, TUPLE, CLASS, INSTANCE, DICT, ARRAY
       if (v.obj == nullptr)
       {
-        return true;
+        return false;
       }
       return (v.obj->type == ObjType::STR)
         || (v.obj->type == ObjType::TUPLE)
         || (v.obj->type == ObjType::CLASS)
         || (v.obj->type == ObjType::INSTANCE)
         || (v.obj->type == ObjType::DICT);
+    }
+    if (type == ValueType::NIL)
+    {
+      return v.i64 == 0;
     }
     if (type == ValueType::BOOL)
     {
@@ -387,7 +410,7 @@ namespace foxlox
     }
     if (is_nil())
     {
-      throw exception_wrongtype(ObjType::NIL, ObjType::INSTANCE, ObjType::DICT);
+      throw exception_wrongtype(ValueType::NIL, ObjType::INSTANCE, ObjType::DICT);
     }
     if (type != ValueType::OBJ)
     {

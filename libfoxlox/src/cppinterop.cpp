@@ -1,3 +1,5 @@
+#include <gsl/gsl>
+
 #include <foxlox/except.h>
 
 #include <foxlox/cppinterop.h>
@@ -8,6 +10,8 @@ namespace foxlox
   {
     switch (v.type)
     {
+    case ValueType::NIL:
+      return nil;
     case ValueType::BOOL:
       return v.v.b;
     case ValueType::F64:
@@ -22,10 +26,7 @@ namespace foxlox
       return std::make_pair(v.v.instance, v.method_func());
     case ValueType::OBJ:
     {
-      if (v.v.obj == nullptr)
-      {
-        return nil;
-      }
+      Expects(v.v.obj != nullptr);
       switch (v.v.obj->type)
       {
       case ObjType::STR:

@@ -82,13 +82,10 @@ namespace foxlox
     }
 
     std::string_view get_view() const noexcept;
-
-#if __cpp_lib_three_way_comparison >= 201907L
-    using TStrViewComp = decltype(std::string_view{} <=> std::string_view{});
-#else
-    using TStrViewComp = std::weak_ordering;
-#endif
-    friend TStrViewComp operator<=>(const String& l, const String& r) noexcept;
+    friend auto operator<=>(const String& l, const String& r) noexcept
+    {
+      return l.get_view() <=> r.get_view();
+    }
     friend bool operator==(const String& l, const String& r) noexcept;
   };
 

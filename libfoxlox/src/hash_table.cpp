@@ -80,6 +80,7 @@ namespace
     // from https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
     
     // TODO: use bit_cast when gcc supports.
+    // TODO: FIXME some values like boolean may not like this hash-the-raw-bytes method
     std::array<uint32_t, 4> data;
     std::memcpy(data.data(), &v, sizeof(v));
     constexpr uint32_t seed = 0;

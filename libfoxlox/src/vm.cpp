@@ -21,7 +21,6 @@
 #include <foxlox/compiler.h>
 #include "object.h"
 #include "common.h"
-#include "runtimelib.h"
 
 #include <foxlox/vm.h>
 
@@ -124,7 +123,7 @@ namespace foxlox
     }
   }
   GSL_SUPPRESS(f.6)
-    VM::VM() noexcept :
+    VM::VM(bool load_default_lib) noexcept :
     current_subroutine(nullptr),
     current_chunk(nullptr),
     stack(STACK_MAX),
@@ -140,13 +139,23 @@ namespace foxlox
     {
       str__init__ = string_pool.add_string("__init__");
       const_string_pool.push_back(str__init__);
+      if (load_default_lib)
+      {
+        for (auto& [path, lib] : g_default_libs)
+        {
+          load_lib(path, lib);
+        }
+      }
     }
     catch (...)
     {
       std::terminate();
     }
   }
-
+  void VM::load_lib(std::string_view path, const RuntimeLib& lib)
+  {
+    runtime_libs.emplace(path, lib);
+  }
   void VM::load_binary(const std::vector<char>& binary)
   {
     if (
@@ -967,14 +976,13 @@ namespace foxlox
   }
   Dict* VM::import_lib(std::span<const std::string_view> libpath)
   {
-    if (libpath.front() == "fox")
+    auto combined_path = libpath | ranges::views::join('.') | ranges::to<std::string>;
+    if (auto found = runtime_libs.find(combined_path); found != runtime_libs.end())
     {
       // an internal lib
       gsl::not_null<Dict*> p = Dict::alloc(allocator, deallocator);
       gc_index.dict_pool.push_back(p);
-
-      const auto vals = find_lib(libpath.subspan(1));
-      for (auto& val : vals)
+      for (auto& val : found->second)
       {
         p->set(string_pool.add_string(val.name), val.val);
       }

@@ -2,7 +2,12 @@
 #include <map>
 #include <version>
 
+#ifdef FOXLOX_USE_WINSDK_ICU
+#include <icu.h>
+#pragma comment(lib, "icu.lib") 
+#else
 #include <unicode/uchar.h>
+#endif
 #undef FALSE
 #undef TRUE
 

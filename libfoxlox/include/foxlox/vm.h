@@ -5,11 +5,13 @@
 #include <vector>
 #include <stack>
 #include <deque>
+#include <unordered_map>
 
 #include <foxlox/chunk.h>
 #include <foxlox/debug.h>
 #include "../../src/value.h"
 #include "../../src/hash_table.h"
+#include "../../src/runtimelib.h"
 
 namespace foxlox
 {
@@ -64,12 +66,13 @@ namespace foxlox
   class VM
   {
   public:
-    VM() noexcept;
+    VM(bool load_default_lib = true) noexcept;
     VM(const VM&) = delete;
     VM& operator=(const VM&) = delete;
     VM(VM&& r) noexcept = default;
     VM& operator=(VM&& r) noexcept = default;
 
+    void load_lib(std::string_view path, const RuntimeLib& lib);
     void load_binary(const std::vector<char>& binary);
     Value run();
     Value run(const std::vector<char>& binary);
@@ -125,6 +128,7 @@ namespace foxlox
     void trace_references();
     void sweep();
 
+    std::unordered_map<std::string, RuntimeLib> runtime_libs;
     std::filesystem::path findlib(std::span<const std::string_view> libpath);
     Dict* import_lib(std::span<const std::string_view> libpath);
     Dict* gen_export_dict();

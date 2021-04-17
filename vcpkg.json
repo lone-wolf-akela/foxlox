@@ -2,13 +2,17 @@
   "name": "foxlox",
   "version-string": "0.0.1",
   "builtin-baseline": "fddf97411017bfcd7dd988d754b25efc3d6a1c3e",
+  "supports": "x64 | arm64",
   "dependencies": [
     "fmt",
     "ms-gsl",
     "range-v3",
     "magic-enum",
     "gtest",
-    "icu",
+    {
+      "name": "icu",
+      "platform": "(!windows) | mingw"
+    },
     "boost-dll",
     {
       "name": "mimalloc",

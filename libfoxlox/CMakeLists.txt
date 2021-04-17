@@ -27,12 +27,16 @@ target_sources(${PROJECT_NAME} PRIVATE
   "src/common.cpp"
   "src/except.cpp"
   "src/object.cpp"
-  "src/runtimelib.h"
   "src/runtimelib.cpp"
   "src/cppinterop.cpp"
   "src/hash_table.cpp"
   "src/mem_alloc.cpp" 
-  "src/serialization.cpp")
+  "src/serialization.cpp" 
+  "src/runtimelibs/io.cpp" 
+  "src/runtimelibs/profiler.cpp" 
+  "src/runtimelibs/math.cpp" 
+  "src/runtimelibs/algorithm.cpp"
+  )
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
@@ -76,8 +80,12 @@ target_link_libraries(${PROJECT_NAME} PUBLIC range-v3)
 find_package(magic_enum CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC magic_enum::magic_enum)
 
-find_package(ICU REQUIRED COMPONENTS uc dt)
-target_link_libraries(${PROJECT_NAME} PUBLIC ICU::uc ICU::dt)
+if(MSVC)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE FOXLOX_USE_WINSDK_ICU)
+else()
+  find_package(ICU REQUIRED COMPONENTS uc dt)
+  target_link_libraries(${PROJECT_NAME} PUBLIC ICU::uc ICU::dt)
+endif()
 
 find_package(Boost REQUIRED COMPONENTS filesystem)
 target_link_libraries(${PROJECT_NAME} PUBLIC Boost::filesystem)

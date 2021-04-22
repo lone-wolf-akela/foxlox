@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <climits>
 #include <stdexcept>
 #include <cstdint>
@@ -236,6 +237,7 @@ namespace foxlox
     friend bool operator==(const Value& l, const Value& r) noexcept;
 
     std::string to_string() const;
+    std::array<uint64_t, 2> serialize() const noexcept;
 
     bool debug_type_is_valid() noexcept;
   };

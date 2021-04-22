@@ -355,6 +355,60 @@ namespace foxlox
       throw FatalError(fmt::format("Unknown ValueType: {}", magic_enum::enum_name(type)));
     }
   }
+  std::array<uint64_t, 2> Value::serialize() const noexcept
+  {
+    // TODO: use bit_cast in this func
+    std::array<uint64_t, 2> data{};
+    switch (type)
+    {
+    case ValueType::NIL:
+      data.at(0) = static_cast<uint64_t>(ValueType::NIL);
+      data.at(1) = 0;
+      return data;
+    case ValueType::BOOL:
+      data.at(0) = static_cast<uint64_t>(ValueType::BOOL);
+      data.at(1) = v.b ? 1 : 0;
+      return data;
+    case ValueType::OBJ:
+      data.at(0) = static_cast<uint64_t>(ValueType::OBJ);
+      data.at(1) = reinterpret_cast<uint64_t>(v.obj);
+      return data;
+    case ValueType::F64:
+      data.at(0) = static_cast<uint64_t>(ValueType::F64);
+      data.at(1) = *reinterpret_cast<const uint64_t*>(&v.f64);
+      return data;
+    case ValueType::I64:
+      data.at(0) = static_cast<uint64_t>(ValueType::I64);
+      data.at(1) = static_cast<uint64_t>(v.i64);
+      return data;
+    case ValueType::FUNC:
+      data.at(0) = static_cast<uint64_t>(ValueType::FUNC);
+      data.at(1) = reinterpret_cast<uint64_t>(v.func);
+      return data;
+    case ValueType::CPP_FUNC:
+      data.at(0) = static_cast<uint64_t>(ValueType::CPP_FUNC);
+      data.at(1) = reinterpret_cast<uint64_t>(v.cppfunc);
+      return data;
+    case ValueType::METHOD:
+      data.at(0) = (static_cast<uint64_t>(type) << userspace_addr_bits)
+        | uint64_t{ method_func_ptr };
+      data.at(1) = reinterpret_cast<uint64_t>(v.func);
+      return data;
+      /* Not Impl yet: */
+    case ValueType::CPP_INSTANCE:
+      data.at(0) = static_cast<uint64_t>(ValueType::CPP_INSTANCE);
+      data.at(1) = 0;
+      return data;
+    case ValueType::CPP_CLASS:
+      data.at(0) = static_cast<uint64_t>(ValueType::CPP_CLASS);
+      data.at(1) = 0;
+      return data;
+    default: // ???
+      data.at(0) = 0;
+      data.at(1) = 0;
+      return data;
+    }
+  }
   bool Value::debug_type_is_valid() noexcept
   {
     if (type == ValueType::OBJ)

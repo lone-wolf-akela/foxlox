@@ -1,0 +1,139 @@
+{
+  "version": 2,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "description": "Sets generator, build and install directory, vcpkg",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        }
+      },
+      "environment": {
+        "VCPKG_FEATURE_FLAGS": "manifests,versions,binarycaching"
+      }
+    },
+    {
+      "name": "x64-windows-debug",
+      "description": "Sets x64 arch, compilers, build type",
+      "inherits": [ "base" ],
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "cl"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "hostOS": [ "Windows" ],
+          "codeAnalysisRuleset": "${sourceDir}/codeanalysis.ruleset"
+        }
+      }
+    },
+    {
+      "name": "x64-windows-release",
+      "description": "Sets x64 arch, compilers, build type",
+      "inherits": [ "base" ],
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "cl",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static-md"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "hostOS": [ "Windows" ],
+          "codeAnalysisRuleset": "${sourceDir}/codeanalysis.ruleset"
+        }
+      }
+    },
+    {
+      "name": "x64-mingw64-ucrt-release",
+      "description": "Sets x64 arch, compilers, build type",
+      "inherits": [ "base" ],
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "hostOS": [ "Windows" ],
+          "intelliSenseMode": "linux-gcc-x64"
+        }
+      },
+      "environment": {
+        "MINGW64_ROOT": "C:\\tools\\msys64\\ucrt64",
+        "BIN_ROOT": "$env{MINGW64_ROOT}\\bin",
+        "FLAVOR": "x86_64-w64-mingw32",
+        "TOOLSET_VERSION": "10.2.0",
+        "PATH": "$env{MINGW64_ROOT}\\bin;$env{MINGW64_ROOT}\\..\\usr\\local\\bin;$env{MINGW64_ROOT}\\..\\usr\\bin;$env{MINGW64_ROOT}\\..\\bin;D:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Preview\\VC\\Tools\\Llvm\\x64\\bin;C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Preview\\VC\\Tools\\Llvm\\x64\\bin;$penv{PATH}",
+        "INCLUDE": "$env{MINGW64_ROOT}\\include\\c++\\$env{TOOLSET_VERSION};$env{MINGW64_ROOT}\\include\\c++\\$env{TOOLSET_VERSION}\\tr1;$env{MINGW64_ROOT}\\include\\c++\\$env{TOOLSET_VERSION}\\$env{FLAVOR}",
+        "environment": "mingw_64"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "core-build",
+      "description": "Inherits environment from base configurePreset",
+      "configurePreset": "base",
+      "hidden": true,
+      "inheritConfigureEnvironment": true
+    },
+    {
+      "name": "x64-windows-debug-build",
+      "description": "just build it",
+      "configurePreset": "x64-windows-debug",
+      "inherits": "core-build"
+    },
+    {
+      "name": "x64-windows-release-build",
+      "description": "just build it",
+      "configurePreset": "x64-windows-release",
+      "inherits": "core-build"
+    },
+    {
+      "name": "x64-mingw64-ucrt-release-build",
+      "description": "just build it",
+      "configurePreset": "x64-mingw64-ucrt-release",
+      "inherits": "core-build"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "core-test",
+      "description": "Enable output on failure",
+      "configurePreset": "base",
+      "hidden": false,
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows-core-test",
+      "configurePreset": "x64-windows-debug",
+      "inherits": "core-test"
+    }
+  ]
+}

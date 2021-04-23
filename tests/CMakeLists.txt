@@ -30,7 +30,9 @@ target_sources(${PROJECT_NAME} PRIVATE
    "src/comments.cpp" 
    "src/constructor.cpp" 
    "src/field.cpp" 
-   "src/function.cpp" "src/import.cpp")
+   "src/function.cpp"
+   "src/import.cpp"
+   "src/string.cpp")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE libfoxlox)
 

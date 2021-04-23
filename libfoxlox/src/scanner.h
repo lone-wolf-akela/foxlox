@@ -4,6 +4,7 @@
 #include <string_view>
 #include <vector>
 #include <string_view>
+#include <tuple>
 
 #include <gsl/gsl>
 #include <range/v3/all.hpp>
@@ -35,12 +36,14 @@ namespace foxlox
     bool is_at_end();
     void scan_token();
     char32_t advance();
+    void add_src_line();
     void add_token(TokenType type);
     void add_token(TokenType type, CompiletimeValue literal);
     void add_error(std::string_view msg);
     bool match(char32_t expected);
     char32_t peek();
     void scanstring();
+    std::tuple<char32_t, bool> hexstr_to_u32char(std::u32string_view hexstr);
     void skipline();
     void number();
     char32_t peek_next();

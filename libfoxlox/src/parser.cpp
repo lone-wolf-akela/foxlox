@@ -523,14 +523,7 @@ namespace foxlox
       if (is_at_end()) { return peek(); }
       current++;
       auto tk = previous();
-      if (tk.type == TokenType::TKERROR)
-      {
-        error(tk, tk.lexeme);
-      }
-      else
-      {
-        return tk;
-      }
+      return tk;
     }
   }
 

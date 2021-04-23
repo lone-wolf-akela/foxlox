@@ -2,9 +2,13 @@
 # You can modify the rules from these initially generated values to suit your own policies
 # You can learn more about editorconfig here: https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-code-style-settings-reference
 root = true
+
 [CMakeLists.txt]
+charset = utf-8
 indent_style = space
 indent_size = 2
+
 [*.{c,cpp,cc,cxx,h,hpp}]
+charset = utf-8
 indent_style = space
 indent_size = 2

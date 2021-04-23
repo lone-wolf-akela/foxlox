@@ -1,5 +1,6 @@
 #include <utility>
 #include <map>
+#include <sstream>
 #include <version>
 
 #ifdef FOXLOX_USE_WINSDK_ICU
@@ -161,10 +162,7 @@ namespace foxlox
     case U'#': skipline(); break;
     case U'\n':
     {
-      const auto a_line_u32 = std::u32string_view(source).substr(last_line_end, current - last_line_end - 1);
-      source_per_line.emplace_back(u32_to_u8(a_line_u32));
-      last_line_end = current;
-      line++;
+      add_src_line();
       break;
     }
     case U'"': scanstring(); break;
@@ -179,6 +177,13 @@ namespace foxlox
   char32_t Scanner::advance()
   {
     return source.at(current++);
+  }
+  void Scanner::add_src_line()
+  {
+    const auto a_line_u32 = std::u32string_view(source).substr(last_line_end, current - last_line_end - 1);
+    source_per_line.emplace_back(u32_to_u8(a_line_u32));
+    last_line_end = current;
+    line++;
   }
   void Scanner::add_token(TokenType type)
   {
@@ -212,7 +217,15 @@ namespace foxlox
   {
     while (peek() != '"' && !is_at_end())
     {
-      if (peek() == '\n') { line++; }
+      if (peek() == '\\')
+      {
+        // escape the next char
+        advance();
+      }
+      if (peek() == '\n') 
+      {
+        add_src_line();
+      }
       advance();
     }
 
@@ -226,9 +239,195 @@ namespace foxlox
     advance();
 
     // Trim the surrounding quotes.
-    auto u32value = source.substr(start + 1, current - start - 2);
-    const auto u8value = u32_to_u8(u32value);
-    add_token(TokenType::STRING, CompiletimeValue(u8value));
+    auto u32str = source.substr(start + 1, current - start - 2);
+
+    // handle the escape sequences
+    std::ostringstream unescaped_strm;
+    enum 
+    { 
+      NON, SLASH, OCT, HEX, U16, U32
+    } state = NON;
+    gsl::index idx_seq_begin = 0;
+    // we parse one elem post to the end of u32str
+    // which is valid because that is the U'\0'
+    // this is to allow we parse escape sequence like '\0' at the end of the string
+    for (gsl::index i = 0; i < ssize(u32str) + 1; i++)
+    {
+      const char32_t c = u32str.c_str()[i];
+      switch (state)
+      {
+      case NON:
+      {
+        if (c == U'\\')
+        {
+          state = SLASH;
+        }
+        else
+        {
+          unescaped_strm << u32_to_u8(c);
+        }
+        break;
+      }
+      case SLASH:
+      {
+        if (c == U'\'' || c == U'\"' || c == U'\?' || c == U'\\')
+        {
+          unescaped_strm << gsl::narrow_cast<char>(c);
+          state = NON;
+        }
+        else if (c == U'a')
+        {
+          unescaped_strm << '\a';
+          state = NON;
+        }
+        else if (c == U'b')
+        {
+          unescaped_strm << '\b';
+          state = NON;
+        }
+        else if (c == U'f')
+        {
+          unescaped_strm << '\f';
+          state = NON;
+        }
+        else if (c == U'n')
+        {
+          unescaped_strm << '\n';
+          state = NON;
+        }
+        else if (c == U'r')
+        {
+          unescaped_strm << '\r';
+          state = NON;
+        }
+        else if (c == U't')
+        {
+          unescaped_strm << '\t';
+          state = NON;
+        }
+        else if (c == U'v')
+        {
+          unescaped_strm << '\v';
+          state = NON;
+        }
+        else if (U'0' <= c && c <= U'7')
+        {
+          state = OCT;
+          idx_seq_begin = i;
+        }
+        else if (c == U'x')
+        {
+          state = HEX;
+          idx_seq_begin = i + 1;
+        }
+        else if (c == U'u')
+        {
+          state = U16;
+          idx_seq_begin = i + 1;
+        }
+        else if (c == U'U')
+        {
+          state = U32;
+          idx_seq_begin = i + 1;
+        }
+        else
+        {
+          add_error("Invalid escaped sequence in string.");
+          return;
+        }
+        break;
+      }
+      case OCT:
+      {
+        const auto seq_len = i - idx_seq_begin;
+        if (c < U'0' || c > U'7' || seq_len >= 3)
+        {
+          char32_t sum = 0;
+          for (char32_t oct : u32str.substr(idx_seq_begin, seq_len))
+          {
+            sum = sum * 8 + (oct - U'0');
+          }
+          unescaped_strm << gsl::narrow_cast<char>(sum);
+          // rewind i as u32str[i] is not in this oct seq
+          i--;
+          state = NON;
+        }
+        break;
+      }
+      case HEX:
+      {
+        const auto seq_len = i - idx_seq_begin;
+        if (!(U'0' <= c && c <= U'9')
+          && !(U'a' <= c && c <= U'f')
+          && !(U'A' <= c && c <= U'F'))
+        {
+          auto [val, success] = hexstr_to_u32char(u32str.substr(idx_seq_begin, seq_len));
+          if (!success) { return; }
+          unescaped_strm << gsl::narrow_cast<char>(val);
+          // rewind i as u32str[i] is not in this hex seq
+          i--;
+          state = NON;
+        }
+        break;
+      }
+      case U16:
+      {
+        const auto seq_len = i - idx_seq_begin + 1;
+        if (seq_len >= 4)
+        {
+          auto [val, success] = hexstr_to_u32char(u32str.substr(idx_seq_begin, seq_len));
+          if (!success) { return; }
+          unescaped_strm << u32_to_u8(val);
+          state = NON;
+        }
+        break;
+      }
+      case U32:
+      {
+        const auto seq_len = i - idx_seq_begin + 1;
+        if (seq_len >= 8)
+        {
+          auto [val, success] = hexstr_to_u32char(u32str.substr(idx_seq_begin, seq_len));
+          if (!success) { return; }
+          unescaped_strm << u32_to_u8(val);
+          state = NON;
+        }
+        break;
+      }
+      default: // ???
+        break;
+      }
+    }
+
+#if !defined(_MSC_VER) && (__GNUC__ <= 10)
+#pragma message("using g++ <= 10, there's no std::ostringstream.view()")
+    auto parsed_str = unescaped_strm.str();
+#else
+    auto parsed_str = unescaped_strm.view();
+#endif
+    // remove the last '\0' in parsed_str
+    parsed_str = parsed_str.substr(0, parsed_str.size() - 1);
+    add_token(TokenType::STRING, CompiletimeValue(parsed_str));
+  }
+
+  std::tuple<char32_t, bool> Scanner::hexstr_to_u32char(std::u32string_view hexstr)
+  {
+    char32_t sum = 0;
+    for (const char32_t hex : hexstr)
+    {
+      if (!(U'0' <= hex && hex <= U'9')
+        && !(U'a' <= hex && hex <= U'f')
+        && !(U'A' <= hex && hex <= U'F'))
+      {
+        add_error("Invalid hexadecimal number in Unicode value.");
+        return std::make_tuple(sum, false);
+      }
+      const char32_t v = (U'0' <= hex && hex <= U'9') ? hex - U'0' :
+        (U'a' <= hex && hex <= U'f') ? hex - U'a' + 10 :
+        hex - U'A' + 10;
+      sum = sum * 16 + v;
+    }
+    return std::make_tuple(sum, true);
   }
 
   void Scanner::skipline()

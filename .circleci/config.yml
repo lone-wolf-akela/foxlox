@@ -2,7 +2,7 @@ version: 2.1
 executors:
   exectr:
     docker:
-      - image: lonewolfakela/foxlox_compile:1.0
+      - image: lonewolfakela/foxlox_compile:1.1
 jobs:
   build:
     executor: exectr

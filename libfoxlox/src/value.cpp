@@ -375,7 +375,7 @@ namespace foxlox
       return data;
     case ValueType::F64:
       data.at(0) = static_cast<uint64_t>(ValueType::F64);
-      data.at(1) = *reinterpret_cast<const uint64_t*>(&v.f64);
+      std::memcpy(&data.at(1), &v.f64, sizeof(v.f64));
       return data;
     case ValueType::I64:
       data.at(0) = static_cast<uint64_t>(ValueType::I64);

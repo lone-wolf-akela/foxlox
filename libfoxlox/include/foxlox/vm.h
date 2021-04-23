@@ -124,7 +124,7 @@ namespace foxlox
     void mark_class(Class& c);
     void mark_dict(Dict& d);
     void mark_subroutine(Subroutine& s);
-    std::stack<Value*> gray_stack;
+    std::stack<Value*, std::vector<Value*>> gray_stack;
     void trace_references();
     void sweep();
 

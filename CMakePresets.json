@@ -161,7 +161,7 @@
     {
       "name": "x64-windows-debug-build-asan",
       "description": "just build it",
-      "configurePreset": "x64-windows-debug",
+      "configurePreset": "x64-windows-debug-asan",
       "inherits": "core-build"
     },
     {

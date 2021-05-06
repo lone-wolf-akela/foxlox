@@ -1,8 +1,8 @@
 #pragma once
-#include <tuple>
-#include <string_view>
-#include <vector>
-#include <filesystem>
+import <tuple>;
+import <string_view>;
+import <vector>;
+import <filesystem>;
 
 namespace foxlox
 {

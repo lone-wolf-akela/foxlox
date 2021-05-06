@@ -1,6 +1,6 @@
-#include <gsl/gsl>
+import <gsl/gsl>;
 
-#include <foxlox/except.h>
+import foxlox.except;
 
 #include <foxlox/cppinterop.h>
 

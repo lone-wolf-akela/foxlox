@@ -1,18 +1,20 @@
 #pragma once
 
-#include <cstdint>
-#include <vector>
-#include <string>
-#include <span>
-#include <istream>
-#include <ostream>
+import <cstdint>;
+import <vector>;
+import <string>;
+import <span>;
+import <istream>;
+import <ostream>;
+import <variant>;
 
-#include <gsl/gsl>
+import <gsl/gsl>;
+
+import foxlox.compiletime_value;
 
 #include "../../src/value.h"
 #include "../../src/object.h"
 #include "../../src/opcode.h"
-#include "../../src/compiletime_value.h"
 
 namespace foxlox
 {

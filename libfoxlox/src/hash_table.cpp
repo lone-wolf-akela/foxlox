@@ -1,14 +1,16 @@
-#include <cassert>
-#include <cstring>
-#include <array>
-#include <algorithm>
-#include <bit>
-#include <iostream>
+import <cassert>;
+import <cstring>;
+import <array>;
+import <algorithm>;
+import <bit>;
+import <iostream>;
 
-#include <gsl/gsl>
+import <gsl/gsl>;
+
+import foxlox.except;
+
 #include <fmt/format.h>
 
-#include <foxlox/except.h>
 #include <foxlox/config.h>
 #include "object.h"
 #include "util.h"
@@ -38,7 +40,7 @@ namespace
     uint32_t hash = 2166136261u;
     for(auto c: str)
     {
-      hash ^= gsl::narrow_cast<uint8_t>(c);
+      hash ^= std::bit_cast<uint8_t>(c);
       hash *= 16777619u;
     }
     return hash;
@@ -49,12 +51,12 @@ namespace
     uint32_t hash = 2166136261u;
     for (auto c : str1)
     {
-      hash ^= gsl::narrow_cast<uint8_t>(c);
+      hash ^= std::bit_cast<uint8_t>(c);
       hash *= 16777619u;
     }
     for (auto c : str2)
     {
-      hash ^= gsl::narrow_cast<uint8_t>(c);
+      hash ^= std::bit_cast<uint8_t>(c);
       hash *= 16777619u;
     }
     return hash;
@@ -79,11 +81,7 @@ namespace
     // MurmurHash3
     // from https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
     
-
-    // TODO: use bit_cast when gcc supports.
-    const auto raw_data = v.serialize();
-    std::array<uint32_t, 4> data;
-    std::memcpy(data.data(), &raw_data, sizeof(raw_data));
+    const auto data = std::bit_cast<std::array<uint32_t, 4>>(v.serialize());
     constexpr uint32_t seed = 0;
     uint32_t h1 = seed;
 

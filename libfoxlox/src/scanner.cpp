@@ -1,7 +1,7 @@
-#include <utility>
-#include <map>
-#include <sstream>
-#include <version>
+import <utility>;
+import <map>;
+import <sstream>;
+import <version>;
 
 #ifdef FOXLOX_USE_WINSDK_ICU
 #include <icu.h>
@@ -461,7 +461,6 @@ namespace foxlox
     if (u8substr.find(U'.') != decltype(u8substr)::npos)
     {
       double f64{};
-#if __cpp_lib_to_chars >= 201611L
       const auto r = std::from_chars(u8substr.data(), u8substr.data() + u8substr.size(), f64);
       if(r.ptr == u8substr.data() + u8substr.size())
       {
@@ -471,11 +470,6 @@ namespace foxlox
       {
         add_error("Wrong number format.");
       }
-#else
-#pragma message("no floating point std::from_chars support!")
-      f64 = std::stod(u8substr);
-      add_token(TokenType::DOUBLE, f64);
-#endif
     }
     else
     {

@@ -1,12 +1,14 @@
 #pragma once
 
-#include <map>
-#include <string_view>
+import <map>;
+import <string_view>;
 
-#include <foxlox/except.h>
-#include <foxlox/chunk.h>
+import foxlox.except;
 
 #include "common.h"
+
+#include <foxlox/chunk.h>
+
 #include "stmt.h"
 #include "expr.h"
 #include "parser.h"

@@ -1,7 +1,9 @@
+import foxlox.except;
+
 #include <fmt/format.h>
 
 #include <foxlox/chunk.h>
-#include <foxlox/except.h>
+
 
 #include "object.h"
 

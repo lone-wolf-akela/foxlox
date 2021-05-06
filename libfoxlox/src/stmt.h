@@ -1,13 +1,14 @@
 #pragma once
 
-#include <memory>
-#include <vector>
+import <memory>;
+import <vector>;
 
-#include <gsl/gsl>
+import <gsl/gsl>;
 
-#include <foxlox/except.h>
+import foxlox.except;
+import foxlox.token;
+
 #include "expr.h"
-#include "token.h"
 
 namespace foxlox::stmt
 {

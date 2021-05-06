@@ -1,9 +1,9 @@
 #pragma once
 
-#include <variant>
-#include <string>
-#include <string_view>
-#include <utility>
+import <variant>;
+import <string>;
+import <string_view>;
+import <utility>;
 
 #include "../../src/value.h"
 #include "../../src/object.h"

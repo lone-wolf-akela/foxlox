@@ -1,8 +1,8 @@
 #pragma once
-#include <climits>
-#include <version>
+import <climits>;
+import <version>;
 
-#include <gsl/gsl>
+import <gsl/gsl>;
 
 #include "hash_table.h"
 #include "value.h"

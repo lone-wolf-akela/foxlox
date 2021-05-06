@@ -1,9 +1,9 @@
 #pragma once
-#include <cassert>
-#include <string_view>
-#include <array>
+import <cassert>;
+import <string_view>;
+import <array>;
 
-#include "token.h"
+import foxlox.token;
 
 #if defined(NDEBUG) && defined(_MSC_VER)
 #define UNREACHABLE __assume(0)
@@ -20,6 +20,6 @@
 
 namespace foxlox
 {
-  [[maybe_unused]] constexpr std::array BINARY_HEADER = { '\004', '\002', 'F', 'O', 'X', 'L', 'O', 'X' };
+  [[maybe_unused]] constexpr std::array<char, 8> BINARY_HEADER = { '\004', '\002', 'F', 'O', 'X', 'L', 'O', 'X' };
   void format_error(Token token, std::string_view message);
 }

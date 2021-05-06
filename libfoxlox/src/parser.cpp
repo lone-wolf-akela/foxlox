@@ -1,6 +1,7 @@
+#include "common.h"
+
 #include <fmt/format.h>
 
-#include "common.h"
 #include "parser.h"
 
 namespace

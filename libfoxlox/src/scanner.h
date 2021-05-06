@@ -1,17 +1,17 @@
 #pragma once
-#include <cstdint>
-#include <charconv>
-#include <string_view>
-#include <vector>
-#include <string_view>
-#include <tuple>
+import <cstdint>;
+import <charconv>;
+import <string_view>;
+import <vector>;
+import <string_view>;
+import <tuple>;
 
-#include <gsl/gsl>
-#include <range/v3/all.hpp>
+import <gsl/gsl>;
+
+import foxlox.token;
+
 #include <fmt/format.h>
-#include <tuple>
 
-#include "token.h"
 #include "util.h"
 
 namespace foxlox

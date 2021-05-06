@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+import <cstdint>;
 
 // from https://bullno1.com/blog/switched-goto
 

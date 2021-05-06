@@ -1,25 +1,16 @@
-#include <bit>
-#include <iostream>
-
+module;
 #include <fmt/format.h>
-#include <gsl/gsl>
-#include <range/v3/all.hpp>
-#include <magic_enum.hpp>
 
-#include <foxlox/except.h>
-#include <foxlox/vm.h>
 #include <foxlox/config.h>
-#include "object.h"
+#include <foxlox/chunk.h>
+module foxlox.vm;
 
+import <gsl/gsl>;
 
-#include <foxlox/debug.h>
+import foxlox.except;
 
 namespace foxlox
 {
-  Debugger::Debugger(bool colored_output) noexcept :
-    colored(colored_output)
-  {
-  }
   gsl::index Debugger::disassemble_inst([[maybe_unused]] const VM& vm, const Subroutine& subroutine, gsl::index index)
   {
     const int last_line_num = index == 0 ? -1 : subroutine.get_lines().get_line(index - 1);
@@ -63,7 +54,7 @@ namespace foxlox
     };
     [[maybe_unused]]
     const auto get_int16 = [&]() -> int16_t {
-      return gsl::narrow_cast<int16_t>(get_uint16());
+      return std::bit_cast<int16_t>(get_uint16());
     };
 
     const OP op = static_cast<OP>(gsl::at(codes, index));
@@ -171,15 +162,6 @@ namespace foxlox
     }
     default:
       throw FatalError("Unknown OpCode.");
-    }
-  }
-  void Debugger::disassemble_chunk(const VM& vm, const Subroutine& subroutine, std::string_view name)
-  {
-    std::cout << fmt::format("== {} ==\n", name);
-    gsl::index i = 0;
-    while (i < ssize(subroutine.get_code()))
-    {
-      i += disassemble_inst(vm, subroutine, i);
     }
   }
   void Debugger::print_vm_stack(VM& vm)

@@ -1,10 +1,9 @@
-#include <gsl/gsl>
+import <gsl/gsl>;
+#include "common.h"
+#include "resolver.h"
+
 #include <fmt/format.h>
 #include <range/v3/all.hpp>
-
-#include "common.h"
-
-#include "resolver.h"
 
 namespace foxlox
 {

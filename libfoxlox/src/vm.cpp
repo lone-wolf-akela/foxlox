@@ -1,28 +1,31 @@
-#include <cassert>
-#include <span>
-#include <functional>
-#include <utility>
-#include <iostream>
-#include <sstream>
-#include <algorithm>
+module;
+#include "common.h"
+#include "../src/opcode.h"
 
 #include <foxlox/config.h>
 #include "mem_alloc.h"
 
-#include <fmt/format.h>
-#pragma warning(disable:4702) // unreachable code
-#include <range/v3/all.hpp>
-#pragma warning(default:4702) 
-#include <magic_enum.hpp>
-#include <boost/dll/runtime_symbol_info.hpp>
-
-#include <foxlox/except.h>
-#include <foxlox/debug.h>
 #include <foxlox/compiler.h>
 #include "object.h"
-#include "common.h"
 
-#include <foxlox/vm.h>
+#include <fmt/format.h>
+#include <range/v3/all.hpp>
+#include <magic_enum.hpp>
+
+#pragma warning(disable:5104) 
+#include <boost/dll/runtime_symbol_info.hpp>
+#pragma warning(default:5104) 
+module foxlox.vm;
+
+import <cassert>;
+import <span>;
+import <functional>;
+import <utility>;
+import <iostream>;
+import <sstream>;
+import <algorithm>;
+
+import foxlox.except;
 
 namespace foxlox
 {
@@ -695,7 +698,7 @@ namespace foxlox
   }
   int16_t VM::read_int16() noexcept
   {
-    return gsl::narrow_cast<int16_t>(read_uint16());
+    return std::bit_cast<int16_t>(read_uint16());
   }
   bool VM::read_bool() noexcept
   {
@@ -843,7 +846,7 @@ namespace foxlox
     {
       if (!v.v.tuple->is_marked())
       {
-        gray_stack.push(&v);
+        gray_stack.push_back(&v);
         v.v.tuple->mark();
       }
     }
@@ -851,7 +854,7 @@ namespace foxlox
     {
       if (!v.v.instance->is_marked())
       {
-        gray_stack.push(&v);
+        gray_stack.push_back(&v);
         v.v.instance->mark();
       }
     }
@@ -863,7 +866,7 @@ namespace foxlox
     {
       if (!v.v.dict->is_marked())
       {
-        gray_stack.push(&v);
+        gray_stack.push_back(&v);
         v.v.dict->mark();
       }
     }
@@ -879,7 +882,7 @@ namespace foxlox
     {
       if (!v.v.instance->is_marked())
       {
-        gray_stack.push(&v);
+        gray_stack.push_back(&v);
         v.v.instance->mark();
       }
       mark_subroutine(*v.method_func());
@@ -889,8 +892,8 @@ namespace foxlox
   {
     while (!gray_stack.empty())
     {
-      const gsl::not_null v = gray_stack.top();
-      gray_stack.pop();
+      const gsl::not_null v = gray_stack.back();
+      gray_stack.pop_back();
       // only tuple, instance, and method should be put into graystack
       if (v->is_tuple())
       {

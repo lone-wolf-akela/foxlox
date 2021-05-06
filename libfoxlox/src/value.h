@@ -1,17 +1,17 @@
 #pragma once
-#include <array>
-#include <climits>
-#include <stdexcept>
-#include <cstdint>
-#include <string>
-#include <compare>
-#include <string_view>
-#include <span>
-#include <concepts>
-#include <type_traits>
-#include <utility>
+import <array>;
+import <climits>;
+import <stdexcept>;
+import <cstdint>;
+import <string>;
+import <compare>;
+import <string_view>;
+import <span>;
+import <concepts>;
+import <type_traits>;
+import <utility>;
 
-#include <gsl/gsl>
+import <gsl/gsl>;
 
 namespace foxlox
 {

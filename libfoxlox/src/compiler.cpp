@@ -1,12 +1,13 @@
-#include <sstream>
-#include <fstream>
+import <sstream>;
+import <fstream>;
+
+#include "common.h"
+#include "codegen.h"
 
 #include <range/v3/all.hpp>
 
-#include "common.h"
 #include "scanner.h"
 #include "parser.h"
-#include "codegen.h"
 #include "resolver.h"
 #include "object.h"
 

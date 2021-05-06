@@ -8,11 +8,6 @@
     "ms-gsl",
     "range-v3",
     "magic-enum",
-    "gtest",
-    {
-      "name": "icu",
-      "platform": "(!windows) | mingw"
-    },
     "boost-dll",
     {
       "name": "mimalloc",

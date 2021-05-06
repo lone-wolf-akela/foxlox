@@ -1,10 +1,12 @@
 #pragma once
-#include <string>
-#include <string_view>
-#include <functional>
-#include <vector>
-#include <concepts>
-#include <optional>
+import <string>;
+import <string_view>;
+import <functional>;
+import <vector>;
+import <concepts>;
+import <optional>;
+
+import <gsl/gsl>;
 
 #include "value.h"
 

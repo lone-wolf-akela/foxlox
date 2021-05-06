@@ -1,11 +1,12 @@
 #pragma once
 
-#include <vector>
-#include <memory>
-#include <string_view>
+import <vector>;
+import <memory>;
+import <string_view>;
+
+import foxlox.token;
 
 #include "value.h"
-#include "token.h"
 #include "stmt.h"
 
 namespace foxlox

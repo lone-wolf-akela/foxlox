@@ -1,15 +1,16 @@
-#include <iostream>
-#include <chrono>
-#include <ranges>
-#include <algorithm>
-#include <numbers>
+module;
+module foxlox.runtimelib;
 
-#include "runtimelib.h"
+import <iostream>;
+import <chrono>;
+import <ranges>;
+import <algorithm>;
+import <numbers>;
 
-#include "runtimelibs/algorithm.h"
-#include "runtimelibs/io.h"
-#include "runtimelibs/math.h"
-#include "runtimelibs/profiler.h"
+import foxlox.runtimelibs.algorithm;
+import foxlox.runtimelibs.io;
+import foxlox.runtimelibs.math;
+import foxlox.runtimelibs.profiler;
 
 namespace foxlox
 {

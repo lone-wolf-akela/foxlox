@@ -1,15 +1,15 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-#include <variant>
-#include <compare>
+import <memory>;
+import <vector>;
+import <variant>;
+import <compare>;
 
-#include <gsl/gsl>
+import <gsl/gsl>;
 
-#include <foxlox/except.h>
-#include "token.h"
-#include "compiletime_value.h"
+import foxlox.except;
+import foxlox.token;
+import foxlox.compiletime_value;
 
 namespace foxlox::stmt
 {

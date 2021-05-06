@@ -1,9 +1,9 @@
 #pragma once
 
-#include <string>
-#include <string_view>
-#include <concepts>
-#include <sstream>
+import <string>;
+import <string_view>;
+import <concepts>;
+import <sstream>;
 
 namespace foxlox
 {

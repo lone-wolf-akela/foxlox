@@ -1,4 +1,6 @@
-#include <cassert>
+import <cassert>;
+
+import <gsl/gsl>;
 
 #ifdef FOXLOX_USE_WINSDK_ICU
 #include <icu.h>
@@ -8,7 +10,6 @@
 #else
 #include <unicode/ustring.h>
 #endif
-#include <gsl/gsl>
 
 #include "util.h"
 

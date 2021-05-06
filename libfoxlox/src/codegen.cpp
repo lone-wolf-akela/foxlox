@@ -1,7 +1,7 @@
+#include "codegen.h"
+
 #include <range/v3/all.hpp>
 #include <fmt/format.h>
-
-#include "codegen.h"
 
 namespace foxlox
 {
@@ -805,7 +805,7 @@ namespace foxlox
     {
       value_idxs.insert_or_assign(
         stmt,
-        ValueIdx{ stmt::VarStoreType::Stack, gsl::narrow_cast<uint16_t>(current_stack_size) }
+        ValueIdx{ stmt::VarStoreType::Stack, current_stack_size }
       );
     }
     else

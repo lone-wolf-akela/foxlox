@@ -1,8 +1,8 @@
 #pragma once
 
-#include <map>
-#include <vector>
-#include <string>
+import <map>;
+import <vector>;
+import <string>;
 
 #include "expr.h"
 #include "stmt.h"

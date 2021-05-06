@@ -1,10 +1,10 @@
-#include <climits>
-#include <concepts>
-#include <bit>
+import <climits>;
+import <concepts>;
+import <bit>;
 
-#include <gsl/gsl>
+import <gsl/gsl>;
 
-#include <foxlox/except.h>
+import foxlox.except;
 
 #include "serialization.h"
 
@@ -37,12 +37,12 @@ namespace foxlox
 {
   void dump_int64(std::ostream& strm, int64_t v)
   {
-    dump_uint64(strm, gsl::narrow_cast<uint64_t>(v));
+    dump_uint64(strm, std::bit_cast<uint64_t>(v));
   }
 
   void dump_int32(std::ostream& strm, int32_t v)
   {
-    dump_uint32(strm, gsl::narrow_cast<uint32_t>(v));
+    dump_uint32(strm, std::bit_cast<uint32_t>(v));
   }
 
   void dump_uint64(std::ostream& strm, uint64_t v)
@@ -89,12 +89,12 @@ namespace foxlox
 
   int64_t load_int64(std::istream& strm)
   {
-    return gsl::narrow_cast<int64_t>(load_uint64(strm));
+    return std::bit_cast<int64_t>(load_uint64(strm));
   }
 
   int32_t load_int32(std::istream& strm)
   {
-    return gsl::narrow_cast<int32_t>(load_uint32(strm));
+    return std::bit_cast<int32_t>(load_uint32(strm));
   }
 
   uint64_t load_uint64(std::istream& strm)

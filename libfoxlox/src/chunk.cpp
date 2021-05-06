@@ -1,12 +1,13 @@
-#include <cassert>
-#include <string_view>
-#include <algorithm>
-#include <limits>
-#include <bit>
+import <cassert>;
+import <string_view>;
+import <algorithm>;
+import <limits>;
+import <bit>;
 
-#include <gsl/gsl>
+import <gsl/gsl>;
 
-#include <foxlox/except.h>
+import foxlox.except;
+
 #include "object.h"
 #include "serialization.h"
 
@@ -71,7 +72,7 @@ namespace foxlox
   }
   void Subroutine::add_code(int16_t c, int line_num)
   {
-    add_code(gsl::narrow_cast<uint16_t>(c), line_num);
+    add_code(std::bit_cast<uint16_t>(c), line_num);
   }
   void Subroutine::add_code(uint16_t c, int line_num)
   {
@@ -81,7 +82,7 @@ namespace foxlox
   }
   void Subroutine::edit_code(gsl::index idx, int16_t c)
   {
-    edit_code(idx, gsl::narrow_cast<uint16_t>(c));
+    edit_code(idx, std::bit_cast<uint16_t>(c));
   }
   void Subroutine::edit_code(gsl::index idx, uint16_t c)
   {

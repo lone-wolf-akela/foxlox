@@ -1,5 +1,5 @@
 module;
-module foxlox.runtimelib;
+module foxlox:runtimelib;
 
 import <iostream>;
 import <chrono>;
@@ -7,10 +7,10 @@ import <ranges>;
 import <algorithm>;
 import <numbers>;
 
-import foxlox.runtimelibs.algorithm;
-import foxlox.runtimelibs.io;
-import foxlox.runtimelibs.math;
-import foxlox.runtimelibs.profiler;
+import :runtimelibs.algorithm;
+import :runtimelibs.io;
+import :runtimelibs.math;
+import :runtimelibs.profiler;
 
 namespace foxlox
 {

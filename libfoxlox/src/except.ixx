@@ -1,6 +1,6 @@
 module;
 #include <fmt/format.h>
-export module foxlox.except;
+export module foxlox:except;
 
 import <stdexcept>;
 import <string>;

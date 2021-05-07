@@ -1,17 +1,31 @@
+module;
+#include <range/v3/all.hpp>
+export module foxlox:compiler;
+
+import <tuple>;
+import <string_view>;
+import <vector>;
+import <filesystem>;
 import <sstream>;
 import <fstream>;
 
-#include "common.h"
-#include "codegen.h"
+import "common.h";
+import :codegen;
+import :scanner;
+import :parser;
+import :resolver;
+import :value;
 
-#include <range/v3/all.hpp>
-
-#include "scanner.h"
-#include "parser.h"
-#include "resolver.h"
-#include "object.h"
-
-#include <foxlox/compiler.h>
+namespace foxlox
+{
+  export enum class CompilerResult
+  {
+    OK,
+    COMPILE_ERROR
+  };
+  export std::tuple<CompilerResult, std::vector<char>> compile(std::string_view source);
+  export std::tuple<CompilerResult, std::vector<char>> compile_file(const std::filesystem::path& path);
+}
 
 namespace
 {

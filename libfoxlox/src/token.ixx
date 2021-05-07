@@ -1,12 +1,12 @@
 module;
 #include <fmt/format.h>
 #include <magic_enum.hpp>
-export module foxlox.token;
+export module foxlox:token;
 
 import <string>;
 import <string_view>;
 
-import foxlox.compiletime_value;
+import :compiletime_value;
 
 namespace foxlox
 {

@@ -1,8 +1,5 @@
-import <utility>;
-import <map>;
-import <sstream>;
-import <version>;
-
+module;
+#include <fmt/format.h>
 #ifdef FOXLOX_USE_WINSDK_ICU
 #include <icu.h>
 #pragma comment(lib, "icu.lib") 
@@ -11,8 +8,60 @@ import <version>;
 #endif
 #undef FALSE
 #undef TRUE
+export module foxlox:scanner;
 
-#include "scanner.h"
+import <cstdint>;
+import <charconv>;
+import <string_view>;
+import <vector>;
+import <string_view>;
+import <tuple>;
+import <utility>;
+import <map>;
+import <sstream>;
+import <version>;
+
+import <gsl/gsl>;
+
+import :util;
+import :token;
+
+namespace foxlox
+{
+  export class Scanner
+  {
+  public:
+    explicit Scanner(std::u32string&& s) noexcept;
+    // return tokens with each line of the source file
+    std::tuple<std::vector<Token>, std::vector<std::string>> scan_tokens();
+
+  private:
+    const std::u32string source;
+    std::vector<std::string> source_per_line;
+    std::vector<Token> tokens;
+
+    gsl::index last_line_end;
+    gsl::index start;
+    gsl::index current;
+    int line;
+
+    bool is_at_end();
+    void scan_token();
+    char32_t advance();
+    void add_src_line();
+    void add_token(TokenType type);
+    void add_token(TokenType type, CompiletimeValue literal);
+    void add_error(std::string_view msg);
+    bool match(char32_t expected);
+    char32_t peek();
+    void scanstring();
+    std::tuple<char32_t, bool> hexstr_to_u32char(std::u32string_view hexstr);
+    void skipline();
+    void number();
+    char32_t peek_next();
+    void identifier();
+  };
+}
 
 namespace
 {
@@ -30,7 +79,7 @@ namespace
   {
     return u_isalpha(c) || c == '_';
   }
-  bool is_letter_or_digit(char32_t c) noexcept 
+  bool is_letter_or_digit(char32_t c) noexcept
   {
     return u_isalnum(c) || c == U'_';
   }
@@ -99,7 +148,7 @@ namespace foxlox
     case U'}': add_token(TokenType::RIGHT_BRACE); break;
     case U',': add_token(TokenType::COMMA); break;
     case U'.': add_token(TokenType::DOT); break;
-    case U'-': 
+    case U'-':
     {
       if (match(U'-')) { add_token(TokenType::MINUS_MINUS); }
       else if (match(U'=')) { add_token(TokenType::MINUS_EQUAL); }
@@ -114,7 +163,7 @@ namespace foxlox
       break;
     }
     case U';': add_token(TokenType::SEMICOLON); break;
-    case U'*': 
+    case U'*':
     {
       if (match(U'=')) { add_token(TokenType::STAR_EQUAL); }
       else { add_token(TokenType::STAR); }
@@ -122,13 +171,13 @@ namespace foxlox
     }
     case U'/':
     {
-      if (match(U'/')) 
-      { 
+      if (match(U'/'))
+      {
         if (match(U'=')) { add_token(TokenType::SLASH_SLASH_EQUAL); }
         else { add_token(TokenType::SLASH_SLASH); }
       }
-      else 
-      { 
+      else
+      {
         if (match(U'=')) { add_token(TokenType::SLASH_EQUAL); }
         else { add_token(TokenType::SLASH); }
       }
@@ -222,7 +271,7 @@ namespace foxlox
         // escape the next char
         advance();
       }
-      if (peek() == '\n') 
+      if (peek() == '\n')
       {
         add_src_line();
       }
@@ -243,8 +292,8 @@ namespace foxlox
 
     // handle the escape sequences
     std::ostringstream unescaped_strm;
-    enum 
-    { 
+    enum
+    {
       NON, SLASH, OCT, HEX, U16, U32
     } state = NON;
     gsl::index idx_seq_begin = 0;
@@ -439,7 +488,7 @@ namespace foxlox
   }
 
   GSL_SUPPRESS(bounds.1)
-  void Scanner::number()
+    void Scanner::number()
   {
     while (is_digit(peek()))
     {
@@ -462,7 +511,7 @@ namespace foxlox
     {
       double f64{};
       const auto r = std::from_chars(u8substr.data(), u8substr.data() + u8substr.size(), f64);
-      if(r.ptr == u8substr.data() + u8substr.size())
+      if (r.ptr == u8substr.data() + u8substr.size())
       {
         add_token(TokenType::DOUBLE, f64);
       }
@@ -475,7 +524,7 @@ namespace foxlox
     {
       int64_t i64{};
       const auto r = std::from_chars(u8substr.data(), u8substr.data() + u8substr.size(), i64);
-      if(r.ptr == u8substr.data() + u8substr.size())
+      if (r.ptr == u8substr.data() + u8substr.size())
       {
         add_token(TokenType::INT, i64);
       }

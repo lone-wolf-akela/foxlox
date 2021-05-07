@@ -1,16 +1,17 @@
 module;
-#include "value.h"
-#include "serialization.h"
-#include "util.h"
-export module foxlox.compiletime_value;
+export module foxlox:compiletime_value;
 
 import <cstdint>;
 import <string>;
 import <string_view>;
 import <variant>;
 import <vector>;
+import <span>;
 
-import foxlox.except;
+import :serialization;
+import :util;
+import :except;
+import :value;
 
 namespace foxlox
 {

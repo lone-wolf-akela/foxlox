@@ -1,13 +1,12 @@
 module;
 #include <fmt/format.h>
-
-#include <foxlox/config.h>
-#include <foxlox/chunk.h>
-module foxlox.vm;
+module foxlox:vm;
 
 import <gsl/gsl>;
 
-import foxlox.except;
+import "config.h";
+import :except;
+import :chunk;
 
 namespace foxlox
 {

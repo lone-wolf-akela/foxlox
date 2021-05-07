@@ -1,6 +1,5 @@
-import <cassert>;
-
-import <gsl/gsl>;
+module;
+#include <fmt/format.h>
 
 #ifdef FOXLOX_USE_WINSDK_ICU
 #include <icu.h>
@@ -10,8 +9,43 @@ import <gsl/gsl>;
 #else
 #include <unicode/ustring.h>
 #endif
+export module foxlox:util;
 
-#include "util.h"
+import <string>;
+import <string_view>;
+import <concepts>;
+import <sstream>;
+import <cassert>;
+import <array>;
+
+import <gsl/gsl>;
+
+namespace foxlox
+{
+  export std::string u32_to_u8(std::u32string_view in);
+  export std::string u32_to_u8(char32_t in);
+  export std::u32string u8_to_u32(std::string_view in);
+
+  export template<typename T> requires std::integral<T> || std::floating_point<T>
+  std::string num_to_str(T v)
+  {
+    std::stringstream strm;
+    strm << v;
+    return strm.str();
+  }
+
+  // from https://stackoverflow.com/questions/31762958/check-if-class-is-a-template-specialization
+  export template <class T, template <class...> class Template>
+  struct is_specialization : std::false_type {};
+
+  export template <template <class...> class Template, class... Args>
+  struct is_specialization<Template<Args...>, Template> : std::true_type {};
+
+  export template <typename T, template <class...> class Template>
+  inline constexpr bool is_specialization_v = is_specialization<T, Template>::value;
+
+  export constexpr std::array<char, 8> BINARY_HEADER = { '\004', '\002', 'F', 'O', 'X', 'L', 'O', 'X' };
+}
 
 namespace foxlox
 {

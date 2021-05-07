@@ -1,24 +1,24 @@
-#pragma once
+module;
+export module foxlox:stmt;
 
 import <memory>;
 import <vector>;
 
 import <gsl/gsl>;
 
-import foxlox.except;
-import foxlox.token;
-
-#include "expr.h"
+import :except;
+import :token;
+import :expr;
 
 namespace foxlox::stmt
 {
-  enum class VarStoreType
+  export enum class VarStoreType
   {
     Stack, // to be stored on stack, and destroyed when function returns 
     Static, // to be stored in the value pool of the closure, and still exists after function exits
   };
 
-  class Stmt
+  export class Stmt
   {
   public:
     Stmt() = default;
@@ -29,7 +29,7 @@ namespace foxlox::stmt
     virtual ~Stmt() = default;
   };
 
-  class VarDeclareBase : public virtual Stmt
+  export class VarDeclareBase : public virtual Stmt
   {
   public:
     VarDeclareBase(Token&& nm) noexcept;
@@ -38,7 +38,7 @@ namespace foxlox::stmt
     virtual ~VarDeclareBase() = default;
   };
 
-  class VarDeclareListBase : public virtual Stmt
+  export class VarDeclareListBase : public virtual Stmt
   {
   public:
     VarDeclareListBase(std::vector<Token>&& names) noexcept;
@@ -47,7 +47,7 @@ namespace foxlox::stmt
     virtual ~VarDeclareListBase() = default;
   };
 
-  class Export : public Stmt
+  export class Export : public Stmt
   {
   public:
     Export(Token&& tk, std::unique_ptr<stmt::Stmt>&& d) noexcept;
@@ -55,21 +55,21 @@ namespace foxlox::stmt
     std::unique_ptr<stmt::Stmt> declare;
   };
 
-  class Expression : public Stmt
+  export class Expression : public Stmt
   {
   public:
     Expression(std::unique_ptr<expr::Expr>&& expr) noexcept;
     std::unique_ptr<expr::Expr> expression;
   };
   
-  class Var : public VarDeclareBase
+  export class Var : public VarDeclareBase
   {
   public:
     Var(Token&& tk, std::unique_ptr<expr::Expr>&& init) noexcept;
     std::unique_ptr<expr::Expr> initializer;
   };
 
-  class While : public Stmt
+  export class While : public Stmt
   {
   public:
     While(std::unique_ptr<expr::Expr>&& cond, std::unique_ptr<Stmt>&& bd, Token&& r_paren) noexcept;
@@ -80,14 +80,14 @@ namespace foxlox::stmt
     Token right_paren;
   };
 
-  class Block : public Stmt
+  export class Block : public Stmt
   {
   public:
     Block(std::vector<std::unique_ptr<Stmt>>&& stmts) noexcept;
     std::vector<std::unique_ptr<Stmt>> statements;
   };
 
-  class If : public Stmt
+  export class If : public Stmt
   {
   public:
     If(
@@ -104,14 +104,14 @@ namespace foxlox::stmt
     Token right_paren;
   };
 
-  class Function : public VarDeclareBase, public VarDeclareListBase
+  export class Function : public VarDeclareBase, public VarDeclareListBase
   {
   public:
     Function(Token&& tk, std::vector<Token>&& par, std::vector<std::unique_ptr<Stmt>>&& bd) noexcept;
     std::vector<std::unique_ptr<Stmt>> body;
   };
 
-  class Return : public Stmt
+  export class Return : public Stmt
   {
   public:
     Return(Token&& tk, std::unique_ptr<expr::Expr>&& v) noexcept;
@@ -120,7 +120,7 @@ namespace foxlox::stmt
     std::unique_ptr<expr::Expr> value;
   };
 
-  class Class : public VarDeclareBase
+  export class Class : public VarDeclareBase
   {
   public:
     Class(Token&& tk, std::unique_ptr<expr::Expr>&& super, std::vector<std::unique_ptr<Function>>&& ms) noexcept;
@@ -132,7 +132,7 @@ namespace foxlox::stmt
     VarStoreType this_store_type;
   };
 
-  class Break : public Stmt
+  export class Break : public Stmt
   {
   public:
     Break(Token&& tk) noexcept;
@@ -140,7 +140,7 @@ namespace foxlox::stmt
     Token keyword;
   };
 
-  class Continue : public Stmt
+  export class Continue : public Stmt
   {
   public:
     Continue(Token&& tk) noexcept;
@@ -148,7 +148,7 @@ namespace foxlox::stmt
     Token keyword;
   };
 
-  class Import : public VarDeclareBase
+  export class Import : public VarDeclareBase
   {
   public:
     Import(Token&& tk, std::vector<Token>&& path) noexcept;
@@ -156,14 +156,14 @@ namespace foxlox::stmt
     std::vector<Token> libpath;
   };
 
-  class From : public VarDeclareListBase
+  export class From : public VarDeclareListBase
   {
   public:
     From(std::vector<Token>&& vars, std::vector<Token>&& path) noexcept;
     std::vector<Token> libpath;
   };
 
-  class For : public Stmt
+  export class For : public Stmt
   {
   public:
     For(
@@ -182,7 +182,7 @@ namespace foxlox::stmt
     Token right_paren;
   };
 
-  template<typename R>
+  export template<typename R>
   class IVisitor
   {
   public:
@@ -269,4 +269,103 @@ namespace foxlox::stmt
       throw FatalError("Unknown stmt type");
     }
   };
+}
+
+namespace foxlox::stmt
+{
+  Expression::Expression(std::unique_ptr<expr::Expr>&& expr) noexcept :
+    expression(std::move(expr))
+  {
+  }
+  Var::Var(Token&& tk, std::unique_ptr<expr::Expr>&& init) noexcept :
+    VarDeclareBase(std::move(tk)),
+    initializer(std::move(init))
+  {
+  }
+  While::While(std::unique_ptr<expr::Expr>&& cond, std::unique_ptr<Stmt>&& bd, Token&& r_paren) noexcept :
+    condition(std::move(cond)),
+    body(std::move(bd)),
+    right_paren(std::move(r_paren))
+  {
+  }
+  Block::Block(std::vector<std::unique_ptr<Stmt>>&& stmts) noexcept :
+    statements(std::move(stmts))
+  {
+  }
+  If::If(
+    std::unique_ptr<expr::Expr>&& cond,
+    std::unique_ptr<Stmt>&& thenb,
+    std::unique_ptr<Stmt>&& elseb,
+    Token&& r_paren
+  ) noexcept :
+    condition(std::move(cond)),
+    then_branch(std::move(thenb)),
+    else_branch(std::move(elseb)),
+    right_paren(std::move(r_paren))
+  {
+  }
+  Function::Function(Token&& tk, std::vector<Token>&& par, std::vector<std::unique_ptr<Stmt>>&& bd) noexcept :
+    VarDeclareBase(std::move(tk)),
+    VarDeclareListBase(std::move(par)),
+    body(std::move(bd))
+  {
+  }
+  Return::Return(Token&& tk, std::unique_ptr<expr::Expr>&& v) noexcept :
+    keyword(std::move(tk)),
+    value(std::move(v))
+  {
+  }
+  Class::Class(Token&& tk, std::unique_ptr<expr::Expr>&& super, std::vector<std::unique_ptr<Function>>&& ms) noexcept :
+    VarDeclareBase(std::move(tk)),
+    superclass(std::move(super)),
+    methods(std::move(ms)),
+    this_store_type{}
+  {
+  }
+  Break::Break(Token&& tk) noexcept :
+    keyword(std::move(tk))
+  {
+  }
+  Continue::Continue(Token&& tk) noexcept :
+    keyword(std::move(tk))
+  {
+  }
+  For::For(
+    std::unique_ptr<Stmt>&& init,
+    std::unique_ptr<expr::Expr>&& cond,
+    std::unique_ptr<expr::Expr>&& incre,
+    std::unique_ptr<Stmt>&& bd,
+    Token&& r_paren
+  ) noexcept :
+    initializer(std::move(init)),
+    condition(std::move(cond)),
+    increment(std::move(incre)),
+    body(std::move(bd)),
+    right_paren(std::move(r_paren))
+  {
+  }
+  Export::Export(Token&& tk, std::unique_ptr<stmt::Stmt>&& d) noexcept :
+    keyword(std::move(tk)),
+    declare(std::move(d))
+  {
+  }
+  Import::Import(Token&& tk, std::vector<Token>&& path) noexcept :
+    VarDeclareBase(std::move(tk)),
+    libpath(std::move(path))
+  {
+  }
+  From::From(std::vector<Token>&& vars, std::vector<Token>&& path) noexcept :
+    VarDeclareListBase(std::move(vars)),
+    libpath(std::move(path))
+  {
+  }
+  VarDeclareBase::VarDeclareBase(Token&& nm) noexcept :
+    name(std::move(nm)),
+    store_type(VarStoreType::Stack)
+  {
+  }
+  VarDeclareListBase::VarDeclareListBase(std::vector<Token>&& names) noexcept :
+    var_names(std::move(names))
+  {
+  }
 }

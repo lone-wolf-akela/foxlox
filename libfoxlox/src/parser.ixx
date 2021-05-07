@@ -1,8 +1,75 @@
-#include "common.h"
-
+module;
 #include <fmt/format.h>
+export module foxlox:parser;
 
-#include "parser.h"
+import <vector>;
+import <memory>;
+import <string_view>;
+
+import "common.h";
+import :token;
+import :value;
+import :stmt;
+import :format_error;
+
+namespace foxlox
+{
+  export using AST = std::vector<std::unique_ptr<stmt::Stmt>>;
+  export class Parser
+  {
+  public:
+    explicit Parser(std::vector<Token>&& tokens) noexcept;
+    void define(std::string_view name, CppFunc* func);
+    AST parse();
+    bool get_had_error() noexcept;
+  private:
+    AST ast;
+    const std::vector<Token> tokens;
+    gsl::index current;
+    bool had_error;
+
+    std::unique_ptr<stmt::Stmt> declaration();
+    std::unique_ptr<stmt::Stmt> export_declaration();
+    std::unique_ptr<stmt::Stmt> class_declaration();
+    std::unique_ptr<stmt::Stmt> from_declaration();
+    std::unique_ptr<stmt::Stmt> import_declaration();
+    std::unique_ptr<stmt::Function> function(std::string_view kind);
+    std::unique_ptr<stmt::Stmt> var_declaration();
+    std::unique_ptr<stmt::Stmt> statement();
+    std::unique_ptr<stmt::Stmt> return_statement();
+    std::unique_ptr<stmt::Stmt> break_statement();
+    std::unique_ptr<stmt::Stmt> continue_statement();
+    std::unique_ptr<stmt::Stmt> for_statement();
+    std::unique_ptr<stmt::Stmt> while_statement();
+    std::unique_ptr<stmt::Stmt> if_statement();
+    std::vector<std::unique_ptr<stmt::Stmt>> block();
+    std::unique_ptr<stmt::Stmt> expression_statement();
+    std::unique_ptr<expr::Expr> expression();
+    std::unique_ptr<expr::Expr> assignment();
+    std::unique_ptr<expr::Expr> or_expr();
+    std::unique_ptr<expr::Expr> and_expr();
+    std::unique_ptr<expr::Expr> equality();
+    std::unique_ptr<expr::Expr> comparison();
+    std::unique_ptr<expr::Expr> term();
+    std::unique_ptr<expr::Expr> factor();
+    std::unique_ptr<expr::Expr> unary();
+    std::unique_ptr<expr::Expr> call();
+    std::unique_ptr<expr::Expr> finish_call(std::unique_ptr<expr::Expr>&& callee);
+    std::unique_ptr<expr::Expr> primary();
+    std::unique_ptr<expr::Expr> tuple(std::unique_ptr<expr::Expr>&& first);
+
+    template<typename ... TokenTypes>
+    bool match(TokenTypes ... types);
+    bool check(TokenType type);
+    Token advance();
+    bool is_at_end();
+    Token peek();
+    Token previous();
+    Token consume(TokenType type, std::string_view message);
+    void error(Token token, std::string_view message);
+    void synchronize();
+  };
+}
 
 namespace
 {
@@ -121,7 +188,7 @@ namespace foxlox
     {
       path.emplace_back(consume(TokenType::IDENTIFIER, "Expect valid lib path."));
     } while (match(TokenType::DOT));
-    Token name = match(TokenType::AS) ? 
+    Token name = match(TokenType::AS) ?
       consume(TokenType::IDENTIFIER, "Expect variable name.") : path.back();
     consume(TokenType::SEMICOLON, "Expect `;' after `import' statement.");
     return std::make_unique<stmt::Import>(std::move(name), std::move(path));
@@ -256,8 +323,8 @@ namespace foxlox
   {
     auto expr = or_expr();
     if (match(
-      TokenType::EQUAL, 
-      TokenType::PLUS_EQUAL, 
+      TokenType::EQUAL,
+      TokenType::PLUS_EQUAL,
       TokenType::MINUS_EQUAL,
       TokenType::STAR_EQUAL,
       TokenType::SLASH_EQUAL,
@@ -268,13 +335,13 @@ namespace foxlox
       // desugaring
       if (equals.type != TokenType::EQUAL)
       {
-        const TokenType tk = 
+        const TokenType tk =
           equals.type == TokenType::PLUS_EQUAL ? TokenType::PLUS :
           equals.type == TokenType::MINUS_EQUAL ? TokenType::MINUS :
           equals.type == TokenType::STAR_EQUAL ? TokenType::STAR :
           equals.type == TokenType::SLASH_EQUAL ? TokenType::SLASH :
           TokenType::SLASH_SLASH;
-        value = std::make_unique<expr::Binary>(expr->clone(), 
+        value = std::make_unique<expr::Binary>(expr->clone(),
           Token(tk, equals.lexeme, equals.literal, equals.line), std::move(value));
       }
       auto p_expr = expr.get();
@@ -291,7 +358,7 @@ namespace foxlox
     return expr;
   }
   GSL_SUPPRESS(r.5)
-  std::unique_ptr<expr::Expr> Parser::or_expr()
+    std::unique_ptr<expr::Expr> Parser::or_expr()
   {
     auto expr = and_expr();
     while (match(TokenType::OR))
@@ -303,7 +370,7 @@ namespace foxlox
     return expr;
   }
   GSL_SUPPRESS(r.5)
-  std::unique_ptr<expr::Expr> Parser::and_expr()
+    std::unique_ptr<expr::Expr> Parser::and_expr()
   {
     auto expr = equality();
     while (match(TokenType::AND))
@@ -315,7 +382,7 @@ namespace foxlox
     return expr;
   }
   GSL_SUPPRESS(r.5)
-  std::unique_ptr<expr::Expr> Parser::equality()
+    std::unique_ptr<expr::Expr> Parser::equality()
   {
     auto expr = comparison();
     while (match(TokenType::BANG_EQUAL, TokenType::EQUAL_EQUAL))
@@ -327,7 +394,7 @@ namespace foxlox
     return expr;
   }
   GSL_SUPPRESS(r.5)
-  std::unique_ptr<expr::Expr> Parser::comparison()
+    std::unique_ptr<expr::Expr> Parser::comparison()
   {
     auto expr = term();
     while (match(TokenType::GREATER, TokenType::GREATER_EQUAL, TokenType::LESS, TokenType::LESS_EQUAL))
@@ -339,7 +406,7 @@ namespace foxlox
     return expr;
   }
   GSL_SUPPRESS(r.5)
-  std::unique_ptr<expr::Expr> Parser::term()
+    std::unique_ptr<expr::Expr> Parser::term()
   {
     auto expr = factor();
     while (match(TokenType::MINUS, TokenType::PLUS))
@@ -351,7 +418,7 @@ namespace foxlox
     return expr;
   }
   GSL_SUPPRESS(r.5)
-  std::unique_ptr<expr::Expr> Parser::factor()
+    std::unique_ptr<expr::Expr> Parser::factor()
   {
     auto expr = unary();
     while (match(TokenType::SLASH, TokenType::STAR, TokenType::SLASH_SLASH))
@@ -378,8 +445,8 @@ namespace foxlox
       auto literal_one = std::make_unique<expr::Literal>(CompiletimeValue(int64_t{ 1 }), op);
       Token tk(
         op.type == TokenType::PLUS_PLUS ? TokenType::PLUS : TokenType::MINUS,
-        op.lexeme, 
-        op.literal, 
+        op.lexeme,
+        op.literal,
         op.line);
       if (auto variable = dynamic_cast<expr::Variable const*>(right.get()); variable != nullptr)
       {
@@ -398,7 +465,7 @@ namespace foxlox
     return call();
   }
   GSL_SUPPRESS(r.5)
-  std::unique_ptr<expr::Expr> Parser::call()
+    std::unique_ptr<expr::Expr> Parser::call()
   {
     auto expr = primary();
     while (true)
@@ -452,7 +519,7 @@ namespace foxlox
     if (match(TokenType::INT, TokenType::DOUBLE, TokenType::STRING))
     {
       GSL_SUPPRESS(lifetime.3)
-      return std::make_unique<expr::Literal>(std::move(previous().literal), previous());
+        return std::make_unique<expr::Literal>(std::move(previous().literal), previous());
     }
     if (match(TokenType::LEFT_PAREN))
     {

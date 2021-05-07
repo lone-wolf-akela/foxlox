@@ -1,13 +1,4 @@
 module;
-#include "common.h"
-#include "../src/opcode.h"
-
-#include <foxlox/config.h>
-#include "mem_alloc.h"
-
-#include <foxlox/compiler.h>
-#include "object.h"
-
 #include <fmt/format.h>
 #include <range/v3/all.hpp>
 #include <magic_enum.hpp>
@@ -15,7 +6,7 @@ module;
 #pragma warning(disable:5104) 
 #include <boost/dll/runtime_symbol_info.hpp>
 #pragma warning(default:5104) 
-module foxlox.vm;
+module foxlox:vm;
 
 import <cassert>;
 import <span>;
@@ -25,7 +16,13 @@ import <iostream>;
 import <sstream>;
 import <algorithm>;
 
-import foxlox.except;
+import "opcode.h";
+import "config.h";
+import "common.h";
+import "mem_alloc.h";
+import :except;
+import :value;
+import :compiler;
 
 namespace foxlox
 {

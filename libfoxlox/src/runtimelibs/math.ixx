@@ -1,10 +1,10 @@
 module;
-#include "../value.h"
-export module foxlox.runtimelibs.math;
+export module foxlox:runtimelibs.math;
 
 import <numbers>;
 
-import foxlox.runtimelib;
+import :runtimelib;
+import :value;
 
 namespace foxlox::lib
 {

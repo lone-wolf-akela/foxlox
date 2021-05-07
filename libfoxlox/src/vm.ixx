@@ -1,12 +1,6 @@
 module;
 #include <fmt/format.h>
-
-#include <foxlox/chunk.h>
-#include "../src/value.h"
-#include "../src/object.h"
-#include "../src/opcode.h"
-#include "../src/hash_table.h"
-export module foxlox.vm;
+export module foxlox:vm;
 
 import <array>;
 import <vector>;
@@ -17,7 +11,10 @@ import <filesystem>;
 import <iostream>;
 import <deque>;
 
-import foxlox.runtimelib;
+import "opcode.h";
+import :runtimelib;
+import :value;
+import :chunk;
 
 namespace foxlox
 {

@@ -1,15 +1,15 @@
 module;
 #include <fmt/format.h>
-#include "../value.h"
-export module foxlox.runtimelibs.io;
+export module foxlox:runtimelibs.io;
 
 import <iostream>;
 import <ranges>;
 import <span>;
 
-import foxlox.runtimelib;
-import foxlox.vm;
-import foxlox.except;
+import :runtimelib;
+import :vm;
+import :except;
+import :value;
 
 namespace foxlox::lib
 {

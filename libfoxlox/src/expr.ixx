@@ -1,4 +1,6 @@
-#pragma once
+module;
+#include <range/v3/all.hpp>
+export module foxlox:expr;
 
 import <memory>;
 import <vector>;
@@ -7,37 +9,37 @@ import <compare>;
 
 import <gsl/gsl>;
 
-import foxlox.except;
-import foxlox.token;
-import foxlox.compiletime_value;
+import :except;
+import :token;
+import :compiletime_value;
 
 namespace foxlox::stmt
 {
-  class Function;
-  class Class;
-  class VarDeclareBase;
-  class VarDeclareListBase;
+  export class Function;
+  export class Class;
+  export class VarDeclareBase;
+  export class VarDeclareListBase;
 }
 
 namespace foxlox
 {
-  struct VarDeclareFromList // store function parameters, etc
+  export struct VarDeclareFromList // store function parameters, etc
   {
     stmt::VarDeclareListBase* list;
     gsl::index index;
     friend auto operator<=>(const VarDeclareFromList& l, const VarDeclareFromList& r) = default;
   };
-  struct ClassThisDeclare // store `this' ...
+  export struct ClassThisDeclare // store `this' ...
   {
     stmt::Class* klass;
     friend auto operator<=>(const ClassThisDeclare& l, const ClassThisDeclare& r) = default;
   };
-  using VarDeclareAt = std::variant<stmt::VarDeclareBase*, VarDeclareFromList, ClassThisDeclare>;
+  export using VarDeclareAt = std::variant<stmt::VarDeclareBase*, VarDeclareFromList, ClassThisDeclare>;
 }
 
 namespace foxlox::expr
 {
-  class Expr
+  export class Expr
   {
   public:
     virtual std::unique_ptr<Expr> clone() = 0;
@@ -50,7 +52,7 @@ namespace foxlox::expr
     virtual ~Expr() = default;
   };
 
-  class Assign : public Expr
+  export class Assign : public Expr
   {
   public:
     Assign(Token&& tk, std::unique_ptr<Expr>&& v) noexcept;
@@ -64,7 +66,7 @@ namespace foxlox::expr
     std::unique_ptr<Expr> clone() final;
   };
 
-  class Binary : public Expr
+  export class Binary : public Expr
   {
   public:
     Binary(std::unique_ptr<Expr>&& l, Token&& tk, std::unique_ptr<Expr>&& r) noexcept;
@@ -75,7 +77,7 @@ namespace foxlox::expr
     std::unique_ptr<Expr> clone() final;
   };
 
-  class Logical : public Expr
+  export class Logical : public Expr
   {
   public:
     Logical(std::unique_ptr<Expr>&& l, Token&& tk, std::unique_ptr<Expr>&& r) noexcept;
@@ -85,7 +87,7 @@ namespace foxlox::expr
 
     std::unique_ptr<Expr> clone() final;
   };
-  class Tuple : public Expr
+  export class Tuple : public Expr
   {
   public:
     Tuple(std::vector<std::unique_ptr<Expr>>&& es) noexcept;
@@ -93,7 +95,7 @@ namespace foxlox::expr
 
     std::unique_ptr<Expr> clone() final;
   };
-  class Grouping : public Expr
+  export class Grouping : public Expr
   {
   public:
     Grouping(std::unique_ptr<Expr>&& expr) noexcept;
@@ -101,7 +103,7 @@ namespace foxlox::expr
 
     std::unique_ptr<Expr> clone() final;
   };
-  class Literal : public Expr
+  export class Literal : public Expr
   {
   public:
     Literal(CompiletimeValue&& v, Token&& tk) noexcept;
@@ -113,7 +115,7 @@ namespace foxlox::expr
 
     std::unique_ptr<Expr> clone() final;
   };
-  class Unary : public Expr
+  export class Unary : public Expr
   {
   public:
     Unary(Token&& tk, std::unique_ptr<Expr>&& r) noexcept;
@@ -122,7 +124,7 @@ namespace foxlox::expr
 
     std::unique_ptr<Expr> clone() final;
   };
-  class Call : public Expr
+  export class Call : public Expr
   {
   public:
     Call(std::unique_ptr<Expr>&& ce, Token&& tk, std::vector<std::unique_ptr<Expr>>&& augs) noexcept;
@@ -134,7 +136,7 @@ namespace foxlox::expr
 
     std::unique_ptr<Expr> clone() final;
   };
-  class Variable : public Expr
+  export class Variable : public Expr
   {
   public:
     Variable(Token&& tk) noexcept;
@@ -146,7 +148,7 @@ namespace foxlox::expr
 
     std::unique_ptr<Expr> clone() final;
   };
-  class Get : public Expr
+  export class Get : public Expr
   {
   public:
     Get(std::unique_ptr<Expr>&& o, Token&& tk) noexcept;
@@ -155,7 +157,7 @@ namespace foxlox::expr
 
     std::unique_ptr<Expr> clone() final;
   };
-  class Set : public Expr
+  export class Set : public Expr
   {
   public:
     Set(std::unique_ptr<Expr>&& o, Token&& tk, std::unique_ptr<Expr>&& v) noexcept;
@@ -165,7 +167,7 @@ namespace foxlox::expr
 
     std::unique_ptr<Expr> clone() final;
   };
-  class Super : public Expr
+  export class Super : public Expr
   {
   public:
     Super(Token&& key, Token&& mthd) noexcept;
@@ -178,7 +180,7 @@ namespace foxlox::expr
 
     std::unique_ptr<Expr> clone() final;
   };
-  class This : public Expr
+  export class This : public Expr
   {
   public:
     This(Token&& tk) noexcept;
@@ -191,7 +193,7 @@ namespace foxlox::expr
     std::unique_ptr<Expr> clone() final;
   };
 
-  template<typename R>
+  export template<typename R>
   class IVisitor
   {
   public:
@@ -273,4 +275,135 @@ namespace foxlox::expr
       throw FatalError("Unknown expr type");
     }
   };
+}
+
+namespace foxlox::expr
+{
+  Assign::Assign(Token&& tk, std::unique_ptr<Expr>&& v) noexcept :
+    name(std::move(tk)),
+    value(std::move(v))
+  {
+  }
+  std::unique_ptr<Expr> Assign::clone()
+  {
+    return std::make_unique<Assign>(Token(name), value->clone());
+  }
+  Binary::Binary(std::unique_ptr<Expr>&& l, Token&& tk, std::unique_ptr<Expr>&& r) noexcept :
+    left(std::move(l)),
+    op(std::move(tk)),
+    right(std::move(r))
+  {
+  }
+  std::unique_ptr<Expr> Binary::clone()
+  {
+    return std::make_unique<Binary>(left->clone(), Token(op), right->clone());
+  }
+  Logical::Logical(std::unique_ptr<Expr>&& l, Token&& tk, std::unique_ptr<Expr>&& r) noexcept :
+    left(std::move(l)),
+    op(std::move(tk)),
+    right(std::move(r))
+  {
+  }
+  std::unique_ptr<Expr> Logical::clone()
+  {
+    return std::make_unique<Logical>(left->clone(), Token(op), right->clone());
+  }
+  Grouping::Grouping(std::unique_ptr<Expr>&& expr) noexcept :
+    expression(std::move(expr))
+  {
+  }
+  std::unique_ptr<Expr> Grouping::clone()
+  {
+    return std::make_unique<Grouping>(expression->clone());
+  }
+  Literal::Literal(CompiletimeValue&& v, Token&& tk) noexcept :
+    value(std::move(v)),
+    token(std::move(tk))
+  {
+  }
+  Literal::Literal(const CompiletimeValue& v, Token tk) noexcept :
+    value(v),
+    token(tk)
+  {
+  }
+  std::unique_ptr<Expr> Literal::clone()
+  {
+    return std::make_unique<Literal>(value, token);
+  }
+  Call::Call(std::unique_ptr<Expr>&& ce, Token&& tk, std::vector<std::unique_ptr<Expr>>&& augs) noexcept :
+    callee(std::move(ce)),
+    paren(std::move(tk)),
+    arguments(std::move(augs))
+  {
+  }
+  std::unique_ptr<Expr> Call::clone()
+  {
+    auto augs = arguments
+      | ranges::views::transform([](auto& arg) {return arg->clone(); })
+      | ranges::to<std::vector<std::unique_ptr<Expr>>>;
+    return std::make_unique<Call>(callee->clone(), Token(paren), std::move(augs));
+  }
+  Variable::Variable(Token&& tk) noexcept :
+    name(std::move(tk))
+  {
+  }
+  std::unique_ptr<Expr> Variable::clone()
+  {
+    return std::make_unique<Variable>(Token(name));
+  }
+  Get::Get(std::unique_ptr<Expr>&& o, Token&& tk) noexcept :
+    obj(std::move(o)),
+    name(std::move(tk))
+  {
+  }
+  std::unique_ptr<Expr> Get::clone()
+  {
+    return std::make_unique<Get>(obj->clone(), Token(name));
+  }
+  Set::Set(std::unique_ptr<Expr>&& o, Token&& tk, std::unique_ptr<Expr>&& v) noexcept :
+    obj(std::move(o)),
+    name(std::move(tk)),
+    value(std::move(v))
+  {
+  }
+  std::unique_ptr<Expr> Set::clone()
+  {
+    return std::make_unique<Set>(obj->clone(), Token(name), value->clone());
+  }
+  Super::Super(Token&& key, Token&& mthd) noexcept :
+    keyword(std::move(key)),
+    method(std::move(mthd))
+  {
+  }
+  std::unique_ptr<Expr> Super::clone()
+  {
+    return std::make_unique<Super>(Token(keyword), Token(method));
+  }
+  This::This(Token&& tk) noexcept :
+    keyword(tk)
+  {
+  }
+  std::unique_ptr<Expr> This::clone()
+  {
+    return std::make_unique<This>(Token(keyword));
+  }
+  Tuple::Tuple(std::vector<std::unique_ptr<Expr>>&& es) noexcept :
+    exprs(std::move(es))
+  {
+  }
+  std::unique_ptr<Expr> Tuple::clone()
+  {
+    auto es = exprs
+      | ranges::views::transform([](auto& e) {return e->clone(); })
+      | ranges::to<std::vector<std::unique_ptr<Expr>>>;
+    return std::make_unique<Tuple>(std::move(es));
+  }
+  Unary::Unary(Token&& tk, std::unique_ptr<Expr>&& r) noexcept :
+    op(std::move(tk)), right(std::move(r))
+  {
+  }
+  std::unique_ptr<Expr> Unary::clone()
+  {
+    return std::make_unique<Unary>(Token(op), right->clone());
+  }
 }

@@ -1,12 +1,12 @@
 module;
-#include "value.h"
-export module foxlox.runtimelib;
+export module foxlox:runtimelib;
 
 import <unordered_map>;
 import <vector>;
 import <string>;
 
-import foxlox.except;
+import :except;
+import :value;
 
 namespace foxlox
 {

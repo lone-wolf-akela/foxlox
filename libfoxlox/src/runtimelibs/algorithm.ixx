@@ -1,12 +1,12 @@
 module;
-#include "../value.h"
-export module foxlox.runtimelibs.algorithm;
+export module foxlox:runtimelibs.algorithm;
 
 import <algorithm>;
 import <span>;
 
-import foxlox.runtimelib;
-import foxlox.vm;
+import :runtimelib;
+import :vm;
+import :value;
 
 namespace foxlox::lib
 {

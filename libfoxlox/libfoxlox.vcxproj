@@ -105,56 +105,38 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="include\except.ixx" />
-    <ClCompile Include="include\vm.ixx" />
-    <ClCompile Include="src\chunk.cpp" />
-    <ClCompile Include="src\codegen.cpp" />
-    <ClCompile Include="src\common.cpp" />
-    <ClCompile Include="src\compiler.cpp" />
+    <ClCompile Include="format_error.ixx" />
+    <ClCompile Include="src\chunk.ixx" />
+    <ClCompile Include="src\codegen.ixx" />
     <ClCompile Include="src\compiletime_value.ixx" />
-    <ClCompile Include="src\config.cpp" />
-    <ClCompile Include="src\cppinterop.cpp" />
+    <ClCompile Include="src\cppinterop.ixx" />
     <ClCompile Include="src\debug.cpp" />
-    <ClCompile Include="src\expr.cpp" />
-    <ClCompile Include="src\hash_table.cpp" />
-    <ClCompile Include="src\mem_alloc.cpp" />
-    <ClCompile Include="src\object.cpp" />
-    <ClCompile Include="src\opcode.cpp" />
-    <ClCompile Include="src\parser.cpp" />
-    <ClCompile Include="src\resolver.cpp" />
+    <ClCompile Include="src\except.ixx" />
+    <ClCompile Include="src\expr.ixx" />
+    <ClCompile Include="src\main.ixx" />
+    <ClCompile Include="src\parser.ixx" />
+    <ClCompile Include="src\resolver.ixx" />
     <ClCompile Include="src\runtimelib.cpp" />
     <ClCompile Include="src\runtimelib.ixx" />
     <ClCompile Include="src\runtimelibs\algorithm.ixx" />
     <ClCompile Include="src\runtimelibs\io.ixx" />
     <ClCompile Include="src\runtimelibs\math.ixx" />
     <ClCompile Include="src\runtimelibs\profiler.ixx" />
-    <ClCompile Include="src\scanner.cpp" />
-    <ClCompile Include="src\serialization.cpp" />
-    <ClCompile Include="src\stmt.cpp" />
+    <ClCompile Include="src\scanner.ixx" />
+    <ClCompile Include="src\serialization.ixx" />
+    <ClCompile Include="src\stmt.ixx" />
     <ClCompile Include="src\token.ixx" />
-    <ClCompile Include="src\util.cpp" />
+    <ClCompile Include="src\util.ixx" />
     <ClCompile Include="src\value.cpp" />
+    <ClCompile Include="src\value.ixx" />
     <ClCompile Include="src\vm.cpp" />
+    <ClCompile Include="src\vm.ixx" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\foxlox\chunk.h" />
-    <ClInclude Include="include\foxlox\compiler.h" />
-    <ClInclude Include="include\foxlox\config.h" />
-    <ClInclude Include="include\foxlox\cppinterop.h" />
-    <ClInclude Include="src\codegen.h" />
     <ClInclude Include="src\common.h" />
-    <ClInclude Include="src\expr.h" />
-    <ClInclude Include="src\hash_table.h" />
+    <ClInclude Include="src\config.h" />
     <ClInclude Include="src\mem_alloc.h" />
-    <ClInclude Include="src\object.h" />
     <ClInclude Include="src\opcode.h" />
-    <ClInclude Include="src\parser.h" />
-    <ClInclude Include="src\resolver.h" />
-    <ClInclude Include="src\scanner.h" />
-    <ClInclude Include="src\serialization.h" />
-    <ClInclude Include="src\stmt.h" />
-    <ClInclude Include="src\util.h" />
-    <ClInclude Include="src\value.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -99,6 +99,9 @@
     <ClCompile Include="format_error.ixx">
       <Filter>模块</Filter>
     </ClCompile>
+    <ClCompile Include="src\compiler.ixx">
+      <Filter>模块</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h">

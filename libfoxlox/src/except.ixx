@@ -1,10 +1,10 @@
 module;
-#include <fmt/format.h>
 export module foxlox:except;
 
 import <stdexcept>;
 import <string>;
 import <string_view>;
+import <format>;
 
 namespace foxlox
 {
@@ -37,7 +37,7 @@ namespace foxlox
     {
     public:
         RuntimeError(std::string_view message, int line_num, std::string_view src_code) :
-            std::runtime_error(fmt::format("[line {}] at \"{}\"\n{}", line_num, src_code, message)),
+            std::runtime_error(std::format("[line {}] at \"{}\"\n{}", line_num, src_code, message)),
             msg(message),
             line(line_num),
             source(src_code)

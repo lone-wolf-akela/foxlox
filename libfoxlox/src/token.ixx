@@ -1,10 +1,10 @@
 module;
-#include <fmt/format.h>
 #include <magic_enum.hpp>
 export module foxlox:token;
 
 import <string>;
 import <string_view>;
+import <format>;
 
 import :compiletime_value;
 
@@ -56,7 +56,7 @@ namespace foxlox
 
         std::string to_string() const
         {
-            return fmt::format("{} {} {}", magic_enum::enum_name(type), lexeme, literal.to_string());
+            return std::format("{} {} {}", magic_enum::enum_name(type), lexeme, literal.to_string());
         }
     };
 }

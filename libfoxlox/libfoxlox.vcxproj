@@ -73,7 +73,7 @@
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <AdditionalIncludeDirectories>$(ProjectDir)\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>5106</DisableSpecificWarnings>
+      <DisableSpecificWarnings>5106;4200</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -95,7 +95,7 @@
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <AdditionalIncludeDirectories>$(ProjectDir)\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>5106</DisableSpecificWarnings>
+      <DisableSpecificWarnings>5106;4200</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -108,6 +108,7 @@
     <ClCompile Include="format_error.ixx" />
     <ClCompile Include="src\chunk.ixx" />
     <ClCompile Include="src\codegen.ixx" />
+    <ClCompile Include="src\compiler.ixx" />
     <ClCompile Include="src\compiletime_value.ixx" />
     <ClCompile Include="src\cppinterop.ixx" />
     <ClCompile Include="src\debug.cpp" />

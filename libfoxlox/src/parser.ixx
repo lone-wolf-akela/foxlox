@@ -1,10 +1,10 @@
 module;
-#include <fmt/format.h>
 export module foxlox:parser;
 
 import <vector>;
 import <memory>;
 import <string_view>;
+import <format>;
 
 import "common.h";
 import :token;
@@ -195,8 +195,8 @@ namespace foxlox
   }
   std::unique_ptr<stmt::Function> Parser::function(std::string_view kind)
   {
-    auto name = consume(TokenType::IDENTIFIER, fmt::format("Expect {} name.", kind));
-    consume(TokenType::LEFT_PAREN, fmt::format("Expect `(' after {} name.", kind));
+    auto name = consume(TokenType::IDENTIFIER, std::format("Expect {} name.", kind));
+    consume(TokenType::LEFT_PAREN, std::format("Expect `(' after {} name.", kind));
     std::vector<Token> parameters;
     if (!check(TokenType::RIGHT_PAREN))
     {
@@ -210,7 +210,7 @@ namespace foxlox
       error(peek(), "Can't have more than 255 parameters.");
     }
     consume(TokenType::RIGHT_PAREN, "Expect `)' after parameters.");
-    consume(TokenType::LEFT_BRACE, fmt::format("Expect `{{' before {} body.", kind));
+    consume(TokenType::LEFT_BRACE, std::format("Expect `{{' before {} body.", kind));
     auto body = block();
     if (body.empty() || dynamic_cast<stmt::Return*>(body.back().get()) == nullptr)
     {

@@ -1,13 +1,20 @@
 export module foxlox:format_error;
+
+import <iostream>;
+import <format>;
+
 import :token;
 
-export void format_error(Token token, std::string_view message)
+namespace foxlox
 {
-    fmt::print(stderr, "[line {}] Error{}: {}\n",
-        token.line,
-        token.type == TokenType::TKEOF ? " at end" :
-        token.type == TokenType::TKERROR ? "" :
-        fmt::format(" at `{}'", token.lexeme),
-        token.type == TokenType::TKERROR ? token.lexeme : message
-    );
+    export void format_error(Token token, std::string_view message)
+    {
+        std::cerr << std::format("[line {}] Error{}: {}\n",
+            token.line,
+            token.type == TokenType::TKEOF ? " at end" :
+            token.type == TokenType::TKERROR ? "" :
+            std::format(" at `{}'", token.lexeme),
+            token.type == TokenType::TKERROR ? token.lexeme : message
+        );
+    }
 }

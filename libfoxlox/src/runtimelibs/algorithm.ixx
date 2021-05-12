@@ -10,11 +10,11 @@ import :value;
 
 namespace foxlox::lib
 {
-  export foxlox::Value max(foxlox::VM& vm, std::span<foxlox::Value> values)
+  export foxlox::Value max(foxlox::VM& /*vm*/, std::span<foxlox::Value> values)
   {
       return *std::ranges::max_element(values);
   }
-  export foxlox::Value min(foxlox::VM& vm, std::span<foxlox::Value> values)
+  export foxlox::Value min(foxlox::VM& /*vm*/ , std::span<foxlox::Value> values)
   {
       return *std::ranges::min_element(values);
   }

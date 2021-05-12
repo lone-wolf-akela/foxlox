@@ -5,6 +5,7 @@ export module foxlox:runtimelibs.io;
 import <iostream>;
 import <ranges>;
 import <span>;
+import <format>;
 
 import :runtimelib;
 import :vm;
@@ -13,7 +14,7 @@ import :value;
 
 namespace foxlox::lib
 {
-	export foxlox::Value print(foxlox::VM& vm, std::span<foxlox::Value> values)
+	export foxlox::Value print(foxlox::VM& /*vm*/, std::span<foxlox::Value> values)
 	{
 		if (values.empty())
 		{

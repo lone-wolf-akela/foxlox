@@ -1,16 +1,15 @@
-#include <range/v3/view/enumerate.hpp>
-
 import <fstream>;
 import <iostream>;
 import <filesystem>;
 import <vector>;
 import <string>;
 import <chrono>;
+import <iostream>;
+import <format>;
 
-#include <foxlox/vm.h>
-#include <foxlox/compiler.h>
+#include <range/v3/view/enumerate.hpp>
 
-#include <fmt/format.h>
+import foxlox;
 
 int main()
 {
@@ -39,12 +38,12 @@ int main()
     }
 
     std::cout << "Available benches:\n";
-    std::cout << fmt::format("\t{}. {}\n", 0, "[ALL]");
+    std::cout << std::format("\t{}. {}\n", 0, "[ALL]");
     for (auto&& [i, name] : bench_names | ranges::views::enumerate)
     {
-      std::cout << fmt::format("\t{}. {}\n", i + 1, name);
+      std::cout << std::format("\t{}. {}\n", i + 1, name);
     }
-    std::cout << fmt::format("\t{}. {}\n", bench_names.size() + 1, "[EXIT]");
+    std::cout << std::format("\t{}. {}\n", bench_names.size() + 1, "[EXIT]");
     std::cout << "Please select: ";
     int selected;
     std::cin >> selected;
@@ -68,11 +67,11 @@ int main()
       std::ifstream ifs(bench_files.at(selected - 1));
       if (ifs)
       {
-        std::cout << fmt::format("=== {{Benchmark: {}}} ===\n", bench_names.at(selected - 1));
+        std::cout << std::format("=== {{Benchmark: {}}} ===\n", bench_names.at(selected - 1));
       }
       else
       {
-        std::cout << fmt::format("Failed to open source file: {}.\n", bench_files.at(selected - 1).string());
+        std::cout << std::format("Failed to open source file: {}.\n", bench_files.at(selected - 1).string());
       }
       std::string src{ std::istreambuf_iterator<char>(ifs),  std::istreambuf_iterator<char>() };
 
@@ -81,7 +80,7 @@ int main()
       const auto time_compile_end = std::chrono::system_clock::now().time_since_epoch();
       const long long compile_time = std::chrono::duration_cast<std::chrono::milliseconds>(
         time_compile_end - time_compile_start).count();
-      std::cout << fmt::format("Compile used {}ms.\n", compile_time);
+      std::cout << std::format("Compile used {}ms.\n", compile_time);
 
       std::cout << "Begin...\n";
       if (res == foxlox::CompilerResult::OK)
@@ -99,6 +98,6 @@ int main()
     const auto time_end = std::chrono::system_clock::now().time_since_epoch();
     const long long total_time = std::chrono::duration_cast<std::chrono::milliseconds>(
       time_end - time_start).count();
-    std::cout << fmt::format("Total time used {}ms.\n", total_time);
+    std::cout << std::format("Total time used {}ms.\n", total_time);
   }
 }

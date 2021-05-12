@@ -10,7 +10,7 @@ import :value;
 
 namespace foxlox::lib
 {
-  export foxlox::Value clock(foxlox::VM& vm, std::span<foxlox::Value> values)
+  export foxlox::Value clock(foxlox::VM& /*vm*/, std::span<foxlox::Value> values)
   {
       if (values.size() != 0)
       {

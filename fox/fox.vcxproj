@@ -73,6 +73,7 @@
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(SolutionDir)\libfoxlox\include\</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4200</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -94,6 +95,7 @@
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(SolutionDir)\libfoxlox\include\</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4200</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

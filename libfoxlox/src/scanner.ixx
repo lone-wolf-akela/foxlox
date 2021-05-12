@@ -1,5 +1,4 @@
 module;
-#include <fmt/format.h>
 #ifdef FOXLOX_USE_WINSDK_ICU
 #include <icu.h>
 #pragma comment(lib, "icu.lib") 
@@ -20,6 +19,7 @@ import <utility>;
 import <map>;
 import <sstream>;
 import <version>;
+import <format>;
 
 import <gsl/gsl>;
 
@@ -219,7 +219,7 @@ namespace foxlox
       if (is_digit(c)) { number(); }
       else if (is_whitespace(c)) { /*Ignore whitespace*/ }
       else if (is_letter(c)) { identifier(); }
-      else { add_error(fmt::format("Unexpected character `{}'.", u32_to_u8(c))); }
+      else { add_error(std::format("Unexpected character `{}'.", u32_to_u8(c))); }
       break;
     }
   }

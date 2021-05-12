@@ -1,6 +1,6 @@
-#include <foxlox/vm.h>
-
-#include <gtest/gtest.h>
+import <tuple>;
+import <gtest/gtest.h>;
+import foxlox;
 
 // I wish all tests in this file could move to compile time...
 TEST(static_test, zero_value_is_nil)

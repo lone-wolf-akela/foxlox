@@ -1,5 +1,4 @@
 module;
-#include <fmt/format.h>
 #include <range/v3/all.hpp>
 #include <magic_enum.hpp>
 
@@ -7,6 +6,7 @@ module;
 #include <boost/dll/runtime_symbol_info.hpp>
 #pragma warning(default:5104) 
 module foxlox:vm;
+import :vm;
 
 import <cassert>;
 import <span>;
@@ -15,6 +15,7 @@ import <utility>;
 import <iostream>;
 import <sstream>;
 import <algorithm>;
+import <format>;
 
 import "opcode.h";
 import "config.h";
@@ -35,11 +36,11 @@ namespace foxlox
   {
     *heap_size += l;
 #ifdef FOXLOX_DEBUG_LOG_GC
-    std::cout << fmt::format("alloc size={} ", l);
+    std::cout << std::format("alloc size={} ", l);
 #endif
     char* const data = static_cast<char*>(MALLOC(l));
 #ifdef FOXLOX_DEBUG_LOG_GC
-    std::cout << fmt::format("at {}; heap size: {} -> {}\n", static_cast<const void*>(data), *heap_size - l, *heap_size);
+    std::cout << std::format("at {}; heap size: {} -> {}\n", static_cast<const void*>(data), *heap_size - l, *heap_size);
 #endif
     Ensures(data != nullptr);
     return data;
@@ -52,7 +53,7 @@ namespace foxlox
     void VM_Deallocator::operator()(char* const p, size_t l) noexcept
   {
 #ifdef FOXLOX_DEBUG_LOG_GC
-    std::cout << fmt::format("free size={} at {}; heap size: {} -> {}\n", l, static_cast<const void*>(p), *heap_size, *heap_size - l);
+    std::cout << std::format("free size={} at {}; heap size: {} -> {}\n", l, static_cast<const void*>(p), *heap_size, *heap_size - l);
 #endif
     Expects(l <= *heap_size);
     *heap_size -= l;
@@ -572,7 +573,7 @@ namespace foxlox
 
           if (func_to_call->get_arity() != num_of_params)
           {
-            throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
+            throw InternalRuntimeError(std::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
           }
           jump_to_func(func_to_call);
           break;
@@ -597,7 +598,7 @@ namespace foxlox
 
           if (func_to_call->get_arity() != num_of_params)
           {
-            throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
+            throw InternalRuntimeError(std::format("Wrong number of function parameters. Expect: {}, got: {}.", func_to_call->get_arity(), num_of_params));
           }
           jump_to_func(func_to_call);
           break;
@@ -610,7 +611,7 @@ namespace foxlox
           }
           if (!v.is_class())
           {
-            throw ValueError(fmt::format("Value of type {} is not callable.",
+            throw ValueError(std::format("Value of type {} is not callable.",
               magic_enum::enum_name(v.v.obj->type)));
           }
           const auto klass = v.v.klass;
@@ -625,7 +626,7 @@ namespace foxlox
 
             if ((*func_to_call)->get_arity() != num_of_params)
             {
-              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", (*func_to_call)->get_arity(), num_of_params));
+              throw InternalRuntimeError(std::format("Wrong number of function parameters. Expect: {}, got: {}.", (*func_to_call)->get_arity(), num_of_params));
             }
             jump_to_func(*func_to_call);
           }
@@ -633,7 +634,7 @@ namespace foxlox
           {
             if (num_of_params != 0)
             {
-              throw InternalRuntimeError(fmt::format("Wrong number of function parameters. Expect: {}, got: {}.", 0, num_of_params));
+              throw InternalRuntimeError(std::format("Wrong number of function parameters. Expect: {}, got: {}.", 0, num_of_params));
             }
             push();
             *top() = instance;
@@ -642,7 +643,7 @@ namespace foxlox
         }
         default:
         {
-          throw ValueError(fmt::format("Value of type {} is not callable.",
+          throw ValueError(std::format("Value of type {} is not callable.",
             magic_enum::enum_name(v.type)));
         }
         }
@@ -754,7 +755,7 @@ namespace foxlox
       next_gc_heap_size = std::max<size_t>(current_heap_size * GC_HEAP_GROW_FACTOR, FIRST_GC_HEAP_SIZE);
 #ifdef FOXLOX_DEBUG_LOG_GC
       std::cout << "-- gc end --\n";
-      std::cout << fmt::format("   collected {} bytes (from {} to {}). next at {}.\n",
+      std::cout << std::format("   collected {} bytes (from {} to {}). next at {}.\n",
         heap_size_before - current_heap_size,
         heap_size_before,
         current_heap_size,
@@ -808,31 +809,31 @@ namespace foxlox
 #ifdef FOXLOX_DEBUG_LOG_GC
     if (v.is_str())
     {
-      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.str), v.v.str->is_marked() ? "is_marked" : "not_marked", v.to_string());
+      std::cout << std::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.str), v.v.str->is_marked() ? "is_marked" : "not_marked", v.to_string());
     }
     if (v.is_tuple())
     {
-      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.tuple), v.v.tuple->is_marked() ? "is_marked" : "not_marked", v.to_string());
+      std::cout << std::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.tuple), v.v.tuple->is_marked() ? "is_marked" : "not_marked", v.to_string());
     }
     if (v.is_class())
     {
-      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.klass), v.v.klass->is_marked() ? "is_marked" : "not_marked", v.to_string());
+      std::cout << std::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.klass), v.v.klass->is_marked() ? "is_marked" : "not_marked", v.to_string());
     }
     if (v.is_instance())
     {
-      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.instance), v.v.instance->is_marked() ? "is_marked" : "not_marked", v.to_string());
+      std::cout << std::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.instance), v.v.instance->is_marked() ? "is_marked" : "not_marked", v.to_string());
     }
     if (v.is_dict())
     {
-      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.dict), v.v.dict->is_marked() ? "is_marked" : "not_marked", v.to_string());
+      std::cout << std::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.dict), v.v.dict->is_marked() ? "is_marked" : "not_marked", v.to_string());
     }
     if (v.type == ValueType::FUNC)
     {
-      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.func), v.v.func->is_marked() ? "is_marked" : "not_marked", v.to_string());
+      std::cout << std::format("marking {} [{}]: {}\n", static_cast<const void*>(v.v.func), v.v.func->is_marked() ? "is_marked" : "not_marked", v.to_string());
     }
     if (v.type == ValueType::METHOD)
     {
-      std::cout << fmt::format("marking {} [{}]: {}\n", static_cast<const void*>(v.method_func()), v.method_func()->is_marked() ? "is_marked" : "not_marked", v.to_string());
+      std::cout << std::format("marking {} [{}]: {}\n", static_cast<const void*>(v.method_func()), v.method_func()->is_marked() ? "is_marked" : "not_marked", v.to_string());
     }
 #endif
     if (v.is_str())
@@ -924,7 +925,7 @@ namespace foxlox
     // tuple_pool
     std::erase_if(gc_index.tuple_pool, [this](gsl::not_null<Tuple*> tuple) {
 #ifdef FOXLOX_DEBUG_LOG_GC
-      std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(tuple), tuple->is_marked() ? "is_marked" : "not_marked", tuple->is_marked() ? Value(tuple).to_string() : "<tuple elem may not avail>");
+      std::cout << std::format("sweeping {} [{}]: {}\n", static_cast<const void*>(tuple), tuple->is_marked() ? "is_marked" : "not_marked", tuple->is_marked() ? Value(tuple).to_string() : "<tuple elem may not avail>");
 #endif
       if (!tuple->is_marked())
       {
@@ -937,7 +938,7 @@ namespace foxlox
     // instance_pool
     std::erase_if(gc_index.instance_pool, [this](gsl::not_null<Instance*> instance) {
 #ifdef FOXLOX_DEBUG_LOG_GC
-      std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(instance), instance->is_marked() ? "is_marked" : "not_marked", Value(instance).to_string());
+      std::cout << std::format("sweeping {} [{}]: {}\n", static_cast<const void*>(instance), instance->is_marked() ? "is_marked" : "not_marked", Value(instance).to_string());
 #endif
       if (!instance->is_marked())
       {
@@ -950,7 +951,7 @@ namespace foxlox
     // dict_pool
     std::erase_if(gc_index.dict_pool, [this](gsl::not_null<Dict*> dict) {
 #ifdef FOXLOX_DEBUG_LOG_GC
-      std::cout << fmt::format("sweeping {} [{}]: {}\n", static_cast<const void*>(dict), dict->is_marked() ? "is_marked" : "not_marked", Value(dict).to_string());
+      std::cout << std::format("sweeping {} [{}]: {}\n", static_cast<const void*>(dict), dict->is_marked() ? "is_marked" : "not_marked", Value(dict).to_string());
 #endif
       if (!dict->is_marked())
       {
@@ -995,7 +996,7 @@ namespace foxlox
       auto [res, chunkdata] = compile_file(filepath);
       if (res != CompilerResult::OK)
       {
-        throw InternalRuntimeError(fmt::format("Failed to load file: {}.", filepath.string()));
+        throw InternalRuntimeError(std::format("Failed to load file: {}.", filepath.string()));
       }
       load_binary(chunkdata);
       Chunk& loaded_chunk = chunks.back();
@@ -1065,6 +1066,6 @@ namespace foxlox
     {
       return p;
     }
-    throw InternalRuntimeError(fmt::format("Failed to find file: {}.", pathobj.string()));
+    throw InternalRuntimeError(std::format("Failed to find file: {}.", pathobj.string()));
   }
 }

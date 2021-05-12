@@ -1,8 +1,6 @@
-#include <foxlox/vm.h>
-#include <foxlox/compiler.h>
-#include <foxlox/cppinterop.h>
-
-#include <gtest/gtest.h>
+import <tuple>;
+import <gtest/gtest.h>;
+import foxlox;
 
 using namespace foxlox;
 

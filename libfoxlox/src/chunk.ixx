@@ -124,40 +124,14 @@ namespace foxlox
     void dump(std::ostream& strm) const;
     static Chunk load(std::istream& strm);
 
-    std::string_view get_src_path() const noexcept
-    {
-        return source_path;
-    }
-    void set_src_path(std::string_view path)
-    {
-        source_path = path;
-    }
+    std::string_view get_src_path() const noexcept;
+    void set_src_path(std::string_view path);
 
-    std::vector<Subroutine>& get_subroutines() noexcept
-    {
-        return subroutines;
-    }
-    std::span<const Subroutine> get_subroutines() const noexcept
-    {
-        return subroutines;
-    }
+    std::vector<Subroutine>& get_subroutines() noexcept;
+    std::span<const Subroutine> get_subroutines() const noexcept;
     std::span<const CompiletimeClass> get_classes() const noexcept;
-    Value get_constant(uint16_t idx) const
-    {
-        const auto v = constants.at(idx);
-        if (std::holds_alternative<int64_t>(v))
-        {
-            return std::get<int64_t>(v);
-        }
-        else // double
-        {
-            return std::get<double>(v);
-        }
-    }
-    std::span<const std::string> get_const_strings() const
-    {
-        return const_strings;
-    }
+    Value get_constant(uint16_t idx) const;
+    std::span<const std::string> get_const_strings() const;
     void set_source(std::vector<std::string>&& src) noexcept;
     std::string_view get_source(gsl::index line_num) const;
 
@@ -169,39 +143,15 @@ namespace foxlox
     uint16_t add_static_value();
     uint16_t get_static_value_num() const noexcept;
 
-    void add_export(std::string_view name, uint16_t idx)
-    {
-        export_list.emplace_back(add_string(name), idx);
-    }
-    std::span<const CompiletimeExport> get_export_list() const noexcept
-    {
-        return export_list;
-    }
+    void add_export(std::string_view name, uint16_t idx);
+    std::span<const CompiletimeExport> get_export_list() const noexcept;
 
-    void set_static_value_idx_base(size_t n) noexcept
-    {
-        static_value_idx_base = n;
-    }
-    size_t get_static_value_idx_base() const noexcept
-    {
-        return static_value_idx_base;
-    }
-    void set_class_idx_base(size_t n) noexcept
-    {
-        class_idx_base = n;
-    }
-    size_t get_class_idx_base() const noexcept
-    {
-        return class_idx_base;
-    }
-    void set_const_string_idx_base(size_t n) noexcept 
-    {
-        const_string_idx_base = n;
-    }
-    size_t get_const_string_idx_base() const noexcept
-    {
-        return const_string_idx_base;
-    }
+    void set_static_value_idx_base(size_t n) noexcept;
+    size_t get_static_value_idx_base() const noexcept;
+    void set_class_idx_base(size_t n) noexcept;
+    size_t get_class_idx_base() const noexcept;
+    void set_const_string_idx_base(size_t n) noexcept;
+    size_t get_const_string_idx_base() const noexcept;
   private:
     std::string source_path; // for import lookup
     std::vector<std::string> source;
@@ -607,5 +557,73 @@ namespace foxlox
             subr.set_chunk(this);
         }
         return *this;
+    }
+
+    std::string_view Chunk::get_src_path() const noexcept
+    {
+        return source_path;
+    }
+    void Chunk::set_src_path(std::string_view path)
+    {
+        source_path = path;
+    }
+
+    std::vector<Subroutine>& Chunk::get_subroutines() noexcept
+    {
+        return subroutines;
+    }
+    std::span<const Subroutine> Chunk::get_subroutines() const noexcept
+    {
+        return subroutines;
+    }
+    Value Chunk::get_constant(uint16_t idx) const
+    {
+        const auto v = constants.at(idx);
+        if (std::holds_alternative<int64_t>(v))
+        {
+            return std::get<int64_t>(v);
+        }
+        else // double
+        {
+            return std::get<double>(v);
+        }
+    }
+    std::span<const std::string> Chunk::get_const_strings() const
+    {
+        return const_strings;
+    }
+
+    void Chunk::add_export(std::string_view name, uint16_t idx)
+    {
+        export_list.emplace_back(add_string(name), idx);
+    }
+    std::span<const CompiletimeExport> Chunk::get_export_list() const noexcept
+    {
+        return export_list;
+    }
+
+    void Chunk::set_static_value_idx_base(size_t n) noexcept
+    {
+        static_value_idx_base = n;
+    }
+    size_t Chunk::get_static_value_idx_base() const noexcept
+    {
+        return static_value_idx_base;
+    }
+    void Chunk::set_class_idx_base(size_t n) noexcept
+    {
+        class_idx_base = n;
+    }
+    size_t Chunk::get_class_idx_base() const noexcept
+    {
+        return class_idx_base;
+    }
+    void Chunk::set_const_string_idx_base(size_t n) noexcept
+    {
+        const_string_idx_base = n;
+    }
+    size_t Chunk::get_const_string_idx_base() const noexcept
+    {
+        return const_string_idx_base;
     }
 }

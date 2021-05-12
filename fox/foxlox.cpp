@@ -5,15 +5,10 @@ import <string_view>;
 import <iostream>;
 import <fstream>;
 import <filesystem>;
+import <format>;
+import <iostream>;
 
-import foxlox.except;
-
-#include <foxlox/debug.h>
-#include <foxlox/chunk.h>
-#include <foxlox/vm.h>
-#include <foxlox/compiler.h>
-
-#include <fmt/format.h>
+import foxlox;
 
 using namespace foxlox;
 
@@ -37,7 +32,7 @@ void run(std::string_view source, VM& vm, bool exit_on_error)
   }
   catch (RuntimeError& e)
   {
-    fmt::print(stderr, "{}\n", e.what());
+    std::cerr << std::format("{}\n", e.what());
     if (exit_on_error)
     {
       std::exit(70);
@@ -53,7 +48,7 @@ void run_prompt(VM& vm)
 {
   while (true)
   {
-    fmt::print("> ");
+    std::cout << "> ";
     std::string line;
     std::getline(std::cin, line);
     if (std::cin.eof())
@@ -69,7 +64,7 @@ void run_file(const std::filesystem::path& path, VM& vm)
   std::ifstream ifs(path);
   if (!ifs)
   {
-    fmt::print(stderr, "Could not open file \"{}\".\n", path.string());
+    std::cerr << std::format("Could not open file \"{}\".\n", path.string());
     std::exit(74);
   }
   std::string content
@@ -90,13 +85,13 @@ int main(int argc, const char* argv[])
   }
   else if (argc == 1)
   {
-    fmt::print("prompt mode not implemented.\n");
+    std::cerr << "prompt mode not implemented.\n";
     std::exit(64);
     // run_prompt(vm);
   }
   else
   {
-    fmt::print(stderr, "Usage: fox [script]\n");
+    std::cerr << "Usage: fox [script]\n";
     std::exit(64);
   }
   return 0;

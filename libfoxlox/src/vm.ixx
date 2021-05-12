@@ -1,5 +1,3 @@
-module;
-#include <fmt/format.h>
 export module foxlox:vm;
 
 import <array>;
@@ -10,6 +8,7 @@ import <unordered_map>;
 import <filesystem>;
 import <iostream>;
 import <deque>;
+import <format>;
 
 import "opcode.h";
 import :runtimelib;
@@ -171,7 +170,7 @@ namespace foxlox
       gsl::index disassemble_inst(const VM& vm, const Subroutine& subroutine, gsl::index index);
       void disassemble_chunk(const VM& vm, const Subroutine& subroutine, std::string_view name)
       {
-          std::cout << fmt::format("== {} ==\n", name);
+          std::cout << std::format("== {} ==\n", name);
           gsl::index i = 0;
           while (i < ssize(subroutine.get_code()))
           {

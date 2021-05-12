@@ -1,10 +1,10 @@
 module;
 #include <range/v3/all.hpp>
-#include <fmt/format.h>
 export module foxlox:codegen;
 
 import <map>;
 import <string_view>;
+import <format>;
 
 import "common.h";
 import :except;
@@ -645,7 +645,7 @@ namespace foxlox
     try
     {
       const uint16_t subroutine_idx =
-        chunk.add_subroutine(fmt::format("{}:{}", source_name, stmt->name.lexeme), gsl::narrow_cast<int>(ssize(stmt->var_names)));
+        chunk.add_subroutine(std::format("{}:{}", source_name, stmt->name.lexeme), gsl::narrow_cast<int>(ssize(stmt->var_names)));
 
       const auto stack_size_before = current_stack_size;
 

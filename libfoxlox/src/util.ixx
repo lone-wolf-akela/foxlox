@@ -1,6 +1,4 @@
 module;
-#include <fmt/format.h>
-
 #ifdef FOXLOX_USE_WINSDK_ICU
 #include <icu.h>
 #pragma comment(lib, "icu.lib") 
@@ -17,6 +15,7 @@ import <concepts>;
 import <sstream>;
 import <cassert>;
 import <array>;
+import <type_traits>;
 
 import <gsl/gsl>;
 

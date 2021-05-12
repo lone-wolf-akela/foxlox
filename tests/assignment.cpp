@@ -1,8 +1,5 @@
-#include <foxlox/vm.h>
-#include <foxlox/compiler.h>
-#include <foxlox/cppinterop.h>
-
-#include <gtest/gtest.h>
+import <gtest/gtest.h>;
+import foxlox;
 
 using namespace foxlox;
 
@@ -22,13 +19,12 @@ r += c; # expect: c
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-  auto s = std::get<TupleSpan>(v);
-  ASSERT_EQ(ssize(s), 3);
-  ASSERT_EQ(to_variant(s[0]), FoxValue("c"));
-  ASSERT_EQ(to_variant(s[1]), FoxValue("c"));
-  ASSERT_EQ(to_variant(s[2]), FoxValue("c"));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 3);
+  ASSERT_EQ(v[0], "c");
+  ASSERT_EQ(v[1], "c");
+  ASSERT_EQ(v[2], "c");
 }
 
 TEST(assignment, global)
@@ -47,14 +43,13 @@ r += a; # expect: arg
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-  auto s = std::get<TupleSpan>(v);
-  ASSERT_EQ(ssize(s), 4);
-  ASSERT_EQ(to_variant(s[0]), FoxValue("before"));
-  ASSERT_EQ(to_variant(s[1]), FoxValue("after"));
-  ASSERT_EQ(to_variant(s[2]), FoxValue("arg"));
-  ASSERT_EQ(to_variant(s[3]), FoxValue("arg"));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 4);
+  ASSERT_EQ(v[0], "before");
+  ASSERT_EQ(v[1], "after");
+  ASSERT_EQ(v[2], "arg");
+  ASSERT_EQ(v[3], "arg");
 }
 
 TEST(assignment, grouping)
@@ -96,14 +91,13 @@ var r = ();
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-  auto s = std::get<TupleSpan>(v);
-  ASSERT_EQ(ssize(s), 4);
-  ASSERT_EQ(to_variant(s[0]), FoxValue("before"));
-  ASSERT_EQ(to_variant(s[1]), FoxValue("after"));
-  ASSERT_EQ(to_variant(s[2]), FoxValue("arg"));
-  ASSERT_EQ(to_variant(s[3]), FoxValue("arg"));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 4);
+  ASSERT_EQ(v[0], "before");
+  ASSERT_EQ(v[1], "after");
+  ASSERT_EQ(v[2], "arg");
+  ASSERT_EQ(v[3], "arg");
 }
 
 TEST(assignment, prefix_operator)
@@ -129,12 +123,11 @@ r += c; # expect: var
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-  auto s = std::get<TupleSpan>(v);
-  ASSERT_EQ(ssize(s), 2);
-  ASSERT_EQ(to_variant(s[0]), FoxValue("var"));
-  ASSERT_EQ(to_variant(s[1]), FoxValue("var"));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 2);
+  ASSERT_EQ(v[0], "var");
+  ASSERT_EQ(v[1], "var");
 }
 
 TEST(assignment, to_this)

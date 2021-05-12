@@ -1,11 +1,11 @@
 module;
-#include <fmt/format.h>
 #include <range/v3/all.hpp>
 export module foxlox:resolver;
 
 import <map>;
 import <vector>;
 import <string>;
+import <format>;
 
 import <gsl/gsl>;
 
@@ -236,7 +236,7 @@ namespace foxlox
         return found->second.declare;
       }
     }
-    error(name, fmt::format("Can't find variable with name: `{}'.", name.lexeme));
+    error(name, std::format("Can't find variable with name: `{}'.", name.lexeme));
     return {};
   }
   void Resolver::resolve_function(stmt::Function* function, FunctionType type)

@@ -73,7 +73,7 @@
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
-      <DisableSpecificWarnings>5106</DisableSpecificWarnings>
+      <DisableSpecificWarnings>5106;4200</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -95,7 +95,7 @@
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
-      <DisableSpecificWarnings>5106</DisableSpecificWarnings>
+      <DisableSpecificWarnings>5106;4200</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

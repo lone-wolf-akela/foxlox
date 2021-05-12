@@ -142,7 +142,7 @@ namespace foxlox
       const_string_pool.push_back(str__init__);
       if (load_default_lib)
       {
-        for (auto& [path, lib] : g_default_libs)
+        for (auto& [path, lib] : default_libs())
         {
           load_lib(path, lib);
         }

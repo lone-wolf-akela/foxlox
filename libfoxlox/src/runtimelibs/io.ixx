@@ -62,8 +62,11 @@ namespace foxlox::lib
 		return Value();
 	}
 
-	export const RuntimeLib io = {
-	  { "print", print },
-	  { "println", println},
+	export RuntimeLib io() 
+	{
+		return RuntimeLib{
+		  { "print", print },
+		  { "println", println },
+		};
 	};
 }

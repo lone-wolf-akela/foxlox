@@ -19,8 +19,11 @@ namespace foxlox::lib
       return *std::ranges::min_element(values);
   }
 
-  export const RuntimeLib algorithm = {
-    { "max", max },
-    { "min", min},
+  export RuntimeLib algorithm()
+  {
+	  return RuntimeLib{
+		{ "max", max },
+		{ "min", min },
+	  };
   };
 }

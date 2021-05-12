@@ -17,5 +17,5 @@ namespace foxlox
   };
   export using RuntimeLib = std::vector<RuntimeLibElem>;
 
-  export extern const std::unordered_map<std::string, RuntimeLib> g_default_libs;
+  export std::unordered_map<std::string, RuntimeLib> default_libs();
 }

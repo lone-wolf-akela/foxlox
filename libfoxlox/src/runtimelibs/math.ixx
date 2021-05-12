@@ -8,7 +8,10 @@ import :value;
 
 namespace foxlox::lib
 {
-  export const RuntimeLib math = {
-    { "pi", std::numbers::pi },
+  export RuntimeLib math()
+  {
+      return RuntimeLib{
+        { "pi", std::numbers::pi },
+      };
   };
 }

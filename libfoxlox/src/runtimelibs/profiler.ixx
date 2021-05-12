@@ -21,7 +21,11 @@ namespace foxlox::lib
       return ms.count() / 1000.0;
   }
 
-  export const RuntimeLib profiler = {
-    { "clock", clock },
+  export RuntimeLib profiler()
+  {
+      return RuntimeLib
+      {
+        { "clock", clock },
+      };
   };
 }

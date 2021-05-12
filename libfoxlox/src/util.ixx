@@ -25,14 +25,6 @@ namespace foxlox
   export std::string u32_to_u8(char32_t in);
   export std::u32string u8_to_u32(std::string_view in);
 
-  export template<typename T> requires std::integral<T> || std::floating_point<T>
-  std::string num_to_str(T v)
-  {
-    std::stringstream strm;
-    strm << v;
-    return strm.str();
-  }
-
   // from https://stackoverflow.com/questions/31762958/check-if-class-is-a-template-specialization
   export template <class T, template <class...> class Template>
   struct is_specialization : std::false_type {};

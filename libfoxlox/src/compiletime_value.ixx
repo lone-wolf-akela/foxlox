@@ -47,11 +47,11 @@ namespace foxlox
         }
         else if (std::holds_alternative<double>(v))
         {
-            return num_to_str(std::get<double>(v));
+            return std::to_string(std::get<double>(v));
         }
         else if (std::holds_alternative<int64_t>(v))
         {
-            return num_to_str(std::get<int64_t>(v));
+            return std::to_string(std::get<int64_t>(v));
         }
         else if (std::holds_alternative<std::string>(v))
         {

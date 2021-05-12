@@ -16,7 +16,9 @@ namespace
     requires ((std::same_as<Args, ValueType> || std::same_as<Args, ObjType>) && ...)
   {
     std::string msg = "Value type error. Expected: ";
-    (std::format_to(std::back_inserter(msg), "{}, ", magic_enum::enum_name(expected)), ...);
+    // TODO: wait for VS update fix this
+    //(std::format_to(std::back_inserter(msg), "{}, ", magic_enum::enum_name(expected)), ...);
+    ((msg += std::format("{}, ", magic_enum::enum_name(expected))), ...);
     return msg;
   }
 
@@ -27,7 +29,9 @@ namespace
     ((std::same_as<Args, ValueType> || std::same_as<Args, ObjType>) && ...)
   {
     std::string msg = wrongtype_msg_fmt(expected...);
-    std::format_to(std::back_inserter(msg), "got: {} and {}.", magic_enum::enum_name(got1), magic_enum::enum_name(got2));
+    // TODO: wait for VS update fix this
+    //std::format_to(std::back_inserter(msg), "got: {} and {}.", magic_enum::enum_name(got1), magic_enum::enum_name(got2));
+    msg += std::format("got: {} and {}.", magic_enum::enum_name(got1), magic_enum::enum_name(got2));
     return ValueError(msg);
   }
 
@@ -37,7 +41,9 @@ namespace
     ((std::same_as<Args, ValueType> || std::same_as<Args, ObjType>) && ...)
   {
     std::string msg = wrongtype_msg_fmt(expected...);
-    std::format_to(std::back_inserter(msg), "got: {}.", magic_enum::enum_name(got));
+    // TODO: wait for VS update fix this
+    //std::format_to(std::back_inserter(msg), "got: {}.", magic_enum::enum_name(got));
+    msg += std::format("got: {}.", magic_enum::enum_name(got));
     return ValueError(msg);
   }
 

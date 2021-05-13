@@ -3,218 +3,141 @@ import foxlox;
 
 using namespace foxlox;
 
-TEST(function, body_must_be_block)
-{
-  auto [res, chunk] = compile(R"(
-fun f() 123;
-)");
-  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
-}
-
-TEST(function, empty_body)
-{
-  VM vm;
-  auto [res, chunk] = compile(R"(
-fun f() {}
-return f();
-)");
-  ASSERT_EQ(res, CompilerResult::OK);
-  auto v = FoxValue(vm.run(chunk));
-  ASSERT_EQ(v, nil);
-}
-
-TEST(function, extra_arguments)
-{
-  VM vm;
-  auto [res, chunk] = compile(R"(
-from fox.io import print, println;
-fun f(a, b) {
-  print(a);
-  println(b);
-}
-f(1, 2, 3, 4);
-)");
-  ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_THROW(vm.run(chunk), RuntimeError);
-}
-
-TEST(function, local_mutual_recursion)
-{
-  auto [res, chunk] = compile(R"(
-{
-  fun isEven(n) {
-    if (n == 0) return true;
-    return isOdd(n - 1); 
-  }
-
-  fun isOdd(n) {
-    if (n == 0) return false;
-    return isEven(n - 1);
-  }
-
-  isEven(4);
-}
-)");
-  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
-}
-
-TEST(function, local_recursion)
-{
-  VM vm;
-  auto [res, chunk] = compile(R"(
-{
-  fun fib(n) {
-    if (n < 2) return n;
-    return fib(n - 1) + fib(n - 2);
-  }
-
-  return fib(8);
-}
-)");
-  ASSERT_EQ(res, CompilerResult::OK);
-  auto v = FoxValue(vm.run(chunk));
-  ASSERT_EQ(v, 21);
-}
-
-TEST(function, missing_arguments)
-{
-  VM vm;
-  auto [res, chunk] = compile(R"(
-fun f(a, b) {}
-f(1);
-)");
-  ASSERT_EQ(res, CompilerResult::OK);
-  ASSERT_THROW(vm.run(chunk), RuntimeError);
-}
-
-TEST(function, missing_comma_in_parameters)
-{
-  auto [res, chunk] = compile(R"(
-fun foo(a, b c, d, e, f) {}
-)");
-  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
-}
-
-TEST(function, global_mutual_recursion)
-{
-  auto [res, chunk] = compile(R"(
-fun isEven(n) {
-  if (n == 0) return true;
-  return isOdd(n - 1); 
-}
-
-fun isOdd(n) {
-  if (n == 0) return false;
-  return isEven(n - 1);
-}
-
-isEven(4);
-)");
-  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
-}
-
-TEST(function, workable_mutual_recursion)
-{
-  VM vm;
-  auto [res, chunk] = compile(R"(
-var isEven;
-var isOdd;
-
-fun isEven_impl(n) {
-  if (n == 0) return true;
-  return isOdd(n - 1); 
-}
-isEven = isEven_impl;
-
-fun isOdd_impl(n) {
-  if (n == 0) return false;
-  return isEven(n - 1);
-}
-isOdd = isOdd_impl;
-
-return (isEven(4), isOdd(3));
-)");
-  ASSERT_EQ(res, CompilerResult::OK);
-  auto v = FoxValue(vm.run(chunk));
-  ASSERT_TRUE(v.is<TupleSpan>());
-  ASSERT_EQ(v.ssize(), 2);
-  ASSERT_EQ(v[0], true);
-  ASSERT_EQ(v[1], true);
-}
-
-TEST(function, parameters)
+TEST(method, arity)
 {
   VM vm;
   auto [res, chunk] = compile(R"(
 var r = ();
-
-fun f0() { return 0; }
-r += f0(); # expect: 0
-
-fun f1(a) { return a; }
-r += f1(1); # expect: 1
-
-fun f2(a, b) { return a + b; }
-r += f2(1, 2); # expect: 3
-
-fun f3(a, b, c) { return a + b + c; }
-r += f3(1, 2, 3); # expect: 6
-
-fun f4(a, b, c, d) { return a + b + c + d; }
-r += f4(1, 2, 3, 4); # expect: 10
-
-fun f5(a, b, c, d, e) { return a + b + c + d + e; }
-r += f5(1, 2, 3, 4, 5); # expect: 15
-
-fun f6(a, b, c, d, e, f) { return a + b + c + d + e + f; }
-r += f6(1, 2, 3, 4, 5, 6); # expect: 21
-
-fun f7(a, b, c, d, e, f, g) { return a + b + c + d + e + f + g; }
-r += f7(1, 2, 3, 4, 5, 6, 7); # expect: 28
-
-fun f8(a, b, c, d, e, f, g, h) { return a + b + c + d + e + f + g + h; }
-r += f8(1, 2, 3, 4, 5, 6, 7, 8); # expect: 36
-
+class Foo {
+  method0() { return "no args"; }
+  method1(a) { return a; }
+  method2(a, b) { return a + b; }
+  method3(a, b, c) { return a + b + c; }
+  method4(a, b, c, d) { return a + b + c + d; }
+  method5(a, b, c, d, e) { return a + b + c + d + e; }
+  method6(a, b, c, d, e, f) { return a + b + c + d + e + f; }
+  method7(a, b, c, d, e, f, g) { return a + b + c + d + e + f + g; }
+  method8(a, b, c, d, e, f, g, h) { return a + b + c + d + e + f + g + h; }
+}
+var foo = Foo();
+r += foo.method0(); 
+r += foo.method1(1); 
+r += foo.method2(1, 2); 
+r += foo.method3(1, 2, 3); 
+r += foo.method4(1, 2, 3, 4);
+r += foo.method5(1, 2, 3, 4, 5); 
+r += foo.method6(1, 2, 3, 4, 5, 6);
+r += foo.method7(1, 2, 3, 4, 5, 6, 7); 
+r += foo.method8(1, 2, 3, 4, 5, 6, 7, 8);
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   auto v = FoxValue(vm.run(chunk));
   ASSERT_TRUE(v.is<TupleSpan>());
   ASSERT_EQ(v.ssize(), 9);
-  int i = 0;
-  ASSERT_EQ(v[i++], 0);
-  ASSERT_EQ(v[i++], 1);
-  ASSERT_EQ(v[i++], 3);
-  ASSERT_EQ(v[i++], 6);
-  ASSERT_EQ(v[i++], 10);
-  ASSERT_EQ(v[i++], 15);
-  ASSERT_EQ(v[i++], 21);
-  ASSERT_EQ(v[i++], 28);
-  ASSERT_EQ(v[i++], 36);
+  ASSERT_EQ(v[0], "no args");
+  ASSERT_EQ(v[1], 1);
+  ASSERT_EQ(v[2], 3);
+  ASSERT_EQ(v[3], 6);
+  ASSERT_EQ(v[4], 10);
+  ASSERT_EQ(v[5], 15);
+  ASSERT_EQ(v[6], 21);
+  ASSERT_EQ(v[7], 28);
+  ASSERT_EQ(v[8], 36);
 }
 
-TEST(function, recursion)
+TEST(method, empty_block)
 {
   VM vm;
   auto [res, chunk] = compile(R"(
-fun fib(n) {
-  if (n < 2) return n;
-  return fib(n - 1) + fib(n - 2);
+class Foo {
+  bar() {}
 }
-return fib(8);
+return Foo().bar();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   auto v = FoxValue(vm.run(chunk));
-  ASSERT_EQ(v, 21);
+  ASSERT_EQ(v, nil);
 }
 
-TEST(function, too_many_arguments)
+TEST(method, extra_arguments)
+{
+  VM vm;
+  auto [res, chunk] = compile(R"(
+class Foo {
+  method(a, b) {
+    this.a = a;
+    this.b = b;
+  }
+}
+Foo().method(1, 2, 3, 4);
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
+}
+
+TEST(method, missing_arguments)
+{
+  VM vm;
+  auto [res, chunk] = compile(R"(
+class Foo {
+  method(a, b) {}
+}
+Foo().method(1);
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
+}
+
+TEST(method, not_found)
+{
+  VM vm;
+  auto [res, chunk] = compile(R"(
+class Foo {}
+Foo().unknown();
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
+}
+
+TEST(method, get_bound_method)
+{
+  VM vm;
+  auto [res, chunk] = compile(R"(
+class Foo {
+  method() { }
+}
+var foo = Foo();
+return foo.method;
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  auto v = FoxValue(vm.run(chunk));
+  auto is_method = v.is<std::pair<Instance*, Subroutine*>>();
+  ASSERT_TRUE(is_method);
+  auto method = v.get<std::pair<Instance*, Subroutine*>>();
+  ASSERT_NE(method.first, nullptr);
+  ASSERT_NE(method.second, nullptr);
+}
+
+TEST(method, refer_to_name)
 {
   auto [res, chunk] = compile(R"(
-fun foo() {}
+class Foo {
+  method() {
+    return method;
+  }
+}
+Foo().method();
+)");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(method, too_many_arguments)
+{
+  auto [res, chunk] = compile(R"(
 {
   var a = 1;
-  foo(
+  true.method(
      a, # 1
      a, # 2
      a, # 3
@@ -470,17 +393,18 @@ fun foo() {}
      a, # 253
      a, # 254
      a, # 255
-     a); # Error at 'a': Can't have more than 255 arguments.
+     a); 
 }
 )");
   ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
 }
 
-TEST(function, too_many_parameters)
+TEST(method, too_many_parameters)
 {
   auto [res, chunk] = compile(R"(
-# 256 parameters.
-fun f(
+class Foo {
+  // 256 parameters.
+  method(
     a1,
     a2,
     a3,
@@ -735,7 +659,8 @@ fun f(
     a252,
     a253,
     a254,
-    a255, a) {} # Error at 'a': Can't have more than 255 parameters.
+    a255, a) {} 
+}
 )");
   ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
 }

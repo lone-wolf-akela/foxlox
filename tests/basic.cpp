@@ -63,21 +63,21 @@ return r;
   auto v = FoxValue(vm.run(chunk));
   ASSERT_TRUE(v.is<TupleSpan>());
   ASSERT_EQ(v.ssize(), 15);
-  ASSERT_EQ(v[0], 14_i64);
-  ASSERT_EQ(v[1], 8_i64);
+  ASSERT_EQ(v[0], 14);
+  ASSERT_EQ(v[1], 8);
   ASSERT_EQ(v[2], 4.0);
   ASSERT_EQ(v[3], 0.0);
-  ASSERT_EQ(v[4], 4_i64);
-  ASSERT_EQ(v[5], 0_i64);
+  ASSERT_EQ(v[4], 4);
+  ASSERT_EQ(v[5], 0);
   ASSERT_EQ(v[6], true);
   ASSERT_EQ(v[7], true);
   ASSERT_EQ(v[8], true);
   ASSERT_EQ(v[9], true);
-  ASSERT_EQ(v[10], 0_i64);
-  ASSERT_EQ(v[11], 0_i64);
-  ASSERT_EQ(v[12], 0_i64);
-  ASSERT_EQ(v[13], 0_i64);
-  ASSERT_EQ(v[14], 4_i64);
+  ASSERT_EQ(v[10], 0);
+  ASSERT_EQ(v[11], 0);
+  ASSERT_EQ(v[12], 0);
+  ASSERT_EQ(v[13], 0);
+  ASSERT_EQ(v[14], 4);
 }
 
 TEST(basic, unexpected_character)

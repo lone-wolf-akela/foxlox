@@ -130,8 +130,8 @@ TEST(regression, false_not_equal_to_false)
 {
   // this only happens in clang
   // as `2 < 1' will set the bool bit in Value to 0
-  // but left the full value to 1024_i64
-  // which makes it not equal to a plain false (0_i64)
+  // but left the full value to 1024
+  // which makes it not equal to a plain false (0)
   VM vm;
   auto [res, chunk] = compile(R"(
 return false == 2 < 1;

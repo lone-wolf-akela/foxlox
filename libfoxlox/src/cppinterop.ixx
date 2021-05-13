@@ -34,11 +34,6 @@ namespace foxlox
 		}
 	};
 
-	export constexpr int64_t operator"" _i64(unsigned long long int i)
-	{
-		return i;
-	}
-
 	using FoxValueVariant = std::variant<
 		nil_t, // NIL
 		bool, // BOOL

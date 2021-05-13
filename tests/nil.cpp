@@ -1,8 +1,6 @@
 #include <gtest/gtest.h>
 import foxlox;
 
-//TODO
-
 using namespace foxlox;
 
 TEST(nil, literal_)
@@ -12,6 +10,6 @@ return nil;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = vm.run(chunk);
-  ASSERT_TRUE(v.is_nil());
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, nil);
 }

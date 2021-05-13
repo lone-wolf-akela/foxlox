@@ -25,8 +25,8 @@ return r;
   ASSERT_TRUE(v.is<TupleSpan>());
   ASSERT_EQ(v.ssize(), 3);
   ASSERT_EQ(v[0], "init");
-  ASSERT_EQ(v[1], 1_i64);
-  ASSERT_EQ(v[2], 2_i64);
+  ASSERT_EQ(v[1], 1);
+  ASSERT_EQ(v[2], 2);
 }
 
 TEST(constructor, early_return)

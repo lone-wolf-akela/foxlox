@@ -54,7 +54,6 @@ return r;
 
 TEST(assignment, grouping)
 {
-  VM vm;
   auto [res, chunk] = compile(R"(
 var a = "a";
 (a) = "value"; #

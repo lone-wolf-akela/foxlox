@@ -16,8 +16,8 @@ return (algorithm.max(4,7,5,-3), algorithm.min(4,7,5,-3),);
   auto v = FoxValue(vm.run(chunk));
   ASSERT_TRUE(v.is<TupleSpan>());
   ASSERT_EQ(v.ssize(), 2);
-  ASSERT_EQ(v[0], 7_i64);
-  ASSERT_EQ(v[1], -3_i64);
+  ASSERT_EQ(v[0], 7);
+  ASSERT_EQ(v[1], -3);
 }
 
 TEST(import_, import_as)
@@ -31,8 +31,8 @@ return (algo.max(4,7,5,-3), algo.min(4,7,5,-3),);
   auto v = FoxValue(vm.run(chunk));
   ASSERT_TRUE(v.is<TupleSpan>());
   ASSERT_EQ(v.ssize(), 2);
-  ASSERT_EQ(v[0], 7_i64);
-  ASSERT_EQ(v[1], -3_i64);
+  ASSERT_EQ(v[0], 7);
+  ASSERT_EQ(v[1], -3);
 }
 
 TEST(import_, from_single)
@@ -44,7 +44,7 @@ return min(4,7,5,-3);
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   auto v = FoxValue(vm.run(chunk));
-  ASSERT_EQ(v, -3_i64);
+  ASSERT_EQ(v, -3);
 }
 
 TEST(import_, from_multi)
@@ -58,8 +58,8 @@ return (max(4,7,5,-3), min(4,7,5,-3),);
   auto v = FoxValue(vm.run(chunk));
   ASSERT_TRUE(v.is<TupleSpan>());
   ASSERT_EQ(v.ssize(), 2);
-  ASSERT_EQ(v[0], 7_i64);
-  ASSERT_EQ(v[1], -3_i64);
+  ASSERT_EQ(v[0], 7);
+  ASSERT_EQ(v[1], -3);
 }
 
 TEST(import_, value_)
@@ -91,7 +91,7 @@ return Ultimate_Answer;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = FoxValue(vm.run(chunk));
-    ASSERT_EQ(v, 42_i64);
+    ASSERT_EQ(v, 42);
   }
   std::filesystem::remove("exported.fox");
 }
@@ -116,7 +116,7 @@ return Ultimate_Answer(100);
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = FoxValue(vm.run(chunk));
-    ASSERT_EQ(v, 58_i64);
+    ASSERT_EQ(v, 58);
   }
   std::filesystem::remove("exported.fox");
 }
@@ -149,7 +149,7 @@ return k.calc(100);
 )");
     ASSERT_EQ(res, CompilerResult::OK);
     auto v = FoxValue(vm.run(chunk));
-    ASSERT_EQ(v, 58_i64);
+    ASSERT_EQ(v, 58);
   }
   std::filesystem::remove("exported.fox");
 }

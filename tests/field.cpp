@@ -24,8 +24,8 @@ return r;
   ASSERT_TRUE(v.is<TupleSpan>());
   ASSERT_EQ(v.ssize(), 3);
   ASSERT_EQ(v[0], "bar");
-  ASSERT_EQ(v[1], 1_i64);
-  ASSERT_EQ(v[2], 2_i64);
+  ASSERT_EQ(v[1], 1);
+  ASSERT_EQ(v[2], 2);
 }
 
 TEST(field, call_nonfunction_field)
@@ -425,7 +425,7 @@ return r;
   ASSERT_TRUE(v.is<TupleSpan>());
   ASSERT_EQ(v.ssize(), 2);
   ASSERT_EQ(v[0], "foo1");
-  ASSERT_EQ(v[1], 1_i64);
+  ASSERT_EQ(v[1], 1);
 }
 
 TEST(field, on_instance)

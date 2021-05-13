@@ -1,5 +1,4 @@
-import <tuple>;
-import <gtest/gtest.h>;
+#include <gtest/gtest.h>
 import foxlox;
 
 using namespace foxlox;
@@ -17,8 +16,8 @@ return "ok";
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_EQ(v, FoxValue("ok"));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, "ok");
 }
 
 TEST(block, scope)
@@ -34,9 +33,9 @@ return r + a;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-  auto s = std::get<TupleSpan>(v);
-  ASSERT_EQ(to_variant(s[0]), FoxValue("inner"));
-  ASSERT_EQ(to_variant(s[1]), FoxValue("outer"));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 2);
+  ASSERT_EQ(v[0], "inner");
+  ASSERT_EQ(v[1], "outer");
 }

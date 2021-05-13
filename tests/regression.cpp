@@ -1,7 +1,7 @@
-import <tuple>;
-import <gtest/gtest.h>;
-import foxlox;
+#include <gtest/gtest.h>
+import <fstream>;
 
+import foxlox;
 using namespace foxlox;
 
 // SWITCH ON DEBUG_STRESS_GC TO TEST THIS
@@ -137,6 +137,6 @@ TEST(regression, false_not_equal_to_false)
 return false == 2 < 1;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_EQ(v, FoxValue(true));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, true);
 }

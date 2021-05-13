@@ -1,5 +1,4 @@
-import <tuple>;
-import <gtest/gtest.h>;
+#include <gtest/gtest.h>
 import foxlox;
 
 using namespace foxlox;

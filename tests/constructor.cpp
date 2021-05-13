@@ -1,5 +1,4 @@
-import <tuple>;
-import <gtest/gtest.h>;
+#include <gtest/gtest.h>
 import foxlox;
 
 using namespace foxlox;
@@ -22,13 +21,12 @@ r += foo.b; # expect: 2
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-  auto s = std::get<TupleSpan>(v);
-  ASSERT_EQ(ssize(s), 3);
-  ASSERT_EQ(to_variant(s[0]), FoxValue("init"));
-  ASSERT_EQ(to_variant(s[1]), FoxValue(1_i64));
-  ASSERT_EQ(to_variant(s[2]), FoxValue(2_i64));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 3);
+  ASSERT_EQ(v[0], "init");
+  ASSERT_EQ(v[1], 1_i64);
+  ASSERT_EQ(v[2], 2_i64);
 }
 
 TEST(constructor, early_return)
@@ -47,8 +45,8 @@ var foo = Foo(); # expect: init
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_EQ(v, FoxValue("init"));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, "init");
 }
 
 TEST(constructor, call_init_explicitly)
@@ -103,8 +101,8 @@ var foo = Foo();
 return Bar().method();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_EQ(v, FoxValue("method"));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, "method");
 }
 
 TEST(constructor, default_arguments)
@@ -151,8 +149,8 @@ __init__("func");
 return  r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_EQ(v, FoxValue("non_class_func"));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, "non_class_func");
 }
 
 TEST(constructor, missing_arguments)
@@ -194,12 +192,11 @@ r += r2; # expect: method
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-  auto s = std::get<TupleSpan>(v);
-  ASSERT_EQ(ssize(s), 2);
-  ASSERT_EQ(to_variant(s[0]), FoxValue("bar"));
-  ASSERT_EQ(to_variant(s[1]), FoxValue("method"));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 2);
+  ASSERT_EQ(v[0], "bar");
+  ASSERT_EQ(v[1], "method");
 }
 
 TEST(constructor, return_value)

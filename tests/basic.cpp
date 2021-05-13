@@ -1,5 +1,4 @@
-import <tuple>;
-import <gtest/gtest.h>;
+#include <gtest/gtest.h>
 import foxlox;
 
 using namespace foxlox;
@@ -9,8 +8,8 @@ TEST(basic, empty_file)
   VM vm;
   auto [res, chunk] = compile(R"()");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_EQ(v, FoxValue(nil));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, nil);
 }
 
 TEST(basic, precedence)
@@ -61,25 +60,24 @@ r +=  (2 * (6 - (2 + 2))); # expect: 4
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-  auto s = std::get<TupleSpan>(v);
-  ASSERT_EQ(ssize(s), 15);
-  ASSERT_EQ(to_variant(s[0]), FoxValue(14_i64));
-  ASSERT_EQ(to_variant(s[1]), FoxValue(8_i64));
-  ASSERT_EQ(to_variant(s[2]), FoxValue(4.0));
-  ASSERT_EQ(to_variant(s[3]), FoxValue(0.0));
-  ASSERT_EQ(to_variant(s[4]), FoxValue(4_i64));
-  ASSERT_EQ(to_variant(s[5]), FoxValue(0_i64));
-  ASSERT_EQ(to_variant(s[6]), FoxValue(true));
-  ASSERT_EQ(to_variant(s[7]), FoxValue(true));
-  ASSERT_EQ(to_variant(s[8]), FoxValue(true));
-  ASSERT_EQ(to_variant(s[9]), FoxValue(true));
-  ASSERT_EQ(to_variant(s[10]), FoxValue(0_i64));
-  ASSERT_EQ(to_variant(s[11]), FoxValue(0_i64));
-  ASSERT_EQ(to_variant(s[12]), FoxValue(0_i64));
-  ASSERT_EQ(to_variant(s[13]), FoxValue(0_i64));
-  ASSERT_EQ(to_variant(s[14]), FoxValue(4_i64));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 15);
+  ASSERT_EQ(v[0], 14_i64);
+  ASSERT_EQ(v[1], 8_i64);
+  ASSERT_EQ(v[2], 4.0);
+  ASSERT_EQ(v[3], 0.0);
+  ASSERT_EQ(v[4], 4_i64);
+  ASSERT_EQ(v[5], 0_i64);
+  ASSERT_EQ(v[6], true);
+  ASSERT_EQ(v[7], true);
+  ASSERT_EQ(v[8], true);
+  ASSERT_EQ(v[9], true);
+  ASSERT_EQ(v[10], 0_i64);
+  ASSERT_EQ(v[11], 0_i64);
+  ASSERT_EQ(v[12], 0_i64);
+  ASSERT_EQ(v[13], 0_i64);
+  ASSERT_EQ(v[14], 4_i64);
 }
 
 TEST(basic, unexpected_character)

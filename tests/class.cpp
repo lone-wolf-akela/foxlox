@@ -1,5 +1,4 @@
-import <tuple>;
-import <gtest/gtest.h>;
+#include <gtest/gtest.h>
 import foxlox;
 
 using namespace foxlox;
@@ -12,8 +11,8 @@ class Foo {}
 return Foo;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_TRUE(std::holds_alternative<Class*>(v));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<Class*>());
 }
 
 TEST(class_, inherit_self)
@@ -52,12 +51,12 @@ baz.inBaz(); # expect: in baz
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-  auto s = std::get<TupleSpan>(v);
-  ASSERT_EQ(to_variant(s[0]), FoxValue("in foo"));
-  ASSERT_EQ(to_variant(s[1]), FoxValue("in bar"));
-  ASSERT_EQ(to_variant(s[2]), FoxValue("in baz"));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 3);
+  ASSERT_EQ(v[0], "in foo");
+  ASSERT_EQ(v[1], "in bar");
+  ASSERT_EQ(v[2], "in baz");
 }
 
 TEST(class_, local_inherit_other)
@@ -74,8 +73,8 @@ fun f() {
 return f()().f(); # expect: "in b"
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_EQ(v, FoxValue("in b"));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, "in b");
 }
 
 TEST(class_, local_inherit_self)
@@ -108,8 +107,8 @@ var r;
 return r().bar();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_EQ(v, FoxValue("foo_self"));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, "foo_self");
 }
 
 TEST(class_, reference_self)
@@ -129,6 +128,6 @@ class Foo {
 return Foo().returnSelf()().bar();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_EQ(v, FoxValue("foo_self"));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, "foo_self");
 }

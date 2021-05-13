@@ -1,5 +1,4 @@
-import <tuple>;
-import <gtest/gtest.h>;
+#include <gtest/gtest.h>
 import foxlox;
 
 using namespace foxlox;
@@ -20,8 +19,8 @@ fun f() {}
 return f();
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_EQ(v, FoxValue(nil));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, nil);
 }
 
 TEST(function, extra_arguments)
@@ -73,8 +72,8 @@ TEST(function, local_recursion)
 }
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_EQ(v, FoxValue(21_i64));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, 21_i64);
 }
 
 TEST(function, missing_arguments)
@@ -136,11 +135,11 @@ isOdd = isOdd_impl;
 return (isEven(4), isOdd(3));
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-  auto s = std::get<TupleSpan>(v);
-  ASSERT_EQ(to_variant(s[0]), FoxValue(true));
-  ASSERT_EQ(to_variant(s[1]), FoxValue(true));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 2);
+  ASSERT_EQ(v[0], true);
+  ASSERT_EQ(v[1], true);
 }
 
 TEST(function, parameters)
@@ -179,19 +178,19 @@ r += f8(1, 2, 3, 4, 5, 6, 7, 8); # expect: 36
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-  auto s = std::get<TupleSpan>(v);
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 9);
   int i = 0;
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(0_i64));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(1_i64));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(3_i64));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(6_i64));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(10_i64));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(15_i64));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(21_i64));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(28_i64));
-  ASSERT_EQ(to_variant(s[i++]), FoxValue(36_i64));
+  ASSERT_EQ(v[i++], 0_i64);
+  ASSERT_EQ(v[i++], 1_i64);
+  ASSERT_EQ(v[i++], 3_i64);
+  ASSERT_EQ(v[i++], 6_i64);
+  ASSERT_EQ(v[i++], 10_i64);
+  ASSERT_EQ(v[i++], 15_i64);
+  ASSERT_EQ(v[i++], 21_i64);
+  ASSERT_EQ(v[i++], 28_i64);
+  ASSERT_EQ(v[i++], 36_i64);
 }
 
 TEST(function, recursion)
@@ -205,8 +204,8 @@ fun fib(n) {
 return fib(8);
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_EQ(v, FoxValue(21_i64));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, 21_i64);
 }
 
 TEST(function, too_many_arguments)

@@ -1,5 +1,4 @@
-import <tuple>;
-import <gtest/gtest.h>;
+#include <gtest/gtest.h>
 import foxlox;
 
 using namespace foxlox;
@@ -41,15 +40,15 @@ f3(); # expect: 4
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-  auto s = std::get<TupleSpan>(v);
-  ASSERT_EQ(to_variant(s[0]), FoxValue(4_i64));
-  ASSERT_EQ(to_variant(s[1]), FoxValue(3_i64));
-  ASSERT_EQ(to_variant(s[2]), FoxValue(4_i64));
-  ASSERT_EQ(to_variant(s[3]), FoxValue(3_i64));
-  ASSERT_EQ(to_variant(s[4]), FoxValue(4_i64));
-  ASSERT_EQ(to_variant(s[5]), FoxValue(3_i64));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 6);
+  ASSERT_EQ(v[0], 4_i64);
+  ASSERT_EQ(v[1], 3_i64);
+  ASSERT_EQ(v[2], 4_i64);
+  ASSERT_EQ(v[3], 3_i64);
+  ASSERT_EQ(v[4], 4_i64);
+  ASSERT_EQ(v[5], 3_i64);
 }
 
 TEST(for_, fun_in_body)
@@ -77,8 +76,8 @@ h(); # expect: i
 return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_EQ(v, FoxValue("i"));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, "i");
 }
 
 TEST(for_, return_inside)
@@ -94,8 +93,8 @@ fun f() {
 return f(); # expect: i
 )");
   ASSERT_EQ(res, CompilerResult::OK);
-  auto v = to_variant(vm.run(chunk));
-  ASSERT_EQ(v, FoxValue("i"));
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, "i");
 }
 
 TEST(for_, scope)
@@ -119,11 +118,11 @@ var r = ();
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-    auto s = std::get<TupleSpan>(v);
-    ASSERT_EQ(to_variant(s[0]), FoxValue(0_i64));
-    ASSERT_EQ(to_variant(s[1]), FoxValue(-1_i64));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 2);
+    ASSERT_EQ(v[0], 0_i64);
+    ASSERT_EQ(v[1], -1_i64);
   }
   {
     VM vm;
@@ -145,11 +144,11 @@ var r = ();
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-    auto s = std::get<TupleSpan>(v);
-    ASSERT_EQ(to_variant(s[0]), FoxValue("after"));
-    ASSERT_EQ(to_variant(s[1]), FoxValue(0_i64));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 2);
+    ASSERT_EQ(v[0], "after");
+    ASSERT_EQ(v[1], 0_i64);
   }
 }
 
@@ -188,12 +187,12 @@ for (var c = 0; c < 3;) r += (++c);
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-    auto s = std::get<TupleSpan>(v);
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 3);
     for (int64_t i = 0; i < 3; i++)
     {
-      ASSERT_EQ(to_variant(s[i]), FoxValue(i + 1));
+      ASSERT_EQ(v[i], i + 1);
     }
   }
   // Block body.
@@ -207,12 +206,12 @@ for (var a = 0; a < 3; ++a) {
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-    auto s = std::get<TupleSpan>(v);
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 3);
     for (int64_t i = 0; i < 3; i++)
     {
-      ASSERT_EQ(to_variant(s[i]), FoxValue(i));
+      ASSERT_EQ(v[i], i);
     }
   }
   // No clauses.
@@ -222,8 +221,8 @@ return r;
 for (;;) return "done";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue("done"));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, "done");
   }
   // No variable.
   {
@@ -235,12 +234,12 @@ for (; i < 2; ++i) r += i;
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-    auto s = std::get<TupleSpan>(v);
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 2);
     for (int64_t i = 0; i < 2; i++)
     {
-      ASSERT_EQ(to_variant(s[i]), FoxValue(i));
+      ASSERT_EQ(v[i], i);
     }
   }
   // No condition.
@@ -254,12 +253,12 @@ for (var i = 0;; ++i) {
 }
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-    auto s = std::get<TupleSpan>(v);
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 3);
     for (int64_t i = 0; i < 3; i++)
     {
-      ASSERT_EQ(to_variant(s[i]), FoxValue(i));
+      ASSERT_EQ(v[i], i);
     }
   }
   // No increment.
@@ -274,12 +273,12 @@ for (var i = 0; i < 2;) {
 return r;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_TRUE(std::holds_alternative<TupleSpan>(v));
-    auto s = std::get<TupleSpan>(v);
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 2);
     for (int64_t i = 0; i < 2; i++)
     {
-      ASSERT_EQ(to_variant(s[i]), FoxValue(i));
+      ASSERT_EQ(v[i], i);
     }
   }
   // Statement bodies.
@@ -291,8 +290,8 @@ for (; false;) while (true) 1;
 for (; false;) for (;;) 1;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(nil));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, nil);
   }
 }
 
@@ -314,8 +313,8 @@ for(c = 0; c < 10; ++c) if (c >= 3) break;
 return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(3_i64));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, 3_i64);
   }
   {
     VM vm;
@@ -329,8 +328,8 @@ for(c = 0; c < 10; ++c) {
 return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(3_i64));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, 3_i64);
   }
   // no init
   {
@@ -345,8 +344,8 @@ for(; c < 10; ++c) {
 return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(3_i64));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, 3_i64);
   }
   // no cond
   {
@@ -361,8 +360,8 @@ for(c = 0;; ++c) {
 return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(3_i64));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, 3_i64);
   }
   // no incre
   {
@@ -378,8 +377,8 @@ for(c = 0; c < 10;) {
 return c;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(3_i64));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, 3_i64);
   }
 }
 
@@ -398,8 +397,8 @@ for(var c = 1; c <= 5; ++c) {
 return s;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(int64_t(1 + 2 + 3 + 4 + 5 - 3)));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, int64_t(1 + 2 + 3 + 4 + 5 - 3));
   }
   // no init
   {
@@ -416,8 +415,8 @@ for(; c <= 5; ++c) {
 return s;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(int64_t(1 + 2 + 3 + 4 + 5 - 3)));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, int64_t(1 + 2 + 3 + 4 + 5 - 3));
   }
   // no cond
   {
@@ -434,8 +433,8 @@ for(var c = 1;; ++c) {
 return s;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(int64_t(1 + 2 + 3 + 4 + 5 - 3)));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, int64_t(1 + 2 + 3 + 4 + 5 - 3));
   }
   // no incre
   {
@@ -452,8 +451,8 @@ for(var c = 0; c < 5;) {
 return s;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(int64_t(1 + 2 + 3 + 4 + 5 - 3)));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, int64_t(1 + 2 + 3 + 4 + 5 - 3));
   }
 }
 
@@ -472,8 +471,8 @@ for(;;) {
 return "outer";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue("mid"));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, "mid");
   }
   {
     VM vm;
@@ -488,8 +487,8 @@ while(true) {
 return "outer";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue("mid"));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, "mid");
   }
 }
 
@@ -510,8 +509,8 @@ for(var i = 11; i <= 13; ++i) {
 return outer_sum;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(int64_t(11 * (1 + 3) + 12 * (1 + 3) + 13 * (1 + 3))));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, int64_t(11 * (1 + 3) + 12 * (1 + 3) + 13 * (1 + 3)));
   }
   {
     VM vm;
@@ -530,7 +529,7 @@ while(i <= 13) {
 return outer_sum;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(int64_t(11 * (1 + 3) + 12 * (1 + 3) + 13 * (1 + 3))));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, int64_t(11 * (1 + 3) + 12 * (1 + 3) + 13 * (1 + 3)));
   }
 }

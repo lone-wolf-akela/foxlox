@@ -1,5 +1,4 @@
-import <tuple>;
-import <gtest/gtest.h>;
+#include <gtest/gtest.h>
 import foxlox;
 
 using namespace foxlox;
@@ -12,8 +11,8 @@ TEST(bool_, equality)
 return true == true;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(true));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, true);
   }
   {
     VM vm;
@@ -21,8 +20,8 @@ return true == true;
 return true == false;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(false));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, false);
   }
   {
     VM vm;
@@ -30,8 +29,8 @@ return true == false;
 return false == true; 
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(false));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, false);
   }
   {
     VM vm;
@@ -39,8 +38,8 @@ return false == true;
 return false == false;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(true));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, true);
   }
   // Not equal to other types.
   {
@@ -49,8 +48,8 @@ return false == false;
 return true == 1;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(false));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, false);
   }
   {
     VM vm;
@@ -58,8 +57,8 @@ return true == 1;
 return false == 0;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(false));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, false);
   }
   {
     VM vm;
@@ -67,8 +66,8 @@ return false == 0;
 return true == 1.0;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(false));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, false);
   }
   {
     VM vm;
@@ -76,8 +75,8 @@ return true == 1.0;
 return false == 0.0;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(false));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, false);
   }
   {
     VM vm;
@@ -85,8 +84,8 @@ return false == 0.0;
 return true == "true";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(false));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, false);
   }
   {
     VM vm;
@@ -94,8 +93,8 @@ return true == "true";
 return false == "false";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(false));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, false);
   }
   {
     VM vm;
@@ -103,8 +102,8 @@ return false == "false";
 return false == "";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(false));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, false);
   }
   {
     VM vm;
@@ -112,8 +111,8 @@ return false == "";
 return false == nil;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(false));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, false);
   }
 
   {
@@ -122,8 +121,8 @@ return false == nil;
 return true != true;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(false));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, false);
   }
   {
     VM vm;
@@ -131,8 +130,8 @@ return true != true;
 return true != false;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(true));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, true);
   }
   {
     VM vm;
@@ -140,8 +139,8 @@ return true != false;
 return false != true; 
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(true));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, true);
   }
   {
     VM vm;
@@ -149,8 +148,8 @@ return false != true;
 return false != false;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(false));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, false);
   }
   // Not equal to other types.
   {
@@ -159,8 +158,8 @@ return false != false;
 return true != 1;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(true));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, true);
   }
   {
     VM vm;
@@ -168,8 +167,8 @@ return true != 1;
 return false != 0;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(true));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, true);
   }
   {
     VM vm;
@@ -177,8 +176,8 @@ return false != 0;
 return true != 1.0;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(true));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, true);
   }
   {
     VM vm;
@@ -186,8 +185,8 @@ return true != 1.0;
 return false != 0.0;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(true));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, true);
   }
   {
     VM vm;
@@ -195,8 +194,8 @@ return false != 0.0;
 return true != "true";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(true));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, true);
   }
   {
     VM vm;
@@ -204,8 +203,8 @@ return true != "true";
 return false != "false";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(true));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, true);
   }
   {
     VM vm;
@@ -213,8 +212,8 @@ return false != "false";
 return false != "";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(true));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, true);
   }
   {
     VM vm;
@@ -222,8 +221,8 @@ return false != "";
 return false != nil;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(true));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, true);
   }
 }
 
@@ -235,8 +234,8 @@ TEST(bool_, not_)
 return !true;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(false));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, false);
   }
   {
     VM vm;
@@ -244,8 +243,8 @@ return !true;
 return !false;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(true));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, true);
   }
   {
     VM vm;
@@ -253,7 +252,7 @@ return !false;
 return !!true;
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(true));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, true);
   }
 }

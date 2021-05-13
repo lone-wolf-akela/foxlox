@@ -1,5 +1,4 @@
-import <tuple>;
-import <gtest/gtest.h>;
+#include <gtest/gtest.h>
 import foxlox;
 
 using namespace foxlox;
@@ -28,8 +27,8 @@ TEST(if_, dangling_else)
 if (true) if (false) return "bad"; else return "good";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue("good"));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, "good");
   }
   {
     VM vm;
@@ -37,8 +36,8 @@ if (true) if (false) return "bad"; else return "good";
 if (false) if (true) return "bad"; else return "bad";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = to_variant(vm.run(chunk));
-    ASSERT_EQ(v, FoxValue(nil));
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, nil);
   }
 }
 

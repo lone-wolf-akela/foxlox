@@ -111,16 +111,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="format_error.ixx" />
+    <ClCompile Include="src\chunk.cpp" />
     <ClCompile Include="src\chunk.ixx" />
     <ClCompile Include="src\codegen.ixx" />
     <ClCompile Include="src\compiler.ixx" />
     <ClCompile Include="src\compiletime_value.ixx" />
+    <ClCompile Include="src\config.ixx" />
     <ClCompile Include="src\cppinterop.ixx" />
     <ClCompile Include="src\debug.cpp" />
     <ClCompile Include="src\except.ixx" />
     <ClCompile Include="src\expr.ixx" />
+    <ClCompile Include="src\format_error.ixx" />
     <ClCompile Include="src\main.ixx" />
+    <ClCompile Include="src\mem_alloc.ixx" />
     <ClCompile Include="src\parser.ixx" />
     <ClCompile Include="src\resolver.ixx" />
     <ClCompile Include="src\runtimelib.cpp" />
@@ -140,9 +143,7 @@
     <ClCompile Include="src\vm.ixx" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\common.h" />
-    <ClInclude Include="src\config.h" />
-    <ClInclude Include="src\mem_alloc.h" />
+    <ClInclude Include="src\libicu.h" />
     <ClInclude Include="src\opcode.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

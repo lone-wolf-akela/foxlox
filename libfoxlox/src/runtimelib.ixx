@@ -1,4 +1,3 @@
-module;
 export module foxlox:runtimelib;
 
 import <unordered_map>;

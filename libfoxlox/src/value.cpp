@@ -1,5 +1,5 @@
-module;
 module foxlox:value;
+import :value;
 
 import <format>;
 import <magic_enum.hpp>;

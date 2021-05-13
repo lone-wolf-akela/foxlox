@@ -1,5 +1,3 @@
-module;
-#include <magic_enum.hpp>
 export module foxlox:value;
 
 import <cassert>;
@@ -23,10 +21,12 @@ import <optional>;
 import <bit>;
 import <algorithm>;
 import <iostream>;
-import <gsl/gsl>;
 import <format>;
 
-import "config.h";
+import <gsl/gsl>;
+import <magic_enum.hpp>;
+
+import :config;
 import :except;
 import :util;
 

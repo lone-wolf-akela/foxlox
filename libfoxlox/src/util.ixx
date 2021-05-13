@@ -1,12 +1,3 @@
-module;
-#ifdef FOXLOX_USE_WINSDK_ICU
-#include <icu.h>
-#pragma comment(lib, "icu.lib") 
-#undef FALSE
-#undef TRUE
-#else
-#include <unicode/ustring.h>
-#endif
 export module foxlox:util;
 
 import <string>;
@@ -14,10 +5,10 @@ import <string_view>;
 import <concepts>;
 import <sstream>;
 import <cassert>;
-import <array>;
 import <type_traits>;
 
 import <gsl/gsl>;
+import "libicu.h";
 
 namespace foxlox
 {
@@ -35,7 +26,30 @@ namespace foxlox
   export template <typename T, template <class...> class Template>
   inline constexpr bool is_specialization_v = is_specialization<T, Template>::value;
 
-  export constexpr std::array<char, 8> BINARY_HEADER = { '\004', '\002', 'F', 'O', 'X', 'L', 'O', 'X' };
+#if defined(NDEBUG) && defined(_MSC_VER)
+  export [[noreturn]] void UNREACHABLE()
+  {
+      __assume(0);
+  }
+#endif
+#if defined(NDEBUG) && !defined(_MSC_VER)
+  export [[noreturn]] void UNREACHABLE()
+  {
+      __builtin_unreachable();
+  }
+#endif
+#if !defined(NDEBUG) && defined(_MSC_VER)
+  export [[noreturn]] void UNREACHABLE()
+  {
+      assert(false);
+  }
+#endif
+#if !defined(NDEBUG) && !defined(_MSC_VER)
+  export [[noreturn]] inline void UNREACHABLE()
+  {
+      assert(false);
+  }
+#endif
 }
 
 namespace foxlox
@@ -55,7 +69,7 @@ namespace foxlox
         &err
       );
       buffer.resize(u16_len);
-      assert(!U_FAILURE(err));
+      assert(err <= U_ZERO_ERROR);
     }
     std::string result(in.size() * 4, '0');
     {
@@ -69,7 +83,7 @@ namespace foxlox
         gsl::narrow_cast<int32_t>(ssize(buffer)),
         &err
       );
-      assert(!U_FAILURE(err));
+      assert(err <= U_ZERO_ERROR);
       result.resize(u8_len);
     }
     return result;
@@ -93,7 +107,7 @@ namespace foxlox
         &err
       );
       buffer.resize(u16_len);
-      assert(!U_FAILURE(err));
+      assert(err <= U_ZERO_ERROR);
     }
     std::u32string result(in.size(), U'0');
     {
@@ -107,7 +121,7 @@ namespace foxlox
         gsl::narrow_cast<int32_t>(ssize(buffer)),
         &err
       );
-      assert(!U_FAILURE(err));
+      assert(err <= U_ZERO_ERROR);
       result.resize(u32_len);
     }
     return result;

@@ -1,12 +1,11 @@
 module;
-#include <range/v3/all.hpp>
+#include <range/v3/view/enumerate.hpp>
 export module foxlox:codegen;
 
 import <map>;
 import <string_view>;
 import <format>;
 
-import "common.h";
 import :except;
 import :chunk;
 import :stmt;

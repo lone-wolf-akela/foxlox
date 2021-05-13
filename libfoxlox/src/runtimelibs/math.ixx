@@ -1,4 +1,3 @@
-module;
 export module foxlox:runtimelibs.math;
 
 import <numbers>;

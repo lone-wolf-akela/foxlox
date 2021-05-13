@@ -1,5 +1,5 @@
 module;
-#include <range/v3/all.hpp>
+#include <range/v3/range/conversion.hpp>
 export module foxlox:compiler;
 
 import <tuple>;
@@ -9,7 +9,7 @@ import <filesystem>;
 import <sstream>;
 import <fstream>;
 
-import "common.h";
+import :config;
 import :codegen;
 import :scanner;
 import :parser;
@@ -61,12 +61,8 @@ namespace
     std::ostringstream strm;
     strm.write(BINARY_HEADER.data(), BINARY_HEADER.size());
     chunk.dump(strm);
-#if !defined(_MSC_VER) && (__GNUC__ <= 10)
-#pragma message("using g++ <= 10, there's no std::ostringstream.view()")
-    return std::make_tuple(CompilerResult::OK, strm.str() | ranges::to<std::vector<char>>);
-#else
+
     return std::make_tuple(CompilerResult::OK, strm.view() | ranges::to<std::vector<char>>);
-#endif
   }
 }
 

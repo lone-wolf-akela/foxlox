@@ -1,12 +1,3 @@
-module;
-#ifdef FOXLOX_USE_WINSDK_ICU
-#include <icu.h>
-#pragma comment(lib, "icu.lib") 
-#else
-#include <unicode/uchar.h>
-#endif
-#undef FALSE
-#undef TRUE
 export module foxlox:scanner;
 
 import <cstdint>;
@@ -22,9 +13,14 @@ import <version>;
 import <format>;
 
 import <gsl/gsl>;
+import "libicu.h";
 
 import :util;
 import :token;
+
+//TODO: wait for a vs update fix this
+#undef TRUE
+#undef FALSE
 
 namespace foxlox
 {
@@ -448,12 +444,8 @@ namespace foxlox
       }
     }
 
-#if !defined(_MSC_VER) && (__GNUC__ <= 10)
-#pragma message("using g++ <= 10, there's no std::ostringstream.view()")
-    auto parsed_str = unescaped_strm.str();
-#else
     auto parsed_str = unescaped_strm.view();
-#endif
+
     // remove the last '\0' in parsed_str
     parsed_str = parsed_str.substr(0, parsed_str.size() - 1);
     add_token(TokenType::STRING, CompiletimeValue(parsed_str));

@@ -1,5 +1,6 @@
 module;
-#include <range/v3/all.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/range/conversion.hpp>
 export module foxlox:expr;
 
 import <memory>;

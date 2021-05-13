@@ -1,4 +1,3 @@
-module;
 export module foxlox:runtimelibs.profiler;
 
 import <chrono>;

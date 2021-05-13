@@ -1,5 +1,5 @@
 module;
-#include <range/v3/all.hpp>
+#include <range/v3/view/enumerate.hpp>
 export module foxlox:resolver;
 
 import <map>;
@@ -9,7 +9,6 @@ import <format>;
 
 import <gsl/gsl>;
 
-import "common.h";
 import :expr;
 import :stmt;
 import :parser;

@@ -6,7 +6,6 @@ import <iostream>;
 
 import <gsl/gsl>;
 
-import "config.h";
 import :except;
 import :chunk;
 

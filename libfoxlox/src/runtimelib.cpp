@@ -1,5 +1,5 @@
-module;
 module foxlox:runtimelib;
+import :runtimelib;
 
 import <iostream>;
 import <chrono>;

@@ -1,4 +1,3 @@
-module;
 export module foxlox:parser;
 
 import <vector>;
@@ -6,11 +5,14 @@ import <memory>;
 import <string_view>;
 import <format>;
 
-import "common.h";
 import :token;
 import :value;
 import :stmt;
 import :format_error;
+
+//TODO: wait for a vs update fix this
+#undef TRUE
+#undef FALSE
 
 namespace foxlox
 {

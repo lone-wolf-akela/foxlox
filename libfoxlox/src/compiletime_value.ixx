@@ -1,4 +1,3 @@
-module;
 export module foxlox:compiletime_value;
 
 import <cstdint>;

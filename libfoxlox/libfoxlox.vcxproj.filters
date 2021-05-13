@@ -96,24 +96,27 @@
     <ClCompile Include="src\scanner.ixx">
       <Filter>模块</Filter>
     </ClCompile>
-    <ClCompile Include="format_error.ixx">
-      <Filter>模块</Filter>
-    </ClCompile>
     <ClCompile Include="src\compiler.ixx">
       <Filter>模块</Filter>
     </ClCompile>
+    <ClCompile Include="src\mem_alloc.ixx">
+      <Filter>模块</Filter>
+    </ClCompile>
+    <ClCompile Include="src\config.ixx">
+      <Filter>模块</Filter>
+    </ClCompile>
+    <ClCompile Include="src\format_error.ixx">
+      <Filter>模块</Filter>
+    </ClCompile>
+    <ClCompile Include="src\chunk.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\common.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\config.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mem_alloc.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="src\opcode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\libicu.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

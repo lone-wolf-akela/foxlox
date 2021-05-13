@@ -1,12 +1,16 @@
-module;
-#include <magic_enum.hpp>
 export module foxlox:token;
 
 import <string>;
 import <string_view>;
 import <format>;
 
+import <magic_enum.hpp>;
+
 import :compiletime_value;
+
+//TODO: wait for a vs update fix this
+#undef TRUE
+#undef FALSE
 
 namespace foxlox
 {

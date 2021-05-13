@@ -1,4 +1,3 @@
-module;
 export module foxlox:cppinterop;
 
 import <cstdint>;

@@ -1,7 +1,7 @@
 module;
-#include <range/v3/all.hpp>
-#include <magic_enum.hpp>
-
+#include <range/v3/view/transform.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/join.hpp>
 #pragma warning(disable:5104) 
 #include <boost/dll/runtime_symbol_info.hpp>
 #pragma warning(default:5104) 
@@ -17,10 +17,11 @@ import <sstream>;
 import <algorithm>;
 import <format>;
 
+import <magic_enum.hpp>;
+
 import "opcode.h";
-import "config.h";
-import "common.h";
-import "mem_alloc.h";
+import :config;
+import :mem_alloc;
 import :except;
 import :value;
 import :compiler;
@@ -246,7 +247,7 @@ namespace foxlox
       switch(read_inst()) \
       { \
         OPCODE(DISPATCH_CASE) \
-        default: UNREACHABLE; \
+        default: UNREACHABLE(); \
       }
 #define LBL(op) lbl_##op
 #define DISPATCH_CASE(op) case OP::op: goto LBL(op);

@@ -5,7 +5,6 @@ import <variant>;
 import <string>;
 import <string_view>;
 import <utility>;
-import <concepts>;
 
 import <gsl/gsl>;
 

@@ -2,7 +2,6 @@ export module foxlox:util;
 
 import <string>;
 import <string_view>;
-import <concepts>;
 import <sstream>;
 import <cassert>;
 import <type_traits>;
@@ -50,10 +49,7 @@ namespace foxlox
     assert(false);
   }
 #endif
-}
 
-namespace foxlox
-{
   std::string u32_to_u8(std::u32string_view in)
   {
     std::u16string buffer(in.size() * 2, u'0');

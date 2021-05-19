@@ -54,7 +54,7 @@ namespace foxlox
     void emit(Arg1 arg1, Args ... args)
     {
       current_subroutine().add_code(arg1, current_line);
-      if constexpr(sizeof...(Args) >= 1)
+      if constexpr (sizeof...(Args) >= 1)
       {
         emit(std::forward<Args>(args)...);
       }

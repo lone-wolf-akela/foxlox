@@ -18,36 +18,36 @@ namespace foxlox
 
   // from https://stackoverflow.com/questions/31762958/check-if-class-is-a-template-specialization
   export template <class T, template <class...> class Template>
-  struct is_specialization : std::false_type {};
+    struct is_specialization : std::false_type {};
 
   export template <template <class...> class Template, class... Args>
-  struct is_specialization<Template<Args...>, Template> : std::true_type {};
+    struct is_specialization<Template<Args...>, Template> : std::true_type {};
 
   export template <typename T, template <class...> class Template>
-  inline constexpr bool is_specialization_v = is_specialization<T, Template>::value;
+    inline constexpr bool is_specialization_v = is_specialization<T, Template>::value;
 
 #if defined(NDEBUG) && defined(_MSC_VER)
   export [[noreturn]] void UNREACHABLE()
   {
-      __assume(0);
+    __assume(0);
   }
 #endif
 #if defined(NDEBUG) && !defined(_MSC_VER)
   export [[noreturn]] void UNREACHABLE()
   {
-      __builtin_unreachable();
+    __builtin_unreachable();
   }
 #endif
 #if !defined(NDEBUG) && defined(_MSC_VER)
   export [[noreturn]] void UNREACHABLE()
   {
-      assert(false);
+    assert(false);
   }
 #endif
 #if !defined(NDEBUG) && !defined(_MSC_VER)
   export [[noreturn]] inline void UNREACHABLE()
   {
-      assert(false);
+    assert(false);
   }
 #endif
 }

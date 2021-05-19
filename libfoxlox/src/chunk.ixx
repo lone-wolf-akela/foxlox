@@ -23,7 +23,7 @@ import :serialization;
 
 namespace foxlox
 {
-    class Chunk;
+  class Chunk;
 
   export class LineInfo
   {
@@ -53,12 +53,12 @@ namespace foxlox
     static Subroutine load(std::istream& strm);
 
     Subroutine(std::string_view func_name, int num_of_params) :
-        arity(num_of_params), name(func_name), gc_mark(false)
+      arity(num_of_params), name(func_name), gc_mark(false)
     {
     }
     std::span<const uint8_t> get_code() const noexcept
     {
-        return code;
+      return code;
     }
     void add_code(bool c, int line_num);
     void add_code(OP c, int line_num);
@@ -73,13 +73,13 @@ namespace foxlox
     const LineInfo& get_lines() const noexcept;
     int get_arity() const noexcept
     {
-        return arity;
+      return arity;
     }
     std::string_view get_funcname() const noexcept
     {
-        return name;
+      return name;
     }
- 
+
     bool is_marked() const noexcept;
     void mark() noexcept;
     void unmark() noexcept;
@@ -89,11 +89,11 @@ namespace foxlox
   private:
     const int32_t arity;
     std::vector<uint8_t> code;
-    
+
     // for error report
     const std::string name;
     LineInfo lines;
-    
+
     // for memory management
     std::vector<uint16_t> referenced_static_values;
 
@@ -101,7 +101,7 @@ namespace foxlox
     Chunk* chunk;
 
     // runtime info, do not dump or load
-    bool gc_mark; 
+    bool gc_mark;
   };
 
   export class ChunkOperationError : public std::runtime_error

@@ -1,6 +1,6 @@
 root = true
 
-[*.{c,cpp,cc,cxx,h,hpp}]
+[*.{c,cpp,cc,cxx,h,hpp,ixx}]
 charset = utf-8
 indent_style = space
 indent_size = 2

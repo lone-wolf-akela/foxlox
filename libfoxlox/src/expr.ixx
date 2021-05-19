@@ -130,8 +130,8 @@ namespace foxlox::expr
   public:
     Call(std::unique_ptr<Expr>&& ce, Token&& tk, std::vector<std::unique_ptr<Expr>>&& augs) noexcept;
     std::unique_ptr<Expr> callee;
-      // stores the token for the closing parenthesis.
-      // its location is used when we report a runtime error caused by a function call.
+    // stores the token for the closing parenthesis.
+    // its location is used when we report a runtime error caused by a function call.
     Token paren;
     std::vector<std::unique_ptr<Expr>> arguments;
 
@@ -195,7 +195,7 @@ namespace foxlox::expr
   };
 
   export template<typename R>
-  class IVisitor
+    class IVisitor
   {
   public:
     virtual R visit_binary_expr(gsl::not_null<Binary*> expr) = 0;
@@ -213,7 +213,7 @@ namespace foxlox::expr
     virtual R visit_super_expr(gsl::not_null<Super*> expr) = 0;
 
     GSL_SUPPRESS(c.21)
-    virtual ~IVisitor() = default;
+      virtual ~IVisitor() = default;
 
     R visit(Expr* expr)
     {

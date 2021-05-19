@@ -239,7 +239,7 @@ namespace foxlox
 
     try
     {
-    // switched goto from https://bullno1.com/blog/switched-goto
+      // switched goto from https://bullno1.com/blog/switched-goto
 #define DISPATCH() \
       DBG_PRINT_STACK; \
       DBG_GC; \
@@ -261,10 +261,10 @@ namespace foxlox
       }
       LBL(RETURN) :
       {
-        if (current_subroutine == &current_chunk->get_subroutines().front()) 
-        { 
+        if (current_subroutine == &current_chunk->get_subroutines().front())
+        {
           collect_garbage();
-          return Value(); 
+          return Value();
         }
         pop_calltrace();
         // return a nil
@@ -320,7 +320,7 @@ namespace foxlox
         }
         else if (l->is_tuple() || r->is_tuple())
         {
-          *l = Value::tuplecat(allocator, *l, *r);
+          *l = Tuple::tuplecat(allocator, *l, *r);
           gc_index.tuple_pool.push_back(l->v.tuple);
         }
         else

@@ -119,11 +119,16 @@
     <ClCompile Include="src\config.ixx" />
     <ClCompile Include="src\cppinterop.ixx" />
     <ClCompile Include="src\debug.cpp" />
+    <ClCompile Include="src\debug.ixx" />
     <ClCompile Include="src\except.ixx" />
     <ClCompile Include="src\expr.ixx" />
     <ClCompile Include="src\format_error.ixx" />
+    <ClCompile Include="src\hash_table.cpp" />
+    <ClCompile Include="src\hash_table.ixx" />
     <ClCompile Include="src\main.ixx" />
     <ClCompile Include="src\mem_alloc.ixx" />
+    <ClCompile Include="src\object.cpp" />
+    <ClCompile Include="src\object.ixx" />
     <ClCompile Include="src\parser.ixx" />
     <ClCompile Include="src\resolver.ixx" />
     <ClCompile Include="src\runtimelib.cpp" />

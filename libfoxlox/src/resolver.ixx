@@ -38,7 +38,7 @@ namespace foxlox
     AST ast;
     bool had_error;
     std::vector<Scope> scopes;
-    
+
     enum class LoopType { NONE, WHILE, FOR } current_loop;
     enum class FunctionType { NONE, FUNCTION, METHOD, INITIALIZER } current_function;
     enum class ClassType { NONE, CLASS, SUBCLASS } current_class;
@@ -51,7 +51,7 @@ namespace foxlox
 
     void begin_scope(bool is_new_function);
     void end_scope() noexcept;
-    
+
     [[nodiscard]] ValueInfo* declare(Token name);
     void declare_a_var(stmt::VarDeclareBase* stmt);
     void declare_var_list(stmt::VarDeclareListBase* stmt);

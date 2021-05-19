@@ -51,7 +51,7 @@ namespace foxlox
 #define DEFINE_ENUM(NAME, ENUMX) enum class NAME : uint8_t { ENUMX(ENUM_ENTRY) }
 #define ENUM_ENTRY(ENTRY) ENTRY,
 
-DEFINE_ENUM(OP, OPCODE);
+  DEFINE_ENUM(OP, OPCODE);
 
 #undef DEFINE_ENUM
 #undef ENUM_ENTRY

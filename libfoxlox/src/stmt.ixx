@@ -60,7 +60,7 @@ namespace foxlox::stmt
     Expression(std::unique_ptr<expr::Expr>&& expr) noexcept;
     std::unique_ptr<expr::Expr> expression;
   };
-  
+
   export class Var : public VarDeclareBase
   {
   public:
@@ -90,8 +90,8 @@ namespace foxlox::stmt
   {
   public:
     If(
-      std::unique_ptr<expr::Expr>&& cond, 
-      std::unique_ptr<Stmt>&& thenb, 
+      std::unique_ptr<expr::Expr>&& cond,
+      std::unique_ptr<Stmt>&& thenb,
       std::unique_ptr<Stmt>&& elseb,
       Token&& r_paren
     ) noexcept;
@@ -166,9 +166,9 @@ namespace foxlox::stmt
   {
   public:
     For(
-      std::unique_ptr<Stmt>&& init, 
-      std::unique_ptr<expr::Expr>&& cond, 
-      std::unique_ptr<expr::Expr>&& incre, 
+      std::unique_ptr<Stmt>&& init,
+      std::unique_ptr<expr::Expr>&& cond,
+      std::unique_ptr<expr::Expr>&& incre,
       std::unique_ptr<Stmt>&& bd,
       Token&& r_paren
     ) noexcept;
@@ -182,7 +182,7 @@ namespace foxlox::stmt
   };
 
   export template<typename R>
-  class IVisitor
+    class IVisitor
   {
   public:
     virtual R visit_expression_stmt(gsl::not_null<Expression*> stmt) = 0;
@@ -201,13 +201,13 @@ namespace foxlox::stmt
     virtual R visit_export_stmt(gsl::not_null<Export*> stmt) = 0;
 
     GSL_SUPPRESS(c.21)
-    virtual ~IVisitor() = default;
+      virtual ~IVisitor() = default;
 
     R visit(Stmt* stmt)
     {
-      if (stmt == nullptr) 
+      if (stmt == nullptr)
       {
-        return R(); 
+        return R();
       }
       if (auto p = dynamic_cast<Expression*>(stmt); p != nullptr)
       {

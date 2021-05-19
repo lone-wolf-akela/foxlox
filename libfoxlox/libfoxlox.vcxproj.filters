@@ -111,6 +111,21 @@
     <ClCompile Include="src\chunk.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\object.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\object.ixx">
+      <Filter>模块</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hash_table.ixx">
+      <Filter>模块</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hash_table.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\debug.ixx">
+      <Filter>模块</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\opcode.h">

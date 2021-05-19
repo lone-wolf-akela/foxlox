@@ -1,13 +1,10 @@
-module foxlox:vm;
-import :vm;
-
-import <format>;
-import <iostream>;
+module foxlox:debug;
+import :debug;
 
 import <gsl/gsl>;
 
 import :except;
-import :chunk;
+import :vm;
 
 namespace foxlox
 {

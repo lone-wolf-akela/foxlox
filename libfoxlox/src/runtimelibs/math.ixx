@@ -9,8 +9,8 @@ namespace foxlox::lib
 {
   export RuntimeLib math()
   {
-      return RuntimeLib{
-        { "pi", std::numbers::pi },
-      };
+    return RuntimeLib{
+      { "pi", std::numbers::pi },
+    };
   };
 }

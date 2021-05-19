@@ -65,6 +65,8 @@
     <ClCompile Include="logical_operator.cpp" />
     <ClCompile Include="method.cpp" />
     <ClCompile Include="nil.cpp" />
+    <ClCompile Include="number.cpp" />
+    <ClCompile Include="operator.cpp" />
     <ClCompile Include="regression.cpp" />
     <ClCompile Include="static_test.cpp" />
     <ClCompile Include="string.cpp" />

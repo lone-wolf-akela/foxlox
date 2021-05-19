@@ -212,6 +212,10 @@ namespace foxlox
     std::span<Value> get_tuplespan() const;
     Value get_property(gsl::not_null<String*> name);
 
+    bool is_number() const noexcept
+    {
+      return (type == ValueType::I64) || (type == ValueType::F64);
+    }
     bool is_truthy() const noexcept;
     Subroutine* method_func() const noexcept;
 

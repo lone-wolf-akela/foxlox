@@ -189,7 +189,7 @@ namespace foxlox
     {
       throw UnimplementedError("");
     }
-    return std::partial_ordering::unordered;
+    throw ValueError("Comparing values with incompatible types.");
   }
   double operator/(const Value& l, const Value& r)
   {
@@ -250,8 +250,7 @@ namespace foxlox
   }
   bool operator!(const Value& val)
   {
-    type_check(val, ValueType::BOOL);
-    return !val.v.b;
+    return !val.is_truthy();
   }
   int64_t intdiv(const Value& l, const Value& r)
   {
@@ -268,7 +267,14 @@ namespace foxlox
     // as the same boolean may have different representation
     if (l.type != r.type)
     {
-      return false;
+      if (l.is_number() && r.is_number())
+      {
+        return l.get_double() == r.get_double();
+      }
+      else
+      {
+        return false;
+      }
     }
     switch (l.type)
     {

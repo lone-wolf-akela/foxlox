@@ -17,4 +17,4 @@ export constexpr auto GC_HEAP_GROW_FACTOR = 2;
 export constexpr auto STRING_POOL_MAX_LOAD = 0.75;
 export constexpr auto HASH_TABLE_START_BUCKET = 1 << 3;
 
-export constexpr std::array<char, 8> BINARY_HEADER = { '\004', '\002', 'F', 'O', 'X', 'L', 'O', 'X' };
+export constexpr std::array BINARY_HEADER = { '\004', '\002', 'F', 'O', 'X', 'L', 'O', 'X' };

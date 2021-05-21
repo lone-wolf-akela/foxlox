@@ -223,7 +223,7 @@ namespace foxlox
           {
             if (current_function_level - this_scope.function_level >= 2)
             {
-              error(name, "Capturing `this' in non-method function is not allowed.");
+              error(name, "Capturing `this' or `super' in non-method function is not allowed.");
               return{};
             }
           }

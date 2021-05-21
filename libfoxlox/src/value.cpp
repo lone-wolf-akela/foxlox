@@ -132,6 +132,16 @@ namespace foxlox
     GSL_SUPPRESS(type.1)
       return reinterpret_cast<Subroutine*>(method_func_ptr);
   }
+  Instance* Value::method_instance() const noexcept
+  {
+    GSL_SUPPRESS(type.1)
+      return reinterpret_cast<Instance*>(v.method_info.instance_ptr);
+  }
+  uint64_t Value::method_super_level() const noexcept
+  {
+    GSL_SUPPRESS(type.1)
+      return v.method_info.super_level;
+  }
 
   std::partial_ordering operator<=>(const Value& l, const Value& r)
   {

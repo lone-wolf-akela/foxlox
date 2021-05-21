@@ -335,6 +335,12 @@ namespace foxlox
     HashTableEntry<K, V>* p_entry;
   };
 
+  template<typename T>
+  concept Serializable128b = requires(T a)
+  {
+    { a.serialize() } -> std::convertible_to<std::array<uint64_t, 2>>;
+  };
+
   export template<typename K, typename V>
     class HashTable
   {
@@ -349,8 +355,8 @@ namespace foxlox
     {
       static_assert(
         (std::same_as<K, String*>&& std::same_as<V, Subroutine*>) ||
-        (std::same_as<K, String*> && std::same_as<V, Value>) ||
-        (std::same_as<K, Value> && std::same_as<V, Value>)
+        (std::same_as<K, String*> && Serializable128b<V>) ||
+        (std::same_as<K, Value> && Serializable128b<V>)
         );
       init_entries();
     }

@@ -155,6 +155,17 @@ namespace foxlox
     }
   };
 
+  struct UnboundMethod
+  {
+    uint64_t super_level;
+    Subroutine* func;
+
+    std::array<uint64_t, 2> serialize() const noexcept
+    {
+      return std::bit_cast<std::array<uint64_t, 2>>(*this);
+    }
+  };
+
   export class Class : public ObjBase
   {
   public:
@@ -164,8 +175,8 @@ namespace foxlox
     void set_super(gsl::not_null<Class*> super);
     Class* get_super() noexcept;
     bool has_method(String* name);
-    std::optional<Subroutine*> get_method(String* name);
-    HashTable<String*, Subroutine*>& get_hash_table() noexcept;
+    std::optional<UnboundMethod> get_method(String* name);
+    HashTable<String*, UnboundMethod>& get_hash_table() noexcept;
 
     bool is_marked() const noexcept;
     void mark() noexcept;
@@ -174,7 +185,7 @@ namespace foxlox
     bool gc_mark;
     Class* superclass;
     std::string class_name;
-    HashTable<String*, Subroutine*> methods;
+    HashTable<String*, UnboundMethod> methods;
   };
 
   export class Instance : public ObjBase
@@ -195,7 +206,7 @@ namespace foxlox
     ~Instance() = default;
     Class* get_class() const noexcept;
     Value get_property(gsl::not_null<String*> name);
-    Value get_super_method(gsl::not_null<String*> name);
+    Value get_super_method(uint64_t super_level, gsl::not_null<String*> name);
     HashTable<String*, Value>& get_hash_table() noexcept;
     void set_property(gsl::not_null<String*> name, Value value);
     bool is_marked() const noexcept;

@@ -68,8 +68,10 @@
     <ClCompile Include="number.cpp" />
     <ClCompile Include="operator.cpp" />
     <ClCompile Include="regression.cpp" />
+    <ClCompile Include="return.cpp" />
     <ClCompile Include="static_test.cpp" />
     <ClCompile Include="string.cpp" />
+    <ClCompile Include="super.cpp" />
     <ClCompile Include="tuple.cpp" />
     <ClCompile Include="variable.cpp" />
     <ClCompile Include="while.cpp" />

@@ -89,6 +89,11 @@ namespace foxlox
       Instance* instance;
       Dict* dict;
       ObjBase* obj;
+      struct
+      {
+        uint64_t super_level : sizeof(uintptr_t)* CHAR_BIT - userspace_addr_bits;
+        uintptr_t instance_ptr : userspace_addr_bits;
+      } method_info;
     } v;
 
 
@@ -136,12 +141,18 @@ namespace foxlox
 
     GSL_SUPPRESS(type.1)
       constexpr Value(
-        std::convertible_to<Instance*> auto instance, 
+        std::convertible_to<uint64_t> auto super_level,
+        std::convertible_to<Instance*> auto instance,
         std::convertible_to<Subroutine*> auto func
       ) noexcept :
       type(ValueType::METHOD),
-      method_func_ptr(reinterpret_cast<uintptr_t>(static_cast<Subroutine*>(func))),
-      v{ .instance = instance }
+      method_func_ptr(std::bit_cast<uintptr_t>(static_cast<Subroutine*>(func))),
+      v{ .method_info =
+        {
+          .super_level = super_level,
+          .instance_ptr = std::bit_cast<uintptr_t>(static_cast<Instance*>(instance))
+        }
+      }
     {}
 
     constexpr Value(std::convertible_to<Class*> auto klass) noexcept :
@@ -218,6 +229,8 @@ namespace foxlox
     }
     bool is_truthy() const noexcept;
     Subroutine* method_func() const noexcept;
+    Instance* method_instance() const noexcept;
+    uint64_t method_super_level() const noexcept;
 
     friend double operator/(const Value& l, const Value& r);
     friend Value operator*(const Value& l, const Value& r);

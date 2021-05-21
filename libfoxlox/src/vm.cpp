@@ -591,11 +591,12 @@ namespace foxlox
         }
         case ValueType::METHOD:
         {
+          // TODO: update super_level env
           const auto func_to_call = v.method_func();
           push_calltrace(num_of_params);
 
           push();
-          *top() = v.v.instance; // `this'
+          *top() = v.method_instance(); // `this'
 
           if (func_to_call->get_arity() != num_of_params)
           {
@@ -618,18 +619,18 @@ namespace foxlox
           const auto klass = v.v.klass;
           const auto instance = Instance::alloc(allocator, deallocator, klass);
           gc_index.instance_pool.push_back(instance);
-          if (auto func_to_call = klass->get_method(str__init__); func_to_call.has_value())
+          if (auto method = klass->get_method(str__init__); method.has_value())
           {
             push_calltrace(num_of_params);
 
             push();
             *top() = instance; // `this'
 
-            if ((*func_to_call)->get_arity() != num_of_params)
+            if (method->func->get_arity() != num_of_params)
             {
-              throw InternalRuntimeError(std::format("Wrong number of function parameters. Expect: {}, got: {}.", (*func_to_call)->get_arity(), num_of_params));
+              throw InternalRuntimeError(std::format("Wrong number of function parameters. Expect: {}, got: {}.", method->func->get_arity(), num_of_params));
             }
-            jump_to_func(*func_to_call);
+            jump_to_func(method->func);
           }
           else
           {
@@ -654,7 +655,8 @@ namespace foxlox
       {
         const auto name = const_string_pool.at(current_chunk->get_const_string_idx_base() + read_uint16());
         auto instance = top()->get_instance();
-        *top() = instance->get_super_method(name);
+        // TODO: add super level to vm env
+        *top() = instance->get_super_method(0, name);
         DISPATCH();
       }
       LBL(GET_PROPERTY) :
@@ -798,7 +800,7 @@ namespace foxlox
     if (c.is_marked()) { return; }
     for (auto& entry : c.get_hash_table())
     {
-      mark_subroutine(*entry.value);
+      mark_subroutine(*entry.value.func);
     }
     if (c.get_super() != nullptr)
     {

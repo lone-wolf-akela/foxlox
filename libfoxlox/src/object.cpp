@@ -34,20 +34,25 @@ namespace foxlox
   Class* Instance::get_class() const noexcept { return klass; }
   Value Instance::get_property(gsl::not_null<String*> name)
   {
-    if (auto func = klass->get_method(name); func.has_value())
+    if (auto method = klass->get_method(name); method.has_value())
     {
       GSL_SUPPRESS(lifetime.3)
-        return Value(this, *func);
+        return Value(method->super_level, this, method->func);
     }
     // return nil when the field is not found
     return fields.get_value(name).value_or(Value());
   }
-  Value Instance::get_super_method(gsl::not_null<String*> name)
+  Value Instance::get_super_method(uint64_t super_level, gsl::not_null<String*> name)
   {
-    if (auto func = klass->get_super()->get_method(name); func.has_value())
+    Class* super_class = klass->get_super();
+    for (uint64_t i = 0; i < super_level; i++)
+    {
+      super_class = super_class->get_super();
+    }
+    if (auto method = super_class->get_method(name); method.has_value())
     {
       GSL_SUPPRESS(lifetime.3)
-        return Value(this, *func);
+        return Value(super_level + method->super_level + 1, this, method->func);
     }
     else
     {
@@ -89,7 +94,7 @@ namespace foxlox
   }
   void Class::add_method(String* name, Subroutine* func)
   {
-    methods.set_entry(name, func);
+    methods.set_entry(name, UnboundMethod{.super_level = 0, .func = func});
   }
   void Class::set_super(gsl::not_null<Class*> super)
   {
@@ -98,6 +103,7 @@ namespace foxlox
     {
       // if we already have a method with the same name,
       // do nothing (to shadow the base class method)
+      entry.value.super_level += 1;
       methods.try_add_entry(entry.key, entry.value);
     }
   }
@@ -109,11 +115,11 @@ namespace foxlox
   {
     return methods.get_value(name).has_value();
   }
-  std::optional<Subroutine*> Class::get_method(String* name)
+  std::optional<UnboundMethod> Class::get_method(String* name)
   {
     return methods.get_value(name);
   }
-  HashTable<String*, Subroutine*>& Class::get_hash_table() noexcept
+  HashTable<String*, UnboundMethod>& Class::get_hash_table() noexcept
   {
     return methods;
   }

@@ -361,4 +361,110 @@ return C().test();
   ASSERT_EQ(res, CompilerResult::OK);
   auto v = FoxValue(vm.run(chunk));
   ASSERT_EQ(v, "A");
-} 
+}
+
+TEST(super, super_in_multilevel_inherited_method)
+{
+  VM vm;
+  auto [res, chunk] = compile(R"CODE(
+class Z {
+  say() {
+    return "Z";
+  }
+  test() {
+    return "Ztest";
+  }
+}
+class A : Z {
+  say() {
+    return "A";
+  }
+}
+class B : A {
+  test() {
+    return super.say();
+  }
+  say() {
+    return "B";
+  }
+}
+class C : B {
+  say() {
+    return "C";
+  }
+}
+class D : C {
+  say() {
+    return "D";
+  }
+}
+return D().test();
+)CODE");
+  ASSERT_EQ(res, CompilerResult::OK);
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, "A");
+}
+
+TEST(super, super_in_top_level_function)
+{
+  auto [res, chunk] = compile(R"CODE(
+super.bar();
+fun foo() {}
+)CODE");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(super, super_without_dot)
+{
+  auto [res, chunk] = compile(R"CODE(
+class A {}
+class B : A {
+  method() {
+    super;
+  }
+}
+)CODE");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(super, super_without_name)
+{
+  auto [res, chunk] = compile(R"CODE(
+class A {}
+class B : A {
+  method() {
+    super.;
+  }
+}
+)CODE");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(super, this_in_superclass_method)
+{
+  VM vm;
+  auto [res, chunk] = compile(R"CODE(
+var r = ();
+class Base {
+  __init__(a) {
+    this.a = a;
+  }
+}
+class Derived : Base {
+  __init__(a, b) {
+    super.__init__(a);
+    this.b = b;
+  }
+}
+var derived = Derived("a", "b");
+r += derived.a;
+r += derived.b;
+return r;
+)CODE");
+  ASSERT_EQ(res, CompilerResult::OK);
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 2);
+  ASSERT_EQ(v[0], "a");
+  ASSERT_EQ(v[1], "b");
+}

@@ -95,6 +95,7 @@ namespace foxlox
     uint16_t read_uint16() noexcept;
 
     Subroutine* current_subroutine;
+    uint64_t current_super_level;
     Chunk* current_chunk;
     using IP = std::span<const uint8_t>::iterator;
     IP ip;
@@ -108,6 +109,7 @@ namespace foxlox
       Subroutine* subroutine{};
       IP ip{};
       Stack::iterator stack_top{};
+      uint64_t super_level;
     };
     using CallTrace = std::vector<CallFrame>;
     CallTrace calltrace;

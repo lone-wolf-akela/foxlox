@@ -127,6 +127,7 @@ namespace foxlox
   GSL_SUPPRESS(f.6)
     VM::VM(bool load_default_lib) noexcept :
     current_subroutine(nullptr),
+    current_super_level(0),
     current_chunk(nullptr),
     stack(STACK_MAX),
     calltrace(CALLTRACE_MAX),
@@ -591,9 +592,9 @@ namespace foxlox
         }
         case ValueType::METHOD:
         {
-          // TODO: update super_level env
-          const auto func_to_call = v.method_func();
           push_calltrace(num_of_params);
+          current_super_level = v.method_super_level();
+          const auto func_to_call = v.method_func();
 
           push();
           *top() = v.method_instance(); // `this'
@@ -655,8 +656,7 @@ namespace foxlox
       {
         const auto name = const_string_pool.at(current_chunk->get_const_string_idx_base() + read_uint16());
         auto instance = top()->get_instance();
-        // TODO: add super level to vm env
-        *top() = instance->get_super_method(0, name);
+        *top() = instance->get_super_method(current_super_level, name);
         DISPATCH();
       }
       LBL(GET_PROPERTY) :
@@ -881,10 +881,10 @@ namespace foxlox
     }
     else if (v.type == ValueType::METHOD)
     {
-      if (!v.v.instance->is_marked())
+      if (!v.method_instance()->is_marked())
       {
         gray_stack.push_back(&v);
-        v.v.instance->mark();
+        v.method_instance()->mark();
       }
       mark_subroutine(*v.method_func());
     }
@@ -911,13 +911,22 @@ namespace foxlox
           mark_value(entry.value);
         }
       }
-      else // if (v->is_instance() || v->type == ValueType::METHOD)
+      else if (v->is_instance())
       {
         for (auto& entry : v->v.instance->get_hash_table())
         {
           mark_value(entry.value);
         }
         mark_class(*v->v.instance->get_class());
+      }
+      else // if (v->type == ValueType::METHOD)
+      {
+        Instance* instance = v->method_instance();
+        for (auto& entry : instance->get_hash_table())
+        {
+          mark_value(entry.value);
+        }
+        mark_class(*instance->get_class());
       }
     }
   }
@@ -1021,6 +1030,7 @@ namespace foxlox
   {
     p_calltrace--;
     current_subroutine = p_calltrace->subroutine;
+    current_super_level = p_calltrace->super_level;
     current_chunk = current_subroutine->get_chunk();
     ip = p_calltrace->ip;
     stack_top = p_calltrace->stack_top;
@@ -1028,6 +1038,7 @@ namespace foxlox
   void VM::push_calltrace(uint16_t num_of_params) noexcept
   {
     p_calltrace->subroutine = current_subroutine;
+    p_calltrace->super_level = current_super_level;
     p_calltrace->ip = ip;
     p_calltrace->stack_top = stack_top - num_of_params;
     p_calltrace++;

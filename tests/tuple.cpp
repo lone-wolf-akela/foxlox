@@ -1,8 +1,6 @@
 #include <gtest/gtest.h>
 import foxlox;
 
-//TODO
-
 using namespace foxlox;
 
 TEST(tuple, creation)
@@ -14,10 +12,9 @@ TEST(tuple, creation)
 return ();
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.run(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 0);
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 0);
   }
   // this is not a tuple
   {
@@ -26,9 +23,8 @@ return ();
 return ("a");
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.run(chunk);
-    ASSERT_TRUE(v.is_str());
-    ASSERT_EQ(v.get_strview(), "a");
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_EQ(v, "a");
   }
   // this is a tuple with 1 element
   {
@@ -37,12 +33,10 @@ return ("a");
 return ("a",);
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.run(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 1);
-    ASSERT_TRUE(s[0].is_str());
-    ASSERT_EQ(s[0].get_strview(), "a");
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 1);
+    ASSERT_EQ(v[0], "a");
   }
   {
     VM vm;
@@ -50,16 +44,12 @@ return ("a",);
 return ("a", "b", "c");
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.run(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 3);
-    ASSERT_TRUE(s[0].is_str());
-    ASSERT_EQ(s[0].get_strview(), "a");
-    ASSERT_TRUE(s[1].is_str());
-    ASSERT_EQ(s[1].get_strview(), "b");
-    ASSERT_TRUE(s[2].is_str());
-    ASSERT_EQ(s[2].get_strview(), "c");
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 3);
+    ASSERT_EQ(v[0], "a");
+    ASSERT_EQ(v[1], "b");
+    ASSERT_EQ(v[2], "c");
   }
   {
     VM vm;
@@ -67,16 +57,12 @@ return ("a", "b", "c");
 return ("a", "b", "c",);
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.run(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 3);
-    ASSERT_TRUE(s[0].is_str());
-    ASSERT_EQ(s[0].get_strview(), "a");
-    ASSERT_TRUE(s[1].is_str());
-    ASSERT_EQ(s[1].get_strview(), "b");
-    ASSERT_TRUE(s[2].is_str());
-    ASSERT_EQ(s[2].get_strview(), "c");
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 3);
+    ASSERT_EQ(v[0], "a");
+    ASSERT_EQ(v[1], "b");
+    ASSERT_EQ(v[2], "c");
   }
 }
 
@@ -88,16 +74,12 @@ TEST(tuple, add)
 return ("a", "b") + "c";
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.run(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 3);
-    ASSERT_TRUE(s[0].is_str());
-    ASSERT_EQ(s[0].get_strview(), "a");
-    ASSERT_TRUE(s[1].is_str());
-    ASSERT_EQ(s[1].get_strview(), "b");
-    ASSERT_TRUE(s[2].is_str());
-    ASSERT_EQ(s[2].get_strview(), "c");
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 3);
+    ASSERT_EQ(v[0], "a");
+    ASSERT_EQ(v[1], "b");
+    ASSERT_EQ(v[2], "c");
   }
   {
     VM vm;
@@ -105,16 +87,12 @@ return ("a", "b") + "c";
 return "a" + ("b", "c");
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.run(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 3);
-    ASSERT_TRUE(s[0].is_str());
-    ASSERT_EQ(s[0].get_strview(), "a");
-    ASSERT_TRUE(s[1].is_str());
-    ASSERT_EQ(s[1].get_strview(), "b");
-    ASSERT_TRUE(s[2].is_str());
-    ASSERT_EQ(s[2].get_strview(), "c");
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 3);
+    ASSERT_EQ(v[0], "a");
+    ASSERT_EQ(v[1], "b");
+    ASSERT_EQ(v[2], "c");
   }
   {
     VM vm;
@@ -122,15 +100,11 @@ return "a" + ("b", "c");
 return ("a",) + ("b", "c");
 )");
     ASSERT_EQ(res, CompilerResult::OK);
-    auto v = vm.run(chunk);
-    ASSERT_TRUE(v.is_tuple());
-    auto s = v.get_tuplespan();
-    ASSERT_EQ(ssize(s), 3);
-    ASSERT_TRUE(s[0].is_str());
-    ASSERT_EQ(s[0].get_strview(), "a");
-    ASSERT_TRUE(s[1].is_str());
-    ASSERT_EQ(s[1].get_strview(), "b");
-    ASSERT_TRUE(s[2].is_str());
-    ASSERT_EQ(s[2].get_strview(), "c");
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 3);
+    ASSERT_EQ(v[0], "a");
+    ASSERT_EQ(v[1], "b");
+    ASSERT_EQ(v[2], "c");
   }
 }

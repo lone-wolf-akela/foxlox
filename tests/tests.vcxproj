@@ -72,6 +72,7 @@
     <ClCompile Include="static_test.cpp" />
     <ClCompile Include="string.cpp" />
     <ClCompile Include="super.cpp" />
+    <ClCompile Include="this.cpp" />
     <ClCompile Include="tuple.cpp" />
     <ClCompile Include="variable.cpp" />
     <ClCompile Include="while.cpp" />

@@ -1,8 +1,6 @@
 #include <gtest/gtest.h>
 import foxlox;
 
-//TODO
-
 using namespace foxlox;
 
 TEST(variable, in_nested_block)
@@ -17,9 +15,8 @@ TEST(variable, in_nested_block)
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = vm.run(chunk);
-  ASSERT_TRUE(v.is_str());
-  ASSERT_EQ(v.get_strview(), "outer");
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, "outer");
 }
 
 TEST(variable, in_middle_of_block)
@@ -40,18 +37,13 @@ return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = vm.run(chunk);
-  ASSERT_TRUE(v.is_tuple());
-  auto s = v.get_tuplespan();
-  ASSERT_EQ(ssize(s), 4);
-  ASSERT_TRUE(s[0].is_str());
-  ASSERT_EQ(s[0].get_strview(), "a");
-  ASSERT_TRUE(s[1].is_str());
-  ASSERT_EQ(s[1].get_strview(), "a b");
-  ASSERT_TRUE(s[2].is_str());
-  ASSERT_EQ(s[2].get_strview(), "a c");
-  ASSERT_TRUE(s[3].is_str());
-  ASSERT_EQ(s[3].get_strview(), "a b d");
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 4);
+  ASSERT_EQ(v[0], "a");
+  ASSERT_EQ(v[1], "a b");
+  ASSERT_EQ(v[2], "a c");
+  ASSERT_EQ(v[3], "a b d");
 }
 
 TEST(variable, scope_reuse_in_different_blocks)
@@ -70,14 +62,11 @@ return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = vm.run(chunk);
-  ASSERT_TRUE(v.is_tuple());
-  auto s = v.get_tuplespan();
-  ASSERT_EQ(ssize(s), 2);
-  ASSERT_TRUE(s[0].is_str());
-  ASSERT_EQ(s[0].get_strview(), "first");
-  ASSERT_TRUE(s[1].is_str());
-  ASSERT_EQ(s[1].get_strview(), "second");
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 2);
+  ASSERT_EQ(v[0], "first");
+  ASSERT_EQ(v[1], "second");
 }
 
 TEST(variable, shadow_and_local)
@@ -96,14 +85,12 @@ return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = vm.run(chunk);
-  ASSERT_TRUE(v.is_tuple());
-  auto s = v.get_tuplespan();
-  ASSERT_EQ(ssize(s), 2);
-  ASSERT_TRUE(s[0].is_str());
-  ASSERT_EQ(s[0].get_strview(), "outer");
-  ASSERT_TRUE(s[1].is_str());
-  ASSERT_EQ(s[1].get_strview(), "inner");
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 2);
+
+  ASSERT_EQ(v[0], "outer");
+  ASSERT_EQ(v[1], "inner");
 }
 
 TEST(variable, shadow_global)
@@ -120,14 +107,11 @@ return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = vm.run(chunk);
-  ASSERT_TRUE(v.is_tuple());
-  auto s = v.get_tuplespan();
-  ASSERT_EQ(ssize(s), 2);
-  ASSERT_TRUE(s[0].is_str());
-  ASSERT_EQ(s[0].get_strview(), "shadow");
-  ASSERT_TRUE(s[1].is_str());
-  ASSERT_EQ(s[1].get_strview(), "global");
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 2);
+  ASSERT_EQ(v[0], "shadow");
+  ASSERT_EQ(v[1], "global");
 }
 
 TEST(variable, shadow_local)
@@ -146,14 +130,11 @@ return r;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = vm.run(chunk);
-  ASSERT_TRUE(v.is_tuple());
-  auto s = v.get_tuplespan();
-  ASSERT_EQ(ssize(s), 2);
-  ASSERT_TRUE(s[0].is_str());
-  ASSERT_EQ(s[0].get_strview(), "shadow");
-  ASSERT_TRUE(s[1].is_str());
-  ASSERT_EQ(s[1].get_strview(), "local");
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 2);
+  ASSERT_EQ(v[0], "shadow");
+  ASSERT_EQ(v[1], "local");
 }
 
 TEST(variable, uninitialized)
@@ -164,6 +145,158 @@ return a;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
   VM vm;
-  auto v = vm.run(chunk);
-  ASSERT_TRUE(v.is_nil());
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, nil);
+}
+
+TEST(variable, collide_with_parameter)
+{
+  auto [res, chunk] = compile(R"CODE(
+fun foo(a) {
+  var a;
+}
+)CODE");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(variable, duplicate_local)
+{
+  auto [res, chunk] = compile(R"CODE(
+{
+  var a = "value";
+  var a = "other";
+}
+)CODE");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(variable, duplicate_global)
+{
+  auto [res, chunk] = compile(R"CODE(
+var a = "value";
+var a;
+)CODE");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(variable, duplicate_parameter)
+{
+  auto [res, chunk] = compile(R"CODE(
+fun foo(arg, arg) {
+  "body";
+}
+)CODE");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(variable, undefined_global)
+{
+  auto [res, chunk] = compile(R"CODE(
+notDefined;
+)CODE");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(variable, undefined_local)
+{
+  auto [res, chunk] = compile(R"CODE(
+{
+  print notDefined;
+}
+)CODE");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(variable, unreached_undefined)
+{
+  auto [res, chunk] = compile(R"CODE(
+if (false) {
+  notDefined;
+}
+)CODE");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(variable, use_false_as_var)
+{
+  auto [res, chunk] = compile(R"CODE(
+var false = "value";
+)CODE");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(variable, use_local_in_initializer)
+{
+  auto [res, chunk] = compile(R"CODE(
+var a = "outer";
+{
+  var a = a;
+}
+)CODE");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(variable, use_global_in_initializer)
+{
+  auto [res, chunk] = compile(R"CODE(
+var a = a;
+)CODE");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(variable, use_nil_as_var)
+{
+  auto [res, chunk] = compile(R"CODE(
+var nil = "value";
+)CODE");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(variable, use_this_as_var)
+{
+  auto [res, chunk] = compile(R"CODE(
+var this = "value";
+)CODE");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
+}
+
+TEST(variable, early_bound)
+{
+  auto [res, chunk] = compile(R"(
+var r = ();
+var a = "outer";
+{
+  fun foo() {
+    r += a;
+  }
+  foo();
+  var a = "inner";
+  foo();
+}
+return r;
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  VM vm;
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 2);
+  ASSERT_EQ(v[0], "outer");
+  ASSERT_EQ(v[1], "outer");
+}
+
+TEST(variable, local_from_method)
+{
+  auto [res, chunk] = compile(R"(
+var foo = "variable";
+class Foo {
+  method() {
+    return foo;
+  }
+}
+return Foo().method();
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  VM vm;
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_EQ(v, "variable");
 }

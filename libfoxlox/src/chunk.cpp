@@ -330,7 +330,7 @@ namespace foxlox
     chunk.constants.reserve(const_len);
     for (int64_t i = 0; i < const_len; i++)
     {
-      uint8_t type = load_uint8(strm);
+      const uint8_t type = load_uint8(strm);
       if (type == 0)
       {
         chunk.constants.emplace_back(load_int64(strm));

@@ -238,7 +238,7 @@ namespace foxlox
 
     friend Value operator-(const Value& l, const Value& r);
     friend Value operator-(const Value& val);
-    friend bool operator!(const Value& val);
+    friend bool operator!(const Value& val) noexcept;
     friend int64_t intdiv(const Value& l, const Value& r);
     friend std::partial_ordering operator<=>(const Value& l, const Value& r);
     friend bool operator==(const Value& l, const Value& r) noexcept;

@@ -258,7 +258,7 @@ namespace foxlox
     }
     return Value(-val.v.i64);
   }
-  bool operator!(const Value& val)
+  bool operator!(const Value& val) noexcept
   {
     return !val.is_truthy();
   }
@@ -449,7 +449,7 @@ namespace foxlox
     }
     if (type == ValueType::FUNC)
     {
-      return (v.func != nullptr) && (reinterpret_cast<uintptr_t>(v.func) % alignof(decltype(*v.func)) == 0);
+      return (v.func != nullptr) && (std::bit_cast<uintptr_t>(v.func) % alignof(decltype(*v.func)) == 0);
     }
     if (type == ValueType::CPP_FUNC)
     {
@@ -458,9 +458,9 @@ namespace foxlox
     if (type == ValueType::METHOD)
     {
       return (v.instance != nullptr)
-        && (reinterpret_cast<uintptr_t>(v.instance) % alignof(decltype(*v.instance)) == 0)
+        && (std::bit_cast<uintptr_t>(method_instance()) % alignof(decltype(*v.instance)) == 0)
         && (method_func() != nullptr)
-        && (reinterpret_cast<uintptr_t>(method_func()) % alignof(decltype(*method_func())) == 0);
+        && (std::bit_cast<uintptr_t>(method_func()) % alignof(decltype(*method_func())) == 0);
     }
     return false;
   }

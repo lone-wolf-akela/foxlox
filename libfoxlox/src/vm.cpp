@@ -144,7 +144,7 @@ namespace foxlox
       const_string_pool.push_back(str__init__);
       if (load_default_lib)
       {
-        for (auto& [path, lib] : default_libs())
+        for (const auto& [path, lib] : default_libs())
         {
           load_lib(path, lib);
         }
@@ -990,10 +990,10 @@ namespace foxlox
   Dict* VM::import_lib(std::span<const std::string_view> libpath)
   {
     auto combined_path = libpath | ranges::views::join('.') | ranges::to<std::string>;
-    if (auto found = runtime_libs.find(combined_path); found != runtime_libs.end())
+    if (const auto found = runtime_libs.find(combined_path); found != runtime_libs.end())
     {
       // an internal lib
-      gsl::not_null<Dict*> p = Dict::alloc(allocator, deallocator);
+      const gsl::not_null<Dict*> p = Dict::alloc(allocator, deallocator);
       gc_index.dict_pool.push_back(p);
       for (auto& val : found->second)
       {
@@ -1045,7 +1045,7 @@ namespace foxlox
   }
   Dict* VM::gen_export_dict()
   {
-    gsl::not_null<Dict*> dict = Dict::alloc(allocator, deallocator);
+    const gsl::not_null<Dict*> dict = Dict::alloc(allocator, deallocator);
     gc_index.dict_pool.push_back(dict);
     for (const auto& exp : current_chunk->get_export_list())
     {

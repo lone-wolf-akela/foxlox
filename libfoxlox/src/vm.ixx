@@ -109,7 +109,7 @@ namespace foxlox
       Subroutine* subroutine{};
       IP ip{};
       Stack::iterator stack_top{};
-      uint64_t super_level;
+      uint64_t super_level{};
     };
     using CallTrace = std::vector<CallFrame>;
     CallTrace calltrace;

@@ -41,7 +41,7 @@ jobs:
         additionalCachedPaths: ${{ env.buildDir }}/vcpkg_installed
         vcpkgGitCommitId: 183a12585a95b36bfdda342eb6d302d3ab3ad466
     - run: |
-        $VCPKG_ROOT/vcpkg install
+        ${{ env.VCPKG_ROOT }}\vcpkg.exe install
       shell: powershell
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}

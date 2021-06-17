@@ -1,0 +1,66 @@
+name: MSBuild
+
+on: [push]
+
+env:
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: foxlox.sln
+
+  # Configuration type to build.
+  # You can convert this to a build matrix if you need coverage of multiple configuration types.
+  # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+  BUILD_CONFIGURATION: Release
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Restore NuGet packages
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: nuget restore ${{env.SOLUTION_FILE_PATH}}
+      
+    - name: run-vcpkg
+      # You may pin to the exact commit or the version.
+      # uses: lukka/run-vcpkg@9c0ae56bad291f4b185cc433a9b56084b2962259
+      uses: lukka/run-vcpkg@v7.3
+      with:
+        # Indicates whether to only setup vcpkg (i.e. installing it and setting the environment variables VCPKG_ROOT, RUNVCPK_VCPKG_ROOT), without installing any port.
+        #setupOnly: # optional
+        # Specify a semi-colon separated list of additional paths to be cached.
+        #additionalCachedPaths: # optional
+        # This value is added to the precomputed key used to restore/save the cached artifacts produced by vcpkg.
+        #appendedCacheKey: # optional
+        # Specify the full SHA-1 hash of a Git commit (not a branch name, nor a tag!) that establishes which version of vcpkg needs to be used. When using vcpkg as a Git submodule, this input is *not* needed as implicitly specified by the submodule.
+        vcpkgGitCommitId: 183a12585a95b36bfdda342eb6d302d3ab3ad466 # optional
+        # 
+        #vcpkgArguments: # optional, default is 
+        # 
+        #vcpkgDirectory: # optional, default is ${{ github.workspace }}/vcpkg
+        # Specify entries to append to the .artifactignore file. This file specifies which directory to ignore or to include by the Cache task. For more info: https://docs.microsoft.com/en-us/azure/devops/artifacts/reference/artifactignore?view=azure-devops . The file is created if not already existing.
+        # vcpkgArtifactIgnoreEntries: # optional, default is !.git
+
+        # Specify the URL Git repository to download vcpkg from. Defaults to https://github.com/microsoft/vcpkg.git
+        #vcpkgGitURL: # optional, default is https://github.com/microsoft/vcpkg.git
+        # Specify the vcpkg triplet. Common values are x64-windows, x64-linux and x64-osx. It is recommended to specify the triplet in the response file provided in the arguments instead than here.
+        #vcpkgTriplet: # optional, default is 
+        # Append the argument '--clean-after-build' to vcpkgArgument input, to clean buildtrees, packages and downloads after building each port. Default is true.
+        #cleanAfterBuild: # optional, default is true
+        # Avoid to update vcpkg (launching git) in the specified 'vcpkgDirectory'. This is useful when vcpkg is being checkout independently of the run-vcpkg action. Default is false.
+        #doNotUpdateVcpkg: # optional
+        # Specify which shell to be used when launching commands. 'true' means the default shell is used. 'false' means no shell is used. It also can be an absolute path and arguments of the shell to spawn commands with.
+        #useShell: # optional, default is true
+        # Disable the automatic caching mechanism by setting it to true. Default is false.
+        #doNotCache: # optional
+        # Specifies a semicolon separated list of regular expressions that are used to identify log file paths in the workflow output. A regular expression must have a single capturing group, that is a single pair of parenthesis such as 'See also (.+.log)'. When a match occurs, the content of the file is written into the workflow output for disclosing its content to the user. The default regular expressions are for CMake's and vcpkg's log files.
+        #logCollectionRegExps: # optional, default is \s*See also "(.+CMakeOutput\.log)"\.\s*;\s*See also "(.+CMakeError\.log)"\.\s*;\s*See logs for more information:\s*(.+out\.log)\s*;\s+(.+err\.log)\s*
+    - name: Build
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      # Add additional options to the MSBuild command line here (like platform or verbosity level).
+      # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
+      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}

@@ -1,4 +1,4 @@
-module foxlox:value;
+module foxlox:object;
 import :object;
 
 namespace foxlox

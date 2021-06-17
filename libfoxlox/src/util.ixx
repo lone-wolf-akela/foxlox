@@ -7,7 +7,8 @@ import <cassert>;
 import <type_traits>;
 
 import <gsl/gsl>;
-import "libicu.h";
+
+import :libicu;
 
 namespace foxlox
 {

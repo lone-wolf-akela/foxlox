@@ -10,9 +10,6 @@ import :value;
 import :stmt;
 import :format_error;
 
-//TODO: wait for a vs update fix this
-#undef TRUE
-#undef FALSE
 
 namespace foxlox
 {

@@ -54,15 +54,21 @@
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <VcpkgAdditionalInstallOptions>--feature-flags="versions"</VcpkgAdditionalInstallOptions>
+    <VcpkgAdditionalInstallOptions>
+    </VcpkgAdditionalInstallOptions>
     <VcpkgTriplet>
     </VcpkgTriplet>
+    <VcpkgHostTriplet>
+    </VcpkgHostTriplet>
     <VcpkgUseStatic>true</VcpkgUseStatic>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <VcpkgAdditionalInstallOptions>--feature-flags="versions"</VcpkgAdditionalInstallOptions>
+    <VcpkgAdditionalInstallOptions>
+    </VcpkgAdditionalInstallOptions>
     <VcpkgTriplet>
     </VcpkgTriplet>
+    <VcpkgHostTriplet>
+    </VcpkgHostTriplet>
     <VcpkgUseStatic>true</VcpkgUseStatic>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -126,6 +132,7 @@
     <ClCompile Include="src\format_error.ixx" />
     <ClCompile Include="src\hash_table.cpp" />
     <ClCompile Include="src\hash_table.ixx" />
+    <ClCompile Include="src\libicu.ixx" />
     <ClCompile Include="src\main.ixx" />
     <ClCompile Include="src\mem_alloc.ixx" />
     <ClCompile Include="src\object.cpp" />
@@ -149,7 +156,6 @@
     <ClCompile Include="src\vm.ixx" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\libicu.h" />
     <ClInclude Include="src\opcode.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -13,14 +13,10 @@ import <version>;
 import <format>;
 
 import <gsl/gsl>;
-import "libicu.h";
 
+import :libicu;
 import :util;
 import :token;
-
-//TODO: wait for a vs update fix this
-#undef TRUE
-#undef FALSE
 
 namespace foxlox
 {

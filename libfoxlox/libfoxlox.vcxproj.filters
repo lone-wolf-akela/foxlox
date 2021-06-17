@@ -126,12 +126,12 @@
     <ClCompile Include="src\debug.ixx">
       <Filter>模块</Filter>
     </ClCompile>
+    <ClCompile Include="src\libicu.ixx">
+      <Filter>模块</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\opcode.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\libicu.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

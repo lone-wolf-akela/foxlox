@@ -8,10 +8,6 @@ import <magic_enum.hpp>;
 
 import :compiletime_value;
 
-//TODO: wait for a vs update fix this
-#undef TRUE
-#undef FALSE
-
 namespace foxlox
 {
   export enum class TokenType

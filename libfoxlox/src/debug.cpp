@@ -1,5 +1,4 @@
 module foxlox:debug;
-import :debug;
 
 import <gsl/gsl>;
 

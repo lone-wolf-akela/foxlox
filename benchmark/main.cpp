@@ -11,8 +11,13 @@ import <format>;
 
 import foxlox;
 
-int main()
+int main(int argc, const char*)
 {
+  if (argc != 1)
+  {
+    std::cerr << "Unknown commandline arguments.\n";
+    return 0;
+  }
   while (true)
   {
     auto bench_path = std::filesystem::path(FOXLOX_CURRENT_SOURCE_DIR) / "bench";

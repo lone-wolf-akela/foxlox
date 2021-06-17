@@ -1,6 +1,6 @@
 module foxlox:hash_table;
+
 import :object;
-import :hash_table;
 
 namespace foxlox
 {

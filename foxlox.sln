@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FECBDC3E-AA33-43B0-AF24-724FCDDF8DE0}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		.github\workflows\msbuild.yml = .github\workflows\msbuild.yml
 		vcpkg.json = vcpkg.json
 	EndProjectSection
 EndProject

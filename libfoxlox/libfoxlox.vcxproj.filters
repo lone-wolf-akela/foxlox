@@ -19,6 +19,9 @@
     <Filter Include="模块\runtimelibs">
       <UniqueIdentifier>{3a508543-1097-45c1-8ee3-c2138d2ce224}</UniqueIdentifier>
     </Filter>
+    <Filter Include="模块\thirdparty_wrapper">
+      <UniqueIdentifier>{f9144420-9f59-4d0e-8397-8973fef2eb3d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\runtimelib.cpp">
@@ -126,8 +129,8 @@
     <ClCompile Include="src\debug.ixx">
       <Filter>模块</Filter>
     </ClCompile>
-    <ClCompile Include="src\libicu.ixx">
-      <Filter>模块</Filter>
+    <ClCompile Include="src\thirdparty_wrapper\libicu.ixx">
+      <Filter>模块\thirdparty_wrapper</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

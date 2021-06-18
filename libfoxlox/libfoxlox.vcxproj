@@ -132,7 +132,6 @@
     <ClCompile Include="src\format_error.ixx" />
     <ClCompile Include="src\hash_table.cpp" />
     <ClCompile Include="src\hash_table.ixx" />
-    <ClCompile Include="src\libicu.ixx" />
     <ClCompile Include="src\main.ixx" />
     <ClCompile Include="src\mem_alloc.ixx" />
     <ClCompile Include="src\object.cpp" />
@@ -148,6 +147,7 @@
     <ClCompile Include="src\scanner.ixx" />
     <ClCompile Include="src\serialization.ixx" />
     <ClCompile Include="src\stmt.ixx" />
+    <ClCompile Include="src\thirdparty_wrapper\libicu.ixx" />
     <ClCompile Include="src\token.ixx" />
     <ClCompile Include="src\util.ixx" />
     <ClCompile Include="src\value.cpp" />

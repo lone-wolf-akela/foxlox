@@ -13,9 +13,7 @@ namespace foxlox
     requires ((std::same_as<Args, ValueType> || std::same_as<Args, ObjType>) && ...)
   {
     std::string msg = "Value type error. Expected: ";
-    // TODO: wait for VS update fix this
-    //(std::format_to(std::back_inserter(msg), "{}, ", magic_enum::enum_name(expected)), ...);
-    ((msg += std::format("{}, ", magic_enum::enum_name(expected))), ...);
+    (std::format_to(std::back_inserter(msg), "{}, ", magic_enum::enum_name(expected)), ...);
     return msg;
   }
 
@@ -26,9 +24,7 @@ namespace foxlox
     ((std::same_as<Args, ValueType> || std::same_as<Args, ObjType>) && ...)
   {
     std::string msg = wrongtype_msg_fmt(expected...);
-    // TODO: wait for VS update fix this
-    //std::format_to(std::back_inserter(msg), "got: {} and {}.", magic_enum::enum_name(got1), magic_enum::enum_name(got2));
-    msg += std::format("got: {} and {}.", magic_enum::enum_name(got1), magic_enum::enum_name(got2));
+    std::format_to(std::back_inserter(msg), "got: {} and {}.", magic_enum::enum_name(got1), magic_enum::enum_name(got2));
     return ValueError(msg);
   }
 
@@ -38,9 +34,7 @@ namespace foxlox
     ((std::same_as<Args, ValueType> || std::same_as<Args, ObjType>) && ...)
   {
     std::string msg = wrongtype_msg_fmt(expected...);
-    // TODO: wait for VS update fix this
-    //std::format_to(std::back_inserter(msg), "got: {}.", magic_enum::enum_name(got));
-    msg += std::format("got: {}.", magic_enum::enum_name(got));
+    std::format_to(std::back_inserter(msg), "got: {}.", magic_enum::enum_name(got));
     return ValueError(msg);
   }
 

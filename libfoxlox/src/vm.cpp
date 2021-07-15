@@ -2,9 +2,7 @@ module;
 #include <range/v3/view/transform.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/join.hpp>
-#pragma warning(disable:5104) 
 #include <boost/dll/runtime_symbol_info.hpp>
-#pragma warning(default:5104) 
 module foxlox:vm;
 import :vm;
 

@@ -1,3 +1,6 @@
+module;
+#include <range/v3/view/transform.hpp>
+#include <range/v3/range/conversion.hpp>
 export module foxlox:parser;
 
 import <vector>;
@@ -45,6 +48,7 @@ namespace foxlox
     std::unique_ptr<stmt::Stmt> expression_statement();
     std::unique_ptr<expr::Expr> expression();
     std::unique_ptr<expr::Expr> assignment();
+    std::unique_ptr<expr::Expr> assignment_impl(Token equals, std::unique_ptr<expr::Expr>&& left, std::unique_ptr<expr::Expr>&& right);
     std::unique_ptr<expr::Expr> or_expr();
     std::unique_ptr<expr::Expr> and_expr();
     std::unique_ptr<expr::Expr> equality();
@@ -343,18 +347,35 @@ namespace foxlox
         value = std::make_unique<expr::Binary>(expr->clone(),
           Token(tk, equals.lexeme, equals.literal, equals.line), std::move(value));
       }
-      auto p_expr = expr.get();
-      if (auto variable = dynamic_cast<expr::Variable*>(p_expr); variable != nullptr)
+      if (auto tuple = dynamic_cast<expr::Tuple*>(expr.get()); tuple != nullptr)
       {
-        return std::make_unique<expr::Assign>(std::move(variable->name), std::move(value));
+        auto assign_list = tuple->exprs
+          | ranges::views::transform([=,this](auto&& e) {
+              return assignment_impl(equals, std::move(e), std::make_unique<expr::NoOP>());
+            })
+          | ranges::to<std::vector<std::unique_ptr<expr::Expr>>>;
+        return std::make_unique<expr::TupleUnpack>(std::move(value), std::move(assign_list));
       }
-      if (auto get = dynamic_cast<expr::Get*>(p_expr); get != nullptr)
+      else
       {
-        return std::make_unique<expr::Set>(std::move(get->obj), std::move(get->name), std::move(value));
+        return assignment_impl(equals, std::move(expr), std::move(value));
       }
-      error(equals, "Invalid assignment target.");
     }
     return expr;
+  }
+  std::unique_ptr<expr::Expr> Parser::assignment_impl(Token equals, std::unique_ptr<expr::Expr>&& left, std::unique_ptr<expr::Expr>&& right)
+  {
+    auto p_expr = left.get();
+    if (auto variable = dynamic_cast<expr::Variable*>(p_expr); variable != nullptr)
+    {
+      return std::make_unique<expr::Assign>(std::move(variable->name), std::move(right));
+    }
+    if (auto get = dynamic_cast<expr::Get*>(p_expr); get != nullptr)
+    {
+      return std::make_unique<expr::Set>(std::move(get->obj), std::move(get->name), std::move(right));
+    }
+    error(equals, "Invalid assignment target.");
+    return std::move(left);
   }
   GSL_SUPPRESS(r.5)
     std::unique_ptr<expr::Expr> Parser::or_expr()

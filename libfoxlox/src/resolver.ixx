@@ -63,6 +63,8 @@ namespace foxlox
     void visit_binary_expr(gsl::not_null<expr::Binary*> expr) final;
     void visit_grouping_expr(gsl::not_null<expr::Grouping*> expr) final;
     void visit_tuple_expr(gsl::not_null<expr::Tuple*> expr) final;
+    void visit_tupleunpack_expr(gsl::not_null<expr::TupleUnpack*> expr) final;
+    void visit_noop_expr(gsl::not_null<expr::NoOP*> expr) noexcept final;
     void visit_literal_expr(gsl::not_null<expr::Literal*> expr) noexcept final;
     void visit_unary_expr(gsl::not_null<expr::Unary*> expr) final;
     void visit_variable_expr(gsl::not_null<expr::Variable*> expr) final;
@@ -256,6 +258,18 @@ namespace foxlox
   {
     resolve(expr->left.get());
     resolve(expr->right.get());
+  }
+  void Resolver::visit_tupleunpack_expr(gsl::not_null<expr::TupleUnpack*> expr)
+  {
+    resolve(expr->tuple.get());
+    for (auto& e : expr->assignlist)
+    {
+      resolve(e.get());
+    }
+  }
+  void Resolver::visit_noop_expr(gsl::not_null<expr::NoOP*> /*expr*/) noexcept
+  {
+    // do nothing
   }
   void Resolver::visit_grouping_expr(gsl::not_null<expr::Grouping*> expr)
   {

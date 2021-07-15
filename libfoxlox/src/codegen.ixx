@@ -5,6 +5,7 @@ export module foxlox:codegen;
 import <map>;
 import <string_view>;
 import <format>;
+import <ranges>;
 
 import :except;
 import :chunk;
@@ -40,7 +41,7 @@ namespace foxlox
     };
     std::map<VarDeclareAt, ValueIdx> value_idxs;
     uint16_t current_stack_size;
-    void push_stack() noexcept;
+    void push_stack(uint16_t n = 1) noexcept;
     void pop_stack(uint16_t n = 1);
     // convert a stack idx between "idx from the stack bottom" and "idx from the stack top"
     uint16_t idx_cast(uint16_t idx) noexcept;
@@ -75,6 +76,8 @@ namespace foxlox
     uint16_t gen_subroutine(gsl::not_null<stmt::Function*> stmt, stmt::Class* klass);
 
     void visit_binary_expr(gsl::not_null<expr::Binary*> expr) final;
+    void visit_tupleunpack_expr(gsl::not_null<expr::TupleUnpack*> expr) final;
+    void visit_noop_expr(gsl::not_null<expr::NoOP*> expr) noexcept final;
     void visit_grouping_expr(gsl::not_null<expr::Grouping*> expr) final;
     void visit_tuple_expr(gsl::not_null<expr::Tuple*> expr) final;
     void visit_literal_expr(gsl::not_null<expr::Literal*> expr) final;
@@ -155,9 +158,9 @@ namespace foxlox
     had_error = true;
   }
 
-  void CodeGen::push_stack() noexcept
+  void CodeGen::push_stack(uint16_t n) noexcept
   {
-    current_stack_size++;
+    current_stack_size += n;
   }
   void CodeGen::pop_stack(uint16_t n)
   {
@@ -295,6 +298,23 @@ namespace foxlox
       throw FatalError("Unknown binary op.");
     }
     pop_stack();
+  }
+  void CodeGen::visit_tupleunpack_expr(gsl::not_null<expr::TupleUnpack*> expr)
+  {
+    compile(expr->tuple.get());
+    const uint16_t tuple_size = gsl::narrow_cast<uint16_t>(expr->assignlist.size());
+    emit(OP::UNPACK, tuple_size);
+    push_stack(tuple_size);
+    for (auto& e : expr->assignlist | std::ranges::views::reverse)
+    {
+      compile(e.get());
+      emit(OP::POP);
+      pop_stack();
+    }
+  }
+  void CodeGen::visit_noop_expr(gsl::not_null<expr::NoOP*> /*expr*/) noexcept
+  {
+    // do nothing
   }
   void CodeGen::visit_grouping_expr(gsl::not_null<expr::Grouping*> expr)
   {

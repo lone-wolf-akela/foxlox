@@ -96,6 +96,21 @@ namespace foxlox::expr
 
     std::unique_ptr<Expr> clone() final;
   };
+  export class TupleUnpack : public Expr
+  {
+  public:
+    TupleUnpack(std::unique_ptr<Expr>&& tpl, std::vector<std::unique_ptr<Expr>>&& list) noexcept;
+    std::unique_ptr<Expr> tuple;
+    std::vector<std::unique_ptr<Expr>> assignlist;
+
+    std::unique_ptr<Expr> clone() final;
+  };
+  export class NoOP : public Expr
+  {
+  public:
+    NoOP() = default;
+    std::unique_ptr<Expr> clone() final;
+  };
   export class Grouping : public Expr
   {
   public:
@@ -199,6 +214,8 @@ namespace foxlox::expr
   {
   public:
     virtual R visit_binary_expr(gsl::not_null<Binary*> expr) = 0;
+    virtual R visit_tupleunpack_expr(gsl::not_null<TupleUnpack*> expr) = 0;
+    virtual R visit_noop_expr(gsl::not_null<NoOP*> expr) = 0;
     virtual R visit_grouping_expr(gsl::not_null<Grouping*> expr) = 0;
     virtual R visit_tuple_expr(gsl::not_null<Tuple*> expr) = 0;
     virtual R visit_literal_expr(gsl::not_null<Literal*> expr) = 0;
@@ -224,6 +241,14 @@ namespace foxlox::expr
       if (auto p = dynamic_cast<Binary*>(expr); p != nullptr)
       {
         return visit_binary_expr(p);
+      }
+      if (auto p = dynamic_cast<TupleUnpack*>(expr); p != nullptr)
+      {
+        return visit_tupleunpack_expr(p);
+      }
+      if (auto p = dynamic_cast<NoOP*>(expr); p != nullptr)
+      {
+        return visit_noop_expr(p);
       }
       if (auto p = dynamic_cast<Grouping*>(expr); p != nullptr)
       {
@@ -308,6 +333,22 @@ namespace foxlox::expr
   std::unique_ptr<Expr> Logical::clone()
   {
     return std::make_unique<Logical>(left->clone(), Token(op), right->clone());
+  }
+  TupleUnpack::TupleUnpack(std::unique_ptr<Expr>&& tpl, std::vector<std::unique_ptr<Expr>>&& list) noexcept :
+    tuple(std::move(tpl)),
+    assignlist(std::move(list))
+  {
+  }
+  std::unique_ptr<Expr> TupleUnpack::clone()
+  {
+    auto cloned_assignlist = assignlist
+      | ranges::views::transform([](auto& e) {return e->clone(); })
+      | ranges::to<std::vector<std::unique_ptr<Expr>>>;
+    return std::make_unique<TupleUnpack>(tuple->clone(), std::move(cloned_assignlist));
+  }
+  std::unique_ptr<Expr> NoOP::clone()
+  {
+    return std::make_unique<NoOP>();
   }
   Grouping::Grouping(std::unique_ptr<Expr>&& expr) noexcept :
     expression(std::move(expr))

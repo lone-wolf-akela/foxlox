@@ -44,7 +44,8 @@ import <cstdint>;
   X(GET_PROPERTY) \
   X(INHERIT) \
   X(GET_SUPER_METHOD) \
-  X(IMPORT)
+  X(IMPORT) \
+  X(UNPACK)
 
 namespace foxlox
 {

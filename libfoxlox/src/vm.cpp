@@ -682,6 +682,23 @@ namespace foxlox
         *top() = import_lib(libpath);
         DISPATCH();
       }
+      LBL(UNPACK) :
+      {
+        const uint16_t tuple_size = read_uint16();
+        std::span<Value> values = top()->get_tuplespan();
+        if (values.size() != tuple_size)
+        {
+          throw InternalRuntimeError(
+            std::format("Tuple size mismatch. Expect: {}, got: {}.", tuple_size, values.size())
+          );
+        }
+        for (auto& e : values)
+        {
+          push();
+          *top() = e;
+        }
+        DISPATCH();
+      }
     }
     catch (const std::exception& e)
     {

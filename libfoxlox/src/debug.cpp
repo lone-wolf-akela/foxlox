@@ -139,6 +139,7 @@ namespace foxlox
     case OP::POP_N:
     case OP::TUPLE:
     case OP::IMPORT:
+    case OP::UNPACK:
     {
 #ifdef FOXLOX_DEBUG_TRACE_INST
       std::cout << std::format("{:<16} {:>4}\n", magic_enum::enum_name(op), get_uint16());

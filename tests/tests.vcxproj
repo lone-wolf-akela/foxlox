@@ -101,7 +101,8 @@
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <SDLCheck>true</SDLCheck>
-      <DisableSpecificWarnings>4200</DisableSpecificWarnings>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <Link>
@@ -123,7 +124,8 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
-      <DisableSpecificWarnings>4200</DisableSpecificWarnings>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>

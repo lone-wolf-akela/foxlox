@@ -1,7 +1,11 @@
 export module foxlox:object;
 
+import <cstddef>;
 import <climits>;
 import <version>;
+import <algorithm>;
+import <utility>;
+import <type_traits>;
 
 import <gsl/gsl>;
 
@@ -16,6 +20,12 @@ namespace foxlox
   private:
     bool gc_mark;
     uint32_t m_size;
+  protected:
+    static constexpr size_t sizeof_obj(size_t l)
+    {
+      // this may cause -Winvalid-offsetof on gcc & clang, but it does work
+      return std::max(sizeof(T), offsetof(T, m_data) + l * sizeof(std::declval<T>().m_data[0]));
+    }
   public:
     SimpleObj(ObjType t, size_t l) noexcept :
       ObjBase(t), gc_mark(false), m_size(gsl::narrow_cast<uint32_t>(l))
@@ -59,7 +69,7 @@ namespace foxlox
   {
     friend class SimpleObj<String>;
   private:
-    char m_data[0];
+    char m_data[1];
   public:
     String(size_t l) noexcept;
     ~String() = default;
@@ -67,7 +77,7 @@ namespace foxlox
     template<Allocator F>
     static gsl::not_null<String*> alloc(F allocator, size_t l)
     {
-      const gsl::not_null<char*> data = allocator(sizeof(String) + l * sizeof(char));
+      const gsl::not_null<char*> data = allocator(sizeof_obj(l));
       return new(data) String(l);
     }
 
@@ -77,7 +87,7 @@ namespace foxlox
       const auto size = p->size();
       p->~String();
       GSL_SUPPRESS(type.1)
-        deallocator(reinterpret_cast<char*>(p.get()), sizeof(String) + size * sizeof(char));
+        deallocator(reinterpret_cast<char*>(p.get()), sizeof_obj(size));
     }
 
     std::string_view get_view() const noexcept;
@@ -92,9 +102,7 @@ namespace foxlox
   {
     friend class SimpleObj<Tuple>;
   private:
-#pragma warning(disable:4200) // nonstandard extension used : zero-sized array in struct/union
-    Value m_data[0];
-#pragma warning(default:4200)
+    Value m_data[1];
   public:
     Tuple(size_t l) noexcept;
     ~Tuple() = default;
@@ -102,7 +110,7 @@ namespace foxlox
     template<Allocator F>
     static gsl::not_null<Tuple*> alloc(F allocator, size_t l)
     {
-      const gsl::not_null<char*> data = allocator(sizeof(Tuple) + l * sizeof(Value));
+      const gsl::not_null<char*> data = allocator(sizeof_obj(l));
       return new(data) Tuple(l);
     }
 
@@ -112,7 +120,7 @@ namespace foxlox
       const auto size = p->size();
       p->~Tuple();
       GSL_SUPPRESS(type.1)
-        deallocator(reinterpret_cast<char*>(p.get()), sizeof(Tuple) + size * sizeof(Value));
+        deallocator(reinterpret_cast<char*>(p.get()), sizeof_obj(size));
     }
 
     std::span<const Value> get_span() const noexcept;

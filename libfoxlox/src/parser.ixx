@@ -49,7 +49,8 @@ namespace foxlox
     std::unique_ptr<stmt::Stmt> expression_statement();
     std::unique_ptr<expr::Expr> expression();
     std::unique_ptr<expr::Expr> assignment();
-    std::unique_ptr<expr::Expr> assignment_impl(Token equals, std::unique_ptr<expr::Expr>&& left, std::unique_ptr<expr::Expr>&& right);
+    std::unique_ptr<expr::Expr> assignment_simple(Token equals, std::unique_ptr<expr::Expr>&& left, std::unique_ptr<expr::Expr>&& right);
+    std::unique_ptr<expr::Expr> assignment_tuple(Token equals, std::unique_ptr<expr::Expr>&& left, std::unique_ptr<expr::Expr>&& right);
     std::unique_ptr<expr::Expr> or_expr();
     std::unique_ptr<expr::Expr> and_expr();
     std::unique_ptr<expr::Expr> equality();
@@ -349,23 +350,36 @@ namespace foxlox
         value = std::make_unique<expr::Binary>(expr->clone(),
           Token(tk, equals.lexeme, equals.literal, equals.line), std::move(value));
       }
-      if (auto tuple = dynamic_cast<expr::Tuple*>(expr.get()); tuple != nullptr)
+      if (dynamic_cast<expr::Tuple*>(expr.get()) != nullptr)
       {
-        auto assign_list = tuple->exprs
-          | ranges::views::transform([=,this](auto&& e) {
-              return assignment_impl(equals, std::move(e), std::make_unique<expr::NoOP>());
-            })
-          | ranges::to<std::vector<std::unique_ptr<expr::Expr>>>;
-        return std::make_unique<expr::TupleUnpack>(std::move(value), std::move(assign_list));
+        return assignment_tuple(equals, std::move(expr), std::move(value));
       }
       else
       {
-        return assignment_impl(equals, std::move(expr), std::move(value));
+        return assignment_simple(equals, std::move(expr), std::move(value));
       }
     }
     return expr;
   }
-  std::unique_ptr<expr::Expr> Parser::assignment_impl(Token equals, std::unique_ptr<expr::Expr>&& left, std::unique_ptr<expr::Expr>&& right)
+  std::unique_ptr<expr::Expr> Parser::assignment_tuple(Token equals, std::unique_ptr<expr::Expr>&& left, std::unique_ptr<expr::Expr>&& right)
+  {
+    auto tuple = dynamic_cast<expr::Tuple*>(left.get()); // tuple will not be null
+    auto assign_list = tuple->exprs
+      | ranges::views::transform([=, this](auto&& e) {
+      if (dynamic_cast<expr::Tuple*>(e.get()) != nullptr)
+      {
+        // recursion tuple unpack
+        return assignment_tuple(equals, std::move(e), std::make_unique<expr::NoOP>());
+      }
+      else
+      {
+        return assignment_simple(equals, std::move(e), std::make_unique<expr::NoOP>());
+      }
+        })
+      | ranges::to<std::vector<std::unique_ptr<expr::Expr>>>;
+     return std::make_unique<expr::TupleUnpack>(std::move(right), std::move(assign_list));
+  }
+  std::unique_ptr<expr::Expr> Parser::assignment_simple(Token equals, std::unique_ptr<expr::Expr>&& left, std::unique_ptr<expr::Expr>&& right)
   {
     auto p_expr = left.get();
     if (auto variable = dynamic_cast<expr::Variable*>(p_expr); variable != nullptr)

@@ -255,3 +255,105 @@ TEST(tuple, unpack_to_literal)
     ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
   }
 }
+
+TEST(tuple, recursion_unpack)
+{
+  {
+    VM vm;
+    auto [res, chunk] = compile(R"(
+var a;
+var b;
+var c;
+(a, (b, c)) = ("a", ("b", "c"));
+return (a, b, c);
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 3);
+    ASSERT_EQ(v[0], "a");
+    ASSERT_EQ(v[1], "b");
+    ASSERT_EQ(v[2], "c");
+  }
+  {
+    VM vm;
+    auto [res, chunk] = compile(R"(
+var a;
+var b;
+var c;
+((a, b), c) = (("a", "b"), "c");
+return (a, b, c);
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 3);
+    ASSERT_EQ(v[0], "a");
+    ASSERT_EQ(v[1], "b");
+    ASSERT_EQ(v[2], "c");
+  }
+}
+
+TEST(tuple, deep_recursion_unpack)
+{
+  {
+    VM vm;
+    auto [res, chunk] = compile(R"(
+var v1;
+var v2;
+var v3;
+var v4;
+var v5;
+(((((v1,), v2), v3), v4), v5) = (((((1,), 2), 3), 4), 5);
+return (v1, v2, v3, v4, v5);
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    auto v = FoxValue(vm.run(chunk));
+    ASSERT_TRUE(v.is<TupleSpan>());
+    ASSERT_EQ(v.ssize(), 5);
+    ASSERT_EQ(v[0], 1);
+    ASSERT_EQ(v[1], 2);
+    ASSERT_EQ(v[2], 3);
+    ASSERT_EQ(v[3], 4);
+    ASSERT_EQ(v[4], 5);
+  }
+}
+
+TEST(tuple, recursion_unpack_wrong_size)
+{
+  {
+    VM vm;
+    auto [res, chunk] = compile(R"(
+var a;
+var b;
+var c;
+((a, b), c) = (("a", "b", "?"), "c");
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    ASSERT_THROW(vm.run(chunk), RuntimeError);
+  }
+  {
+    VM vm;
+    auto [res, chunk] = compile(R"(
+var a;
+var b;
+var c;
+(a, (b, c)) = ("a", ("b",));
+)");
+    ASSERT_EQ(res, CompilerResult::OK);
+    ASSERT_THROW(vm.run(chunk), RuntimeError);
+  }
+}
+
+TEST(tuple, recursion_unpack_nontuple)
+{
+
+  VM vm;
+  auto [res, chunk] = compile(R"(
+var a;
+var b;
+(a, (b,)) = ("a", "b");
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  ASSERT_THROW(vm.run(chunk), RuntimeError);
+}

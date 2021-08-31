@@ -17,6 +17,7 @@ namespace foxlox
     COMMA, DOT, SEMICOLON,
 
     // One or two character tokens.
+    UNDERLINE,
     PLUS, PLUS_PLUS, PLUS_EQUAL,
     MINUS, MINUS_MINUS, MINUS_EQUAL,
     STAR, STAR_EQUAL,

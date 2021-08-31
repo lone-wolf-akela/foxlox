@@ -408,6 +408,11 @@ namespace foxlox
     current_line = expr->name.line;
 
     compile(expr->value.get());
+    if (expr->name.type == TokenType::UNDERLINE)
+    {
+      // assign to a placeholder -> do nothing
+      return;
+    }
     const auto info = value_idxs.at(expr->declare);
     if (info.type == stmt::VarStoreType::Stack)
     {
@@ -533,7 +538,16 @@ namespace foxlox
       emit(OP::NIL);
       push_stack();
     }
-    declare_a_var(stmt);
+    if (stmt->name.type == TokenType::UNDERLINE)
+    {
+      // assign to a placeholder -> drop the value
+      pop_stack();
+      emit(OP::POP);
+    }
+    else
+    {
+      declare_a_var(stmt);
+    }
   }
   void CodeGen::visit_block_stmt(gsl::not_null<stmt::Block*> stmt)
   {

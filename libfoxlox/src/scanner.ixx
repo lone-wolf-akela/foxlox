@@ -98,7 +98,8 @@ namespace
     { U"from", TokenType::FROM },
     { U"import", TokenType::IMPORT },
     { U"as", TokenType::AS },
-    { U"export", TokenType::EXPORT }
+    { U"export", TokenType::EXPORT },
+    { U"_", TokenType::UNDERLINE },
   };
 }
 

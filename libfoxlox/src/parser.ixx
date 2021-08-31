@@ -7,6 +7,7 @@ import <vector>;
 import <memory>;
 import <string_view>;
 import <format>;
+import <concepts>;
 
 import :token;
 import :value;
@@ -61,14 +62,15 @@ namespace foxlox
     std::unique_ptr<expr::Expr> primary();
     std::unique_ptr<expr::Expr> tuple(std::unique_ptr<expr::Expr>&& first);
 
-    template<typename ... TokenTypes>
-    bool match(TokenTypes ... types);
+    template<std::same_as<TokenType> ... Args>
+    bool match(Args ... types);
     bool check(TokenType type);
     Token advance();
     bool is_at_end();
     Token peek();
     Token previous();
-    Token consume(TokenType type, std::string_view message);
+    template<std::same_as<TokenType> ... Args>
+    Token consume(std::string_view message, Args ... types);
     void error(Token token, std::string_view message);
     void synchronize();
   };
@@ -83,8 +85,8 @@ namespace
 
 namespace foxlox
 {
-  template<typename ...TokenTypes>
-  bool Parser::match(TokenTypes ...types) // match any
+  template<std::same_as<TokenType> ... Args>
+  bool Parser::match(Args ... types) // match any
   {
     if ((check(types) || ...))
     {
@@ -150,13 +152,13 @@ namespace foxlox
   }
   std::unique_ptr<stmt::Stmt> Parser::class_declaration()
   {
-    Token name = consume(TokenType::IDENTIFIER, "Expect class name.");
+    Token name = consume("Expect class name.", TokenType::IDENTIFIER);
     std::unique_ptr<expr::Expr> superclass = nullptr;
     if (match(TokenType::COLON))
     {
       superclass = expression();
     }
-    consume(TokenType::LEFT_BRACE, "Expect `{' before class body.");
+    consume("Expect `{' before class body.", TokenType::LEFT_BRACE);
 
     std::vector<std::unique_ptr<stmt::Function>> methods;
     while (!check(TokenType::RIGHT_BRACE) && !is_at_end())
@@ -164,7 +166,7 @@ namespace foxlox
       methods.emplace_back(function("method"));
     }
 
-    consume(TokenType::RIGHT_BRACE, "Expect `}' after class body.");
+    consume("Expect `}' after class body.", TokenType::RIGHT_BRACE);
 
     return std::make_unique<stmt::Class>(std::move(name), std::move(superclass), std::move(methods));
   }
@@ -173,15 +175,15 @@ namespace foxlox
     std::vector<Token> path;
     do
     {
-      path.emplace_back(consume(TokenType::IDENTIFIER, "Expect valid lib path."));
+      path.emplace_back(consume("Expect valid lib path.", TokenType::IDENTIFIER));
     } while (match(TokenType::DOT));
-    consume(TokenType::IMPORT, "Expect `import'.");
+    consume("Expect `import'.", TokenType::IMPORT);
     std::vector<Token> vars;
     do
     {
-      vars.emplace_back(consume(TokenType::IDENTIFIER, "Expect valid variable name."));
+      vars.emplace_back(consume("Expect valid variable name.", TokenType::IDENTIFIER));
     } while (match(TokenType::COMMA));
-    consume(TokenType::SEMICOLON, "Expect `;' after `from' statement.");
+    consume("Expect `;' after `from' statement.", TokenType::SEMICOLON);
     return std::make_unique<stmt::From>(std::move(vars), std::move(path));
   }
   std::unique_ptr<stmt::Stmt> Parser::import_declaration()
@@ -189,31 +191,31 @@ namespace foxlox
     std::vector<Token> path;
     do
     {
-      path.emplace_back(consume(TokenType::IDENTIFIER, "Expect valid lib path."));
+      path.emplace_back(consume("Expect valid lib path.", TokenType::IDENTIFIER));
     } while (match(TokenType::DOT));
     Token name = match(TokenType::AS) ?
-      consume(TokenType::IDENTIFIER, "Expect variable name.") : path.back();
-    consume(TokenType::SEMICOLON, "Expect `;' after `import' statement.");
+      consume("Expect variable name.", TokenType::IDENTIFIER) : path.back();
+    consume("Expect `;' after `import' statement.", TokenType::SEMICOLON);
     return std::make_unique<stmt::Import>(std::move(name), std::move(path));
   }
   std::unique_ptr<stmt::Function> Parser::function(std::string_view kind)
   {
-    auto name = consume(TokenType::IDENTIFIER, std::format("Expect {} name.", kind));
-    consume(TokenType::LEFT_PAREN, std::format("Expect `(' after {} name.", kind));
+    auto name = consume(std::format("Expect {} name.", kind), TokenType::IDENTIFIER);
+    consume(std::format("Expect `(' after {} name.", kind), TokenType::LEFT_PAREN);
     std::vector<Token> parameters;
     if (!check(TokenType::RIGHT_PAREN))
     {
       do
       {
-        parameters.emplace_back(consume(TokenType::IDENTIFIER, "Expect parameter name."));
+        parameters.emplace_back(consume("Expect parameter name.", TokenType::IDENTIFIER));
       } while (match(TokenType::COMMA));
     }
     if (parameters.size() >= 255)
     {
       error(peek(), "Can't have more than 255 parameters.");
     }
-    consume(TokenType::RIGHT_PAREN, "Expect `)' after parameters.");
-    consume(TokenType::LEFT_BRACE, std::format("Expect `{{' before {} body.", kind));
+    consume("Expect `)' after parameters.", TokenType::RIGHT_PAREN);
+    consume(std::format("Expect `{{' before {} body.", kind), TokenType::LEFT_BRACE);
     auto body = block();
     if (body.empty() || dynamic_cast<stmt::Return*>(body.back().get()) == nullptr)
     {
@@ -226,9 +228,9 @@ namespace foxlox
   }
   std::unique_ptr<stmt::Stmt> Parser::var_declaration()
   {
-    auto name = consume(TokenType::IDENTIFIER, "Expect variable name.");
+    auto name = consume("Expect variable name.", TokenType::IDENTIFIER, TokenType::UNDERLINE);
     auto initializer = match(TokenType::EQUAL) ? expression() : nullptr;
-    consume(TokenType::SEMICOLON, "Expect `;' after variable declaration.");
+    consume("Expect `;' after variable declaration.", TokenType::SEMICOLON);
     return std::make_unique<stmt::Var>(std::move(name), std::move(initializer));
   }
   std::unique_ptr<stmt::Stmt> Parser::statement()
@@ -250,32 +252,32 @@ namespace foxlox
     {
       value = expression();
     }
-    consume(TokenType::SEMICOLON, "Expect `;' after return value.");
+    consume("Expect `;' after return value.", TokenType::SEMICOLON);
     return std::make_unique<stmt::Return>(std::move(keyword), std::move(value));
   }
   std::unique_ptr<stmt::Stmt> Parser::break_statement()
   {
     auto keyword = previous();
-    consume(TokenType::SEMICOLON, "Expect `;' after `break'.");
+    consume("Expect `;' after `break'.", TokenType::SEMICOLON);
     return std::make_unique<stmt::Break>(std::move(keyword));
   }
   std::unique_ptr<stmt::Stmt> Parser::continue_statement()
   {
     auto keyword = previous();
-    consume(TokenType::SEMICOLON, "Expect `;' after `continue'.");
+    consume("Expect `;' after `continue'.", TokenType::SEMICOLON);
     return std::make_unique<stmt::Continue>(std::move(keyword));
   }
   std::unique_ptr<stmt::Stmt> Parser::for_statement()
   {
-    consume(TokenType::LEFT_PAREN, "Expect `(' after `for'.");
+    consume("Expect `(' after `for'.", TokenType::LEFT_PAREN);
     auto initializer =
       match(TokenType::SEMICOLON) ? nullptr :
       match(TokenType::VAR) ? var_declaration() :
       expression_statement();
     auto condition = check(TokenType::SEMICOLON) ? nullptr : expression();
-    consume(TokenType::SEMICOLON, "Expect `;' after loop condition.");
+    consume("Expect `;' after loop condition.", TokenType::SEMICOLON);
     auto increment = check(TokenType::RIGHT_PAREN) ? nullptr : expression();
-    auto r_paren = consume(TokenType::RIGHT_PAREN, "Expect `)' after for clauses.");
+    auto r_paren = consume("Expect `)' after for clauses.", TokenType::RIGHT_PAREN);
     auto body = statement();
     return std::make_unique<stmt::For>(
       std::move(initializer),
@@ -287,17 +289,17 @@ namespace foxlox
   }
   std::unique_ptr<stmt::Stmt> Parser::while_statement()
   {
-    consume(TokenType::LEFT_PAREN, "Expect `(' after `while'.");
+    consume("Expect `(' after `while'.", TokenType::LEFT_PAREN);
     auto condition = expression();
-    auto r_paren = consume(TokenType::RIGHT_PAREN, "Expect `)' after condition.");
+    auto r_paren = consume("Expect `)' after condition.", TokenType::RIGHT_PAREN);
     auto body = statement();
     return std::make_unique<stmt::While>(std::move(condition), std::move(body), std::move(r_paren));
   }
   std::unique_ptr<stmt::Stmt> Parser::if_statement()
   {
-    consume(TokenType::LEFT_PAREN, "Expect `(' after `if'.");
+    consume("Expect `(' after `if'.", TokenType::LEFT_PAREN);
     auto condition = expression();
-    auto r_paren = consume(TokenType::RIGHT_PAREN, "Expect `)' after if condition.");
+    auto r_paren = consume("Expect `)' after if condition.", TokenType::RIGHT_PAREN);
     auto then_branch = statement();
     auto else_branch = match(TokenType::ELSE) ? statement() : nullptr;
     return std::make_unique<stmt::If>(std::move(condition), std::move(then_branch), std::move(else_branch), std::move(r_paren));
@@ -309,13 +311,13 @@ namespace foxlox
     {
       statements.emplace_back(declaration());
     }
-    consume(TokenType::RIGHT_BRACE, "Expect `}' after block.");
+    consume("Expect `}' after block.", TokenType::RIGHT_BRACE);
     return statements;
   }
   std::unique_ptr<stmt::Stmt> Parser::expression_statement()
   {
     auto expr = expression();
-    consume(TokenType::SEMICOLON, "Expect `;' after expression.");
+    consume("Expect `;' after expression.", TokenType::SEMICOLON);
     return std::make_unique<stmt::Expression>(std::move(expr));
   }
   std::unique_ptr<expr::Expr> Parser::expression()
@@ -496,7 +498,7 @@ namespace foxlox
       }
       else if (match(TokenType::DOT))
       {
-        Token name = consume(TokenType::IDENTIFIER, "Expect property name after `.'.");
+        Token name = consume("Expect property name after `.'.", TokenType::IDENTIFIER);
         expr = std::make_unique<expr::Get>(std::move(expr), std::move(name));
       }
       else { break; }
@@ -514,7 +516,7 @@ namespace foxlox
         arguments.emplace_back(expression());
       } while (match(TokenType::COMMA));
     }
-    Token paren = consume(TokenType::RIGHT_PAREN, "Expect `)' after arguments.");
+    Token paren = consume("Expect `)' after arguments.", TokenType::RIGHT_PAREN);
     if (arguments.size() >= 255)
     {
       error(peek(), "Can't have more than 255 arguments.");
@@ -553,7 +555,7 @@ namespace foxlox
       {
         return tuple(std::move(expr));
       }
-      consume(TokenType::RIGHT_PAREN, "Expect `)' after expression.");
+      consume("Expect `)' after expression.", TokenType::RIGHT_PAREN);
       return std::make_unique<expr::Grouping>(std::move(expr));
     }
     if (match(TokenType::THIS))
@@ -563,11 +565,11 @@ namespace foxlox
     if (match(TokenType::SUPER))
     {
       Token keyword = previous();
-      consume(TokenType::DOT, "Expect `.' after `super'.");
-      Token method = consume(TokenType::IDENTIFIER, "Expect superclass method name.");
+      consume("Expect `.' after `super'.", TokenType::DOT);
+      Token method = consume("Expect superclass method name.", TokenType::IDENTIFIER);
       return std::make_unique<expr::Super>(std::move(keyword), std::move(method));
     }
-    if (match(TokenType::IDENTIFIER))
+    if (match(TokenType::IDENTIFIER, TokenType::UNDERLINE)) // a placeholder `_' is kinda of a special variable
     {
       return std::make_unique<expr::Variable>(previous());
     }
@@ -582,7 +584,7 @@ namespace foxlox
     exprs.emplace_back(std::move(first));
     while (!match(TokenType::RIGHT_PAREN))
     {
-      consume(TokenType::COMMA, "Expect `,' after expression.");
+      consume("Expect `,' after expression.", TokenType::COMMA);
       if (!match(TokenType::RIGHT_PAREN))
       {
         exprs.emplace_back(expression());
@@ -630,9 +632,10 @@ namespace foxlox
     return tokens.at(current - 1);
   }
 
-  Token Parser::consume(TokenType type, std::string_view message)
+  template<std::same_as<TokenType> ... Args>
+  Token Parser::consume(std::string_view message, Args ... types)
   {
-    if (check(type))
+    if ((check(types) || ...))
     {
       return advance();
     }

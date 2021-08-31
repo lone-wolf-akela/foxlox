@@ -159,6 +159,11 @@ namespace foxlox
   }
   void Resolver::declare_a_var(stmt::VarDeclareBase* stmt)
   {
+    if (stmt->name.type == TokenType::UNDERLINE)
+    {
+      // is an assignment place holder, ignore it
+      return;
+    }
     ValueInfo* vinfo = declare(stmt->name);
     if (vinfo != nullptr)
     {
@@ -286,11 +291,21 @@ namespace foxlox
   }
   void Resolver::visit_variable_expr(gsl::not_null<expr::Variable*> expr)
   {
+    if (expr->name.type == TokenType::UNDERLINE)
+    {
+      error(expr->name, "Placeholder `_' is not a valid variable.");
+      return;
+    }
     expr->declare = resolve_local(expr->name);
   }
   void Resolver::visit_assign_expr(gsl::not_null<expr::Assign*> expr)
   {
     resolve(expr->value.get());
+    if (expr->name.type == TokenType::UNDERLINE)
+    {
+      // is an assigment placeholder, do not resolve it
+      return;
+    }
     expr->declare = resolve_local(expr->name);
   }
   void Resolver::visit_logical_expr(gsl::not_null<expr::Logical*> expr)

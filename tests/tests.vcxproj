@@ -73,6 +73,7 @@
     <ClCompile Include="nil.cpp" />
     <ClCompile Include="number.cpp" />
     <ClCompile Include="operator.cpp" />
+    <ClCompile Include="placeholder.cpp" />
     <ClCompile Include="regression.cpp" />
     <ClCompile Include="return.cpp" />
     <ClCompile Include="static_test.cpp" />

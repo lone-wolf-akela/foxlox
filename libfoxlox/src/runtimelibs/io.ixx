@@ -4,6 +4,7 @@ import <iostream>;
 import <ranges>;
 import <span>;
 
+import <fmt/args.h>;
 import <fmt/format.h>;
 
 import :runtimelib;

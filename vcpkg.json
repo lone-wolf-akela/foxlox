@@ -1,7 +1,7 @@
 {
   "name": "foxlox",
   "version-string": "0.0.1",
-  "builtin-baseline": "92af1ff59a651c1cf43aca48f54369a86d40d81c",
+  "builtin-baseline": "a79d4a8ec7ae4464eb22f6af23e277882a67595d",
   "supports": "x64 | arm64",
   "dependencies": [
     "fmt",

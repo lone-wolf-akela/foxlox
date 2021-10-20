@@ -5,6 +5,8 @@ import <string_view>;
 import <sstream>;
 import <cassert>;
 import <type_traits>;
+import <vector>;
+import <iterator>;
 
 import <gsl/gsl>;
 
@@ -25,6 +27,42 @@ namespace foxlox
 
   export template <typename T, template <class...> class Template>
     inline constexpr bool is_specialization_v = is_specialization<T, Template>::value;
+
+  export template <typename T>
+    std::vector<T> make_vector(T&& a)
+  {
+    std::vector<T> result;
+    result.push_back(std::move(a));
+    return result;
+  }
+
+  export template <typename T>
+    std::vector<T> vec_concat(std::vector<T>&& a, std::vector<T>&& b)
+  {
+    std::vector<T> result = std::move(a);
+    result.insert(result.end(),
+      std::make_move_iterator(b.begin()),
+      std::make_move_iterator(b.end()));
+    return result;
+  }
+
+  export template <typename T>
+    std::vector<T> vec_concat(T&& a, std::vector<T>&& b)
+  {
+    std::vector<T> result = make_vector(std::move(a));
+    result.insert(result.end(),
+      std::make_move_iterator(b.begin()),
+      std::make_move_iterator(b.end()));
+    return result;
+  }
+
+  export template <typename T>
+    std::vector<T> vec_concat(std::vector<T>&& a, T&& b)
+  {
+    std::vector<T> result = std::move(a);
+    result.push_back(std::move(b));
+    return result;
+  }
 
 #if defined(NDEBUG) && defined(_MSC_VER)
   export [[noreturn]] void UNREACHABLE()

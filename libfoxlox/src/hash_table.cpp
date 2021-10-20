@@ -1,5 +1,7 @@
 module foxlox:hash_table;
 
+import <iostream>;
+
 import :object;
 
 namespace foxlox

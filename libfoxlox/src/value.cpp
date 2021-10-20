@@ -313,6 +313,8 @@ namespace foxlox
   {
     switch (type)
     {
+    case ValueType::NIL:
+      return "nil";
     case ValueType::BOOL:
       return v.b ? "true" : "false";
     case ValueType::F64:
@@ -326,7 +328,7 @@ namespace foxlox
         //return std::format("<native fn {}>", reinterpret_cast<void*>(v.cppfunc));
         return "<native fn>";
     case ValueType::METHOD:
-      return std::format("<class {} method {}>", v.instance->get_class()->get_name(), method_func()->get_funcname());
+      return std::format("<class {} method {}>", method_instance()->get_class()->get_name(), method_func()->get_funcname());
     case ValueType::OBJ:
     {
       if (v.obj == nullptr) { return "nil"; }

@@ -1,6 +1,7 @@
 module foxlox:debug;
 
 import <gsl/gsl>;
+import <magic_enum.hpp>;
 
 import :except;
 import :vm;

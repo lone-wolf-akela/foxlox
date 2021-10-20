@@ -8,6 +8,7 @@ import <gsl/gsl>;
 import :except;
 import :token;
 import :expr;
+import :util;
 
 namespace foxlox::stmt
 {
@@ -28,21 +29,17 @@ namespace foxlox::stmt
     virtual ~Stmt() = default;
   };
 
-  export class VarDeclareBase : public virtual Stmt
+  export struct VarDeclareListItem
   {
-  public:
-    VarDeclareBase(Token&& nm) noexcept;
     Token name;
-    VarStoreType store_type; // to be filled by resolver
-    virtual ~VarDeclareBase() = default;
+    VarStoreType store_type = VarStoreType::Stack;
   };
 
   export class VarDeclareListBase : public virtual Stmt
   {
   public:
     VarDeclareListBase(std::vector<Token>&& names) noexcept;
-    std::vector<Token> var_names{};
-    std::vector<VarStoreType> store_type_list{}; // to be filled by resolver
+    std::vector<VarDeclareListItem> vars{};
     virtual ~VarDeclareListBase() = default;
   };
 
@@ -61,7 +58,7 @@ namespace foxlox::stmt
     std::unique_ptr<expr::Expr> expression;
   };
 
-  export class Var : public VarDeclareBase
+  export class Var : public VarDeclareListBase
   {
   public:
     Var(Token&& tk, std::unique_ptr<expr::Expr>&& init) noexcept;
@@ -103,7 +100,7 @@ namespace foxlox::stmt
     Token right_paren;
   };
 
-  export class Function : public VarDeclareBase, public VarDeclareListBase
+  export class Function : public VarDeclareListBase
   {
   public:
     Function(Token&& tk, std::vector<Token>&& par, std::vector<std::unique_ptr<Stmt>>&& bd) noexcept;
@@ -119,7 +116,7 @@ namespace foxlox::stmt
     std::unique_ptr<expr::Expr> value;
   };
 
-  export class Class : public VarDeclareBase
+  export class Class : public VarDeclareListBase
   {
   public:
     Class(Token&& tk, std::unique_ptr<expr::Expr>&& super, std::vector<std::unique_ptr<Function>>&& ms) noexcept;
@@ -147,7 +144,7 @@ namespace foxlox::stmt
     Token keyword;
   };
 
-  export class Import : public VarDeclareBase
+  export class Import : public VarDeclareListBase
   {
   public:
     Import(Token&& tk, std::vector<Token>&& path) noexcept;
@@ -277,7 +274,7 @@ namespace foxlox::stmt
   {
   }
   Var::Var(Token&& tk, std::unique_ptr<expr::Expr>&& init) noexcept :
-    VarDeclareBase(std::move(tk)),
+    VarDeclareListBase(make_vector(std::move(tk))),
     initializer(std::move(init))
   {
   }
@@ -304,8 +301,7 @@ namespace foxlox::stmt
   {
   }
   Function::Function(Token&& tk, std::vector<Token>&& par, std::vector<std::unique_ptr<Stmt>>&& bd) noexcept :
-    VarDeclareBase(std::move(tk)),
-    VarDeclareListBase(std::move(par)),
+    VarDeclareListBase(vec_concat(std::move(tk), std::move(par))),
     body(std::move(bd))
   {
   }
@@ -315,7 +311,7 @@ namespace foxlox::stmt
   {
   }
   Class::Class(Token&& tk, std::unique_ptr<expr::Expr>&& super, std::vector<std::unique_ptr<Function>>&& ms) noexcept :
-    VarDeclareBase(std::move(tk)),
+    VarDeclareListBase(make_vector(std::move(tk))),
     superclass(std::move(super)),
     methods(std::move(ms)),
     this_store_type{}
@@ -349,7 +345,7 @@ namespace foxlox::stmt
   {
   }
   Import::Import(Token&& tk, std::vector<Token>&& path) noexcept :
-    VarDeclareBase(std::move(tk)),
+    VarDeclareListBase(make_vector(std::move(tk))),
     libpath(std::move(path))
   {
   }
@@ -358,13 +354,11 @@ namespace foxlox::stmt
     libpath(std::move(path))
   {
   }
-  VarDeclareBase::VarDeclareBase(Token&& nm) noexcept :
-    name(std::move(nm)),
-    store_type(VarStoreType::Stack)
+  VarDeclareListBase::VarDeclareListBase(std::vector<Token>&& names) noexcept
   {
-  }
-  VarDeclareListBase::VarDeclareListBase(std::vector<Token>&& names) noexcept :
-    var_names(std::move(names))
-  {
+    for (auto&& name : names)
+    {
+      vars.push_back(VarDeclareListItem{ .name = std::move(name) });
+    }
   }
 }

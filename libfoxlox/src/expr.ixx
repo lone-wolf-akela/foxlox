@@ -35,7 +35,7 @@ namespace foxlox
     stmt::Class* klass;
     friend auto operator<=>(const ClassThisDeclare& l, const ClassThisDeclare& r) = default;
   };
-  export using VarDeclareAt = std::variant<stmt::VarDeclareBase*, VarDeclareFromList, ClassThisDeclare>;
+  export using VarDeclareAt = std::variant<VarDeclareFromList, ClassThisDeclare>;
 }
 
 namespace foxlox::expr

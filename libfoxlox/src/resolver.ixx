@@ -364,12 +364,19 @@ namespace foxlox
   }
   void Resolver::visit_var_stmt(gsl::not_null<stmt::Var*> stmt)
   {
-    declare_a_var(stmt, 0);
-    if (stmt->initializer.get() != nullptr)
+    for (gsl::index i = 0; i < ssize(stmt->vars); i++)
     {
-      resolve(stmt->initializer.get());
+      declare_a_var(stmt, i);
+      if (auto init = stmt->initializers.at(i).get(); init != nullptr)
+      {
+        resolve(init);
+      }
+      define(stmt->vars.at(i).name);
     }
-    define(stmt->vars.at(0).name);
+    for (auto& e : stmt->tuple_unpacks)
+    {
+      resolve(e.get());
+    }
   }
   void Resolver::visit_import_stmt(gsl::not_null<stmt::Import*> stmt)
   {

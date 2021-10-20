@@ -61,8 +61,9 @@ namespace foxlox::stmt
   export class Var : public VarDeclareListBase
   {
   public:
-    Var(Token&& tk, std::unique_ptr<expr::Expr>&& init) noexcept;
-    std::unique_ptr<expr::Expr> initializer;
+    Var(std::vector<Token>&& tks, std::vector<std::unique_ptr<expr::Expr>>&& init, std::vector<std::unique_ptr<expr::Expr>>&& tpl_unpacks) noexcept;
+    std::vector<std::unique_ptr<expr::Expr>> initializers;
+    std::vector<std::unique_ptr<expr::Expr>> tuple_unpacks;
   };
 
   export class While : public Stmt
@@ -273,9 +274,10 @@ namespace foxlox::stmt
     expression(std::move(expr))
   {
   }
-  Var::Var(Token&& tk, std::unique_ptr<expr::Expr>&& init) noexcept :
-    VarDeclareListBase(make_vector(std::move(tk))),
-    initializer(std::move(init))
+  Var::Var(std::vector<Token>&& tks, std::vector<std::unique_ptr<expr::Expr>>&& init, std::vector<std::unique_ptr<expr::Expr>>&& tpl_unpacks) noexcept :
+    VarDeclareListBase(std::move(tks)),
+    initializers(std::move(init)),
+    tuple_unpacks(std::move(tpl_unpacks))
   {
   }
   While::While(std::unique_ptr<expr::Expr>&& cond, std::unique_ptr<Stmt>&& bd, Token&& r_paren) noexcept :

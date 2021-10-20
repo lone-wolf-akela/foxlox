@@ -20,8 +20,7 @@ TEST(placeholder, basic_declare)
 {
   VM vm;
   auto [res, chunk] = compile(R"(
-var str = "string";
-var _ = str;
+var str = "string", _ = str;
 return str;
 )");
   ASSERT_EQ(res, CompilerResult::OK);
@@ -46,8 +45,7 @@ TEST(placeholder, tuple_unpack)
 {
   VM vm;
   auto [res, chunk] = compile(R"(
-var a;
-var b;
+var a, b;
 (a, _, b) = (1, 2, 3);
 return (a, b);
 )");
@@ -63,9 +61,7 @@ TEST(placeholder, tuple_unpack_chained)
 {
   VM vm;
   auto [res, chunk] = compile(R"(
-var a;
-var b;
-var c;
+var a, b, c;
 (a, b, c) = (a, _, b) = (1, 2, 3);
 return (a, b, c);
 )");
@@ -81,8 +77,7 @@ return (a, b, c);
 TEST(placeholder, assigned_from)
 {
   auto [res, chunk] = compile(R"(
-var _ = "placeholder";
-var v = _;
+var _ = "placeholder", v = _;
 )");
   ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
 }

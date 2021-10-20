@@ -17,9 +17,7 @@ TEST(for_, closure_in_body)
   auto [res, chunk] = compile(R"(
 var r = ();
 
-var f1;
-var f2;
-var f3;
+var f1, f2, f3;
 for (var i = 1; i < 4; ++i) {
   var j = i;
   fun f() {
@@ -228,8 +226,7 @@ for (;;) return "done";
   {
     VM vm;
     auto [res, chunk] = compile(R"(
-var r = ();
-var i = 0;
+var r = (), i = 0;
 for (; i < 2; ++i) r += i;
 return r;
 )");
@@ -404,8 +401,7 @@ return s;
   {
     VM vm;
     auto [res, chunk] = compile(R"(
-var s = 0;
-var c = 0;
+var s = 0, c = 0;
 for(; c <= 5; ++c) { 
   if (c == 3) {
     continue;
@@ -515,8 +511,7 @@ return outer_sum;
   {
     VM vm;
     auto [res, chunk] = compile(R"(
-var outer_sum = 0;
-var i = 11;
+var outer_sum = 0, i = 11;
 while(i <= 13) { 
   var inner_sum = 0;
   for(var j = 1; j <= 3; ++j) {

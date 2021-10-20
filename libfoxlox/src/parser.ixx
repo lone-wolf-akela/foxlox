@@ -8,6 +8,7 @@ import <memory>;
 import <string_view>;
 import <format>;
 import <concepts>;
+import <optional>;
 
 import :token;
 import :value;
@@ -22,7 +23,6 @@ namespace foxlox
   {
   public:
     explicit Parser(std::vector<Token>&& tokens) noexcept;
-    void define(std::string_view name, CppFunc* func);
     AST parse();
     bool get_had_error() noexcept;
   private:
@@ -101,13 +101,6 @@ namespace foxlox
     current(0),
     had_error(false)
   {
-  }
-  void Parser::define(std::string_view name, CppFunc* func)
-  {
-    Token tk_name(TokenType::IDENTIFIER, name, {}, 0);
-    auto initializer = std::make_unique<expr::Literal>(CompiletimeValue(func), tk_name);
-    auto var_stmt = std::make_unique<stmt::Var>(std::move(tk_name), std::move(initializer));
-    ast.emplace_back(std::move(var_stmt));
   }
   AST Parser::parse()
   {
@@ -223,12 +216,75 @@ namespace foxlox
     }
     return std::make_unique<stmt::Function>(std::move(name), std::move(parameters), std::move(body));
   }
+
+  static std::optional<std::vector<Token>> get_names_from_tuple_unpack_expr(expr::TupleUnpack* e)
+  {
+    std::vector<Token> result;
+    for (std::unique_ptr<expr::Expr>& assign_tgt : e->assignlist)
+    {
+      if (auto child_pack = dynamic_cast<expr::TupleUnpack*>(assign_tgt.get()); child_pack != nullptr)
+      {
+        auto child_result = get_names_from_tuple_unpack_expr(child_pack);
+        if (!child_result) // not valid input
+        {
+          return std::nullopt;
+        }
+        result = vec_concat(std::move(result), std::move(*child_result));
+      }
+      else if (auto var = dynamic_cast<expr::Assign*>(assign_tgt.get()); var != nullptr)
+      {
+        result.push_back(var->name); // note: this is a copy, not a move
+      }
+      else // not valid input
+      {
+        return std::nullopt;
+      }
+    }
+    return result;
+  }
+
   std::unique_ptr<stmt::Stmt> Parser::var_declaration()
   {
-    auto name = consume("Expect variable name.", TokenType::IDENTIFIER, TokenType::UNDERLINE);
-    auto initializer = match(TokenType::EQUAL) ? expression() : nullptr;
+    auto tk_var = previous();
+    std::vector<Token> names;
+    std::vector<std::unique_ptr<expr::Expr>> inits;
+    std::vector<std::unique_ptr<expr::Expr>> tuple_unpacks;
+    do
+    {
+      auto left = primary();
+      if (auto var = dynamic_cast<expr::Variable*>(left.get()); var != nullptr)
+      {
+        auto initializer = match(TokenType::EQUAL) ? expression() : nullptr;
+        names.push_back(std::move(var->name));
+        inits.push_back(std::move(initializer));
+      }
+      else if (dynamic_cast<expr::Tuple*>(left.get()) != nullptr)
+      {
+        auto equal = consume("Tuple style declaration must be initialized.", TokenType::EQUAL);
+        auto initializer = expression();
+        auto tuple_unpack = assignment_tuple(equal, std::move(left), std::move(initializer));
+        auto some_names = get_names_from_tuple_unpack_expr(static_cast<expr::TupleUnpack*>(tuple_unpack.get()));
+        if (!some_names)
+        {
+          error(equal, "Expect variable name or tuple declaration.");
+        }
+        else
+        {
+          for (gsl::index i = 0; i < ssize(*some_names); i++)
+          {
+            inits.push_back(nullptr);
+          }
+          names = vec_concat(std::move(names), std::move(*some_names));
+          tuple_unpacks.push_back(std::move(tuple_unpack));
+        }
+      }
+      else
+      {
+        error(tk_var, "Expect variable name or tuple declaration.");
+      }
+    } while (match(TokenType::COMMA));
     consume("Expect `;' after variable declaration.", TokenType::SEMICOLON);
-    return std::make_unique<stmt::Var>(std::move(name), std::move(initializer));
+    return std::make_unique<stmt::Var>(std::move(names), std::move(inits), std::move(tuple_unpacks));
   }
   std::unique_ptr<stmt::Stmt> Parser::statement()
   {
@@ -359,7 +415,7 @@ namespace foxlox
   }
   std::unique_ptr<expr::Expr> Parser::assignment_tuple(Token equals, std::unique_ptr<expr::Expr>&& left, std::unique_ptr<expr::Expr>&& right)
   {
-    auto tuple = dynamic_cast<expr::Tuple*>(left.get()); // tuple will not be null
+    auto tuple = static_cast<expr::Tuple*>(left.get()); 
     auto assign_list = tuple->exprs
       | ranges::views::transform([=, this](auto&& e) {
       if (dynamic_cast<expr::Tuple*>(e.get()) != nullptr)

@@ -7,10 +7,7 @@ TEST(assignment, associativity)
 {
   VM vm;
   auto [res, chunk] = compile(R"(
-var r = ();
-var a = "a";
-var b = "b";
-var c = "c";
+var r = (), a = "a", b = "b", c = "c";
 # Assignment is right-associative.
 a = b = c;
 r += a; # expect: c
@@ -31,8 +28,7 @@ TEST(assignment, global)
 {
   VM vm;
   auto [res, chunk] = compile(R"(
-var r = ();
-var a = "before";
+var r = (), a = "before";
 r += a; # expect: before
 
 a = "after";
@@ -65,8 +61,7 @@ TEST(assignment, infix_operator)
 {
   VM vm;
   auto [res, chunk] = compile(R"(
-var a = "a";
-var b = "b";
+var a = "a", b = "b";
 a + b = "value";
 )");
   ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
@@ -115,8 +110,7 @@ TEST(assignment, syntax)
   auto [res, chunk] = compile(R"(
 var r = ();
 # Assignment on RHS of variable.
-var a = "before";
-var c = a = "var";
+var a = "before", c = a = "var";
 r += a; # expect: var
 r += c; # expect: var
 return r;

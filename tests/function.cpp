@@ -117,8 +117,7 @@ TEST(function, workable_mutual_recursion)
 {
   VM vm;
   auto [res, chunk] = compile(R"(
-var isEven;
-var isOdd;
+var isEven, isOdd;
 
 fun isEven_impl(n) {
   if (n == 0) return true;

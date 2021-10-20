@@ -71,7 +71,7 @@ namespace foxlox
     std::vector<gsl::index> break_stmts;
     std::vector<gsl::index> continue_stmts;
 
-    void declare_a_var_from_list(gsl::not_null<stmt::VarDeclareListBase*> stmt, int index);
+    void declare_a_var_from_list(gsl::not_null<stmt::VarDeclareListBase*> stmt, gsl::index index);
 
     uint16_t gen_subroutine(gsl::not_null<stmt::Function*> stmt, stmt::Class* klass);
 
@@ -528,25 +528,32 @@ namespace foxlox
   }
   void CodeGen::visit_var_stmt(gsl::not_null<stmt::Var*> stmt)
   {
-    current_line = stmt->vars.at(0).name.line;
-    if (stmt->initializer.get() != nullptr)
+    for (gsl::index i = 0; i < ssize(stmt->vars); i++)
     {
-      compile(stmt->initializer.get());
+      current_line = stmt->vars.at(i).name.line;
+      if (auto init = stmt->initializers.at(i).get(); init != nullptr)
+      {
+        compile(init);
+      }
+      else
+      {
+        emit(OP::NIL);
+        push_stack();
+      }
+      if (stmt->vars.at(i).name.type == TokenType::UNDERLINE)
+      {
+        // assign to a placeholder -> drop the value
+        pop_stack();
+        emit(OP::POP);
+      }
+      else
+      {
+        declare_a_var_from_list(stmt, i);
+      }
     }
-    else
+    for (auto& e : stmt->tuple_unpacks)
     {
-      emit(OP::NIL);
-      push_stack();
-    }
-    if (stmt->vars.at(0).name.type == TokenType::UNDERLINE)
-    {
-      // assign to a placeholder -> drop the value
-      pop_stack();
-      emit(OP::POP);
-    }
-    else
-    {
-      declare_a_var_from_list(stmt, 0);
+      compile(e.get());
     }
   }
   void CodeGen::visit_block_stmt(gsl::not_null<stmt::Block*> stmt)
@@ -608,7 +615,7 @@ namespace foxlox
     loop_start_stack_size = enclosing_loop_start_stack_size;
   }
 
-  void CodeGen::declare_a_var_from_list(gsl::not_null<stmt::VarDeclareListBase*> stmt, int index)
+  void CodeGen::declare_a_var_from_list(gsl::not_null<stmt::VarDeclareListBase*> stmt, gsl::index index)
   {
     current_line = stmt->vars.at(index).name.line;
     if (stmt->vars.at(index).store_type == stmt::VarStoreType::Stack)

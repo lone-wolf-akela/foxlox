@@ -9,8 +9,7 @@ TEST(while_, syntax)
     VM vm;
     // Single-expression body.
     auto [res, chunk] = compile(R"(
-var r = ();
-var c = 0;
+var r = (), c = 0;
 while (c < 3) r += (++c);
 return r;
 )");
@@ -27,8 +26,7 @@ return r;
     VM vm;
     // Block body.
     auto [res, chunk] = compile(R"(
-var r = ();
-var a = 0;
+var r = (), a = 0;
 while (a < 3) {
   r += a;
   ++a;
@@ -94,8 +92,7 @@ TEST(while_, continue_)
   {
     VM vm;
     auto [res, chunk] = compile(R"(
-var s = 0;
-var c = 0;
+var s = 0, c = 0;
 while (c < 5) {
   ++c;  
   if (c == 3) {
@@ -152,11 +149,9 @@ TEST(while_, nested_continue)
   {
     VM vm;
     auto [res, chunk] = compile(R"(
-var outer_sum = 0;
-var i = 11;
+var outer_sum = 0, i = 11;
 while(i <= 13) { 
-  var inner_sum = 0;
-  var j = 0;
+  var inner_sum = 0, j = 0;
   while(j < 3) {
     ++j;
     if (j == 2) continue;
@@ -176,8 +171,7 @@ return outer_sum;
     auto [res, chunk] = compile(R"(
 var outer_sum = 0;
 for(var i = 11; i <= 13; ++i) { 
-  var inner_sum = 0;
-  var j = 0;
+  var inner_sum = 0, j = 0;
   while(j < 3) {
     ++j;
     if (j == 2) continue;
@@ -221,11 +215,7 @@ TEST(while_, closure_in_body)
 {
   VM vm;
   auto [res, chunk] = compile(R"CODE(
-var r = ();
-var f1;
-var f2;
-var f3;
-var i = 1;
+var r = (), f1, f2, f3, i = 1;
 while (i < 4) {
   var j = i;
   fun f() { r += j; }

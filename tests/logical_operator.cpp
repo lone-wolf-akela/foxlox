@@ -19,8 +19,7 @@ r += 1 and true;
 r += 1 and 2 and 3; 
 
 # Short-circuit at the first false argument.
-var a = "before";
-var b = "before";
+var a = "before", b = "before";
 (a = true) and
     (b = false) and
     (a = "bad");
@@ -82,8 +81,7 @@ r += false or false;
 r += false or false or false;
 
 # Short-circuit at the first true argument.
-var a = "before";
-var b = "before";
+var a = "before", b = "before";
 (a = false) or
     (b = true) or
     (a = "bad");

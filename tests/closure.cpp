@@ -8,9 +8,7 @@ TEST(closure, assign_to_closure)
   VM vm;
   {
     auto [res, chunk] = compile(R"(
-var r = ();
-var f;
-var g;
+var r = (), f, g;
 {
   var local = "local";
   fun f_() {
@@ -53,8 +51,7 @@ TEST(closure, assign_to_shadowed_later)
   VM vm;
   {
     auto [res, chunk] = compile(R"(
-var r = ();
-var a = "global";
+var r = (), a = "global";
 {
   fun assign() {
     a = "assigned";
@@ -80,8 +77,7 @@ TEST(closure, close_over_function_parameter)
   VM vm;
   {
     auto [res, chunk] = compile(R"(
-var r;
-var f;
+var r, f;
 fun foo(param) {
   fun f_() {
     r = param;
@@ -110,8 +106,7 @@ TEST(closure, close_over_later_variable)
     auto [res, chunk] = compile(R"(
 var r = ();
 fun f() {
-  var a = "a";
-  var b = "b";
+  var a = "a", b = "b";
   fun g() {
     r += b; # expect: b
     r += a; # expect: a
@@ -135,8 +130,7 @@ TEST(closure, close_over_method_parameter)
   VM vm;
   {
     auto [res, chunk] = compile(R"(
-var r;
-var f;
+var r, f;
 
 class Foo {
   method(param) {
@@ -161,8 +155,7 @@ TEST(closure, closed_closure_in_function)
   VM vm;
   {
     auto [res, chunk] = compile(R"(
-var r;
-var f;
+var r, f;
 {
   var local = "local";
   fun f_() {
@@ -184,8 +177,7 @@ TEST(closure, nested_closure)
   VM vm;
   {
     auto [res, chunk] = compile(R"(
-var r = ();
-var f;
+var r = (), f;
 fun f1() {
   var a = "a";
   fun f2() {
@@ -246,8 +238,7 @@ TEST(closure, reference_closure_multiple_times)
   VM vm;
   {
     auto [res, chunk] = compile(R"(
-var r = ();
-var f;
+var r = (), f;
 {
   var a = "a";
   fun f_() {

@@ -405,9 +405,7 @@ class Foo {
   method() {}
 }
 
-var foo = Foo();
-var bar = Foo();
-var fooMethod = foo.method;
+var foo = Foo(), bar = Foo(), fooMethod = foo.method;
 
 r += fooMethod == fooMethod; 
 r += foo.method == foo.method;

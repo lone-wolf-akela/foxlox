@@ -98,8 +98,7 @@ export class Program : World {
   }
 }
 export fun fib(n) {
-  var first = 1;
-  var second = 0;
+  var first = 1, second = 0;
   for(var i = 0; i < n; ++i) {
     var t = second;
     second = first + second;

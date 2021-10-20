@@ -23,8 +23,7 @@ return "ok";
 TEST(block, scope)
 {
   auto [res, chunk] = compile(R"(
-var a = "outer";
-var r = ();
+var a = "outer", r = ();
 {
   var a = "inner";
   r += a;

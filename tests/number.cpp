@@ -32,8 +32,7 @@ TEST(number, nan_equality)
 {
   VM vm;
   auto [res, chunk] = compile(R"(
-var r = ();
-var nan = 0.0/0.0;
+var r = (), nan = 0.0/0.0;
 r += nan == 0;
 r += nan != 1; 
 # NaN is not equal to self.

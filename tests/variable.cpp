@@ -96,8 +96,7 @@ return r;
 TEST(variable, shadow_global)
 {
   auto [res, chunk] = compile(R"(
-var r = ();
-var a = "global";
+var r = (), a = "global";
 {
   var a = "shadow";
   r += a; # expect: shadow
@@ -163,8 +162,7 @@ TEST(variable, duplicate_local)
 {
   auto [res, chunk] = compile(R"CODE(
 {
-  var a = "value";
-  var a = "other";
+  var a = "value", a = "other";
 }
 )CODE");
   ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
@@ -173,8 +171,7 @@ TEST(variable, duplicate_local)
 TEST(variable, duplicate_global)
 {
   auto [res, chunk] = compile(R"CODE(
-var a = "value";
-var a;
+var a = "value", a;
 )CODE");
   ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
 }
@@ -263,8 +260,7 @@ var this = "value";
 TEST(variable, early_bound)
 {
   auto [res, chunk] = compile(R"(
-var r = ();
-var a = "outer";
+var r = (), a = "outer";
 {
   fun foo() {
     r += a;
@@ -299,4 +295,48 @@ return Foo().method();
   VM vm;
   auto v = FoxValue(vm.run(chunk));
   ASSERT_EQ(v, "variable");
+}
+
+TEST(variable, declare_multi_vars)
+{
+  auto [res, chunk] = compile(R"(
+var a = "a", b, c, d = "d";
+c = "c";
+return (a, b, c, d);
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  VM vm;
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 4);
+  ASSERT_EQ(v[0], "a");
+  ASSERT_EQ(v[1], nil);
+  ASSERT_EQ(v[2], "c");
+  ASSERT_EQ(v[3], "d");
+}
+
+TEST(variable, declare_multi_and_use_in_same_stmt)
+{
+  auto [res, chunk] = compile(R"(
+var a = 0, b = a + 1, c = b + 1, d = a + 1;
+return (a, b, c, d);
+)");
+  ASSERT_EQ(res, CompilerResult::OK);
+  VM vm;
+  auto v = FoxValue(vm.run(chunk));
+  ASSERT_TRUE(v.is<TupleSpan>());
+  ASSERT_EQ(v.ssize(), 4);
+  ASSERT_EQ(v[0], 0);
+  ASSERT_EQ(v[1], 1);
+  ASSERT_EQ(v[2], 2);
+  ASSERT_EQ(v[3], 1);
+}
+
+TEST(variable, declare_multi_and_use_before_decl)
+{
+  auto [res, chunk] = compile(R"(
+var a = 0, b = c + 1, c = 1;
+return (a, b, c);
+)");
+  ASSERT_EQ(res, CompilerResult::COMPILE_ERROR);
 }

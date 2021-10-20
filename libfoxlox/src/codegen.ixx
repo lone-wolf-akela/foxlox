@@ -550,10 +550,10 @@ namespace foxlox
       {
         declare_a_var_from_list(stmt, i);
       }
-    }
-    for (auto& e : stmt->tuple_unpacks)
-    {
-      compile(e.get());
+      if (auto e = stmt->tuple_unpacks.at(i).get(); e != nullptr)
+      {
+        compile(e);
+      }
     }
   }
   void CodeGen::visit_block_stmt(gsl::not_null<stmt::Block*> stmt)

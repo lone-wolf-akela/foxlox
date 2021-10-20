@@ -275,7 +275,8 @@ namespace foxlox
             inits.push_back(nullptr);
           }
           names = vec_concat(std::move(names), std::move(*some_names));
-          tuple_unpacks.push_back(std::move(tuple_unpack));
+          tuple_unpacks.resize(size(names));
+          tuple_unpacks.back() = std::move(tuple_unpack);
         }
       }
       else
@@ -284,6 +285,7 @@ namespace foxlox
       }
     } while (match(TokenType::COMMA));
     consume("Expect `;' after variable declaration.", TokenType::SEMICOLON);
+    tuple_unpacks.resize(size(names));
     return std::make_unique<stmt::Var>(std::move(names), std::move(inits), std::move(tuple_unpacks));
   }
   std::unique_ptr<stmt::Stmt> Parser::statement()

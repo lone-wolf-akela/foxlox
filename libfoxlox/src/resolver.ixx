@@ -372,10 +372,10 @@ namespace foxlox
         resolve(init);
       }
       define(stmt->vars.at(i).name);
-    }
-    for (auto& e : stmt->tuple_unpacks)
-    {
-      resolve(e.get());
+      if (auto e = stmt->tuple_unpacks.at(i).get(); e != nullptr)
+      {
+        resolve(e);
+      }
     }
   }
   void Resolver::visit_import_stmt(gsl::not_null<stmt::Import*> stmt)

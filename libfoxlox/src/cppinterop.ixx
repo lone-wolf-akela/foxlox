@@ -6,6 +6,7 @@ import <string>;
 import <string_view>;
 import <utility>;
 import <variant>;
+import <concepts>;
 
 import <gsl/gsl>;
 
@@ -118,8 +119,8 @@ namespace foxlox
       return l.value == r.value;
     }
     template<typename T>
-    requires !std::same<T, FoxValue>
-      friend bool operator==(const FoxValue& l, const T& r)
+    requires !std::same_as<T, FoxValue>
+    friend bool operator==(const FoxValue& l, const T& r)
     {
       return l == FoxValue(r);
     }

@@ -24,8 +24,14 @@ namespace foxlox
       if (src != "")
       {
         const auto formatted = std::format("{:>5} {:25} {:>4} {}", "[src]", formated_funcname, this_line_num, src);
-        std::cout << std::format(colored ? "\x1b[46m\x1b[30m{:100}\x1b[0m\n" : "{}\n", formatted);
-        print_line_num_before_inst = false;
+        if (colored)
+        {
+          std::cout << std::format("\x1b[46m\x1b[30m{:100}\x1b[0m\n", formatted);
+        }
+        else
+        {
+          std::cout << std::format("{}\n", formatted);
+        }
       }
     }
 #endif

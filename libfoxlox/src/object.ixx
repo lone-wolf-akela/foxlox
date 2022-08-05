@@ -38,13 +38,22 @@ namespace foxlox
     SimpleObj& operator=(SimpleObj&&) = delete;
 
     // TODO: deduce this
+    /*template <class Self>
+    auto data(this Self&& self) noexcept
+    {
+      GSL_SUPPRESS(type.2) GSL_SUPPRESS(bounds.3)
+        return std::forward<Self>(self).m_data;
+    }*/
+
+
+    // TODO: deduce this
     template<typename T>
     auto data() noexcept
     {
       GSL_SUPPRESS(type.2) GSL_SUPPRESS(bounds.3)
         return static_cast<T*>(this)->m_data;
     }
-
+   
     // TODO: deduce this
     template<typename T>
     auto data() const noexcept

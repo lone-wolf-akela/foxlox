@@ -14,13 +14,13 @@ import :hash_table;
 
 namespace foxlox
 {
-  export template<typename T>
-    class SimpleObj : public ObjBase
+  export class SimpleObj : public ObjBase
   {
   private:
     bool gc_mark;
     uint32_t m_size;
   protected:
+    template<typename T>
     static constexpr size_t sizeof_obj(size_t l)
     {
       // this may cause -Winvalid-offsetof on gcc & clang, but it does work
@@ -37,16 +37,22 @@ namespace foxlox
     SimpleObj& operator=(const SimpleObj&) = delete;
     SimpleObj& operator=(SimpleObj&&) = delete;
 
+    // TODO: deduce this
+    template<typename T>
     auto data() noexcept
     {
       GSL_SUPPRESS(type.2) GSL_SUPPRESS(bounds.3)
         return static_cast<T*>(this)->m_data;
     }
+
+    // TODO: deduce this
+    template<typename T>
     auto data() const noexcept
     {
       GSL_SUPPRESS(bounds.3) GSL_SUPPRESS(type.2)
         return static_cast<const T*>(this)->m_data;
     }
+
     bool is_marked() const noexcept
     {
       return gc_mark;
@@ -65,9 +71,9 @@ namespace foxlox
     }
   };
 
-  export class String : public SimpleObj<String>
+  export class String : public SimpleObj
   {
-    friend class SimpleObj<String>;
+    friend class SimpleObj;
   private:
     char m_data[1];
   public:
@@ -77,7 +83,7 @@ namespace foxlox
     template<Allocator F>
     static gsl::not_null<String*> alloc(F allocator, size_t l)
     {
-      const gsl::not_null<char*> data = allocator(sizeof_obj(l));
+      const gsl::not_null<char*> data = allocator(sizeof_obj<String>(l));
       return new(data) String(l);
     }
 
@@ -87,7 +93,7 @@ namespace foxlox
       const auto size = p->size();
       p->~String();
       GSL_SUPPRESS(type.1)
-        deallocator(reinterpret_cast<char*>(p.get()), sizeof_obj(size));
+        deallocator(reinterpret_cast<char*>(p.get()), sizeof_obj<String>(size));
     }
 
     std::string_view get_view() const noexcept;
@@ -98,9 +104,9 @@ namespace foxlox
     friend bool operator==(const String& l, const String& r) noexcept;
   };
 
-  export class Tuple : public SimpleObj<Tuple>
+  export class Tuple : public SimpleObj
   {
-    friend class SimpleObj<Tuple>;
+    friend class SimpleObj;
   private:
     Value m_data[1];
   public:
@@ -110,7 +116,7 @@ namespace foxlox
     template<Allocator F>
     static gsl::not_null<Tuple*> alloc(F allocator, size_t l)
     {
-      const gsl::not_null<char*> data = allocator(sizeof_obj(l));
+      const gsl::not_null<char*> data = allocator(sizeof_obj<Tuple>(l));
       return new(data) Tuple(l);
     }
 
@@ -120,7 +126,7 @@ namespace foxlox
       const auto size = p->size();
       p->~Tuple();
       GSL_SUPPRESS(type.1)
-        deallocator(reinterpret_cast<char*>(p.get()), sizeof_obj(size));
+        deallocator(reinterpret_cast<char*>(p.get()), sizeof_obj<Tuple>(size));
     }
 
     std::span<const Value> get_span() const noexcept;
@@ -135,8 +141,9 @@ namespace foxlox
         const auto s1 = l.v.tuple->get_span();
         const auto s2 = r.v.tuple->get_span();
         const gsl::not_null p = Tuple::alloc(allocator, s1.size() + s2.size());
+        //TODO: deduce this
         GSL_SUPPRESS(bounds.3) GSL_SUPPRESS(stl.1)
-          const auto it = std::copy(s1.begin(), s1.end(), p->data());
+          const auto it = std::copy(s1.begin(), s1.end(), p->data<Tuple>());
         GSL_SUPPRESS(stl.1)
           std::copy(s2.begin(), s2.end(), it);
         return p;
@@ -145,8 +152,9 @@ namespace foxlox
       {
         const auto s1 = l.v.tuple->get_span();
         const gsl::not_null p = Tuple::alloc(allocator, s1.size() + 1);
+        //TODO: deduce this
         GSL_SUPPRESS(bounds.3) GSL_SUPPRESS(stl.1)
-          const auto it = std::copy(s1.begin(), s1.end(), p->data());
+          const auto it = std::copy(s1.begin(), s1.end(), p->data<Tuple>());
         *it = r;
         return p;
       }
@@ -154,10 +162,12 @@ namespace foxlox
       {
         const auto s2 = r.v.tuple->get_span();
         const gsl::not_null p = Tuple::alloc(allocator, 1 + s2.size());
+        //TODO: deduce this
         GSL_SUPPRESS(bounds.1)
-          p->data()[0] = l;
+          p->data<Tuple>()[0] = l;
+        //TODO: deduce this
         GSL_SUPPRESS(bounds.3) GSL_SUPPRESS(stl.1) GSL_SUPPRESS(bounds.1)
-          std::copy(s2.begin(), s2.end(), p->data() + 1);
+          std::copy(s2.begin(), s2.end(), p->data<Tuple>() + 1);
         return p;
       }
     }

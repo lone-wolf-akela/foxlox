@@ -465,8 +465,9 @@ namespace foxlox
         const auto p = Tuple::alloc(allocator, n);
         for (gsl::index i = 0; i < n; i++)
         {
+          //TODO: deduce this
           GSL_SUPPRESS(bounds.4) GSL_SUPPRESS(bounds.2) GSL_SUPPRESS(bounds.1)
-            p->data()[i] = *top(gsl::narrow_cast<uint16_t>(n - i - 1));
+            p->data<Tuple>()[i] = *top(gsl::narrow_cast<uint16_t>(n - i - 1));
         }
         gc_index.tuple_pool.push_back(p);
         pop(n);

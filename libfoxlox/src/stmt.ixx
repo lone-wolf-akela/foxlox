@@ -1,9 +1,10 @@
+module;
+#include <gsl/gsl>
 export module foxlox:stmt;
 
 import <memory>;
 import <vector>;
 
-import <gsl/gsl>;
 
 import :except;
 import :token;

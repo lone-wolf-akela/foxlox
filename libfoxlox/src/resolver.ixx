@@ -1,6 +1,7 @@
 module;
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/drop.hpp>
+#include <gsl/gsl>
 export module foxlox:resolver;
 
 import <map>;
@@ -8,7 +9,6 @@ import <vector>;
 import <string>;
 import <format>;
 
-import <gsl/gsl>;
 
 import :expr;
 import :stmt;

@@ -1,3 +1,5 @@
+module;
+#include <gsl/gsl>
 export module foxlox:value;
 
 import <array>;
@@ -12,7 +14,6 @@ import <concepts>;
 import <type_traits>;
 import <utility>;
 
-import <gsl/gsl>;
 
 namespace foxlox
 {
@@ -21,7 +22,7 @@ namespace foxlox
   public:
     using std::runtime_error::runtime_error;
   };
-
+  
   template<typename T1, typename T2>
   concept remove_cv_same_as = std::same_as<std::remove_cv_t<T1>, std::remove_cv_t<T2>>;
 

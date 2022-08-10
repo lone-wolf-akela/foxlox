@@ -1,3 +1,5 @@
+module;
+#include <gsl/gsl>
 export module foxlox:scanner;
 
 import <cstdint>;
@@ -12,7 +14,6 @@ import <sstream>;
 import <version>;
 import <format>;
 
-import <gsl/gsl>;
 
 import :libicu;
 import :util;

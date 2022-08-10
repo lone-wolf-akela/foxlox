@@ -1,3 +1,5 @@
+module;
+#include <gsl/gsl>
 export module foxlox:util;
 
 import <string>;
@@ -8,7 +10,6 @@ import <type_traits>;
 import <vector>;
 import <iterator>;
 
-import <gsl/gsl>;
 
 import :libicu;
 

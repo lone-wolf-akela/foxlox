@@ -1,3 +1,5 @@
+module;
+#include <gsl/gsl>
 export module foxlox:serialization;
 
 import <istream>;
@@ -8,7 +10,6 @@ import <climits>;
 import <concepts>;
 import <bit>;
 
-import <gsl/gsl>;
 
 import :except;
 

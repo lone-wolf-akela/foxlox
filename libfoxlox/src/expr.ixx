@@ -1,6 +1,7 @@
 module;
 #include <range/v3/view/transform.hpp>
 #include <range/v3/range/conversion.hpp>
+#include <gsl/gsl>
 export module foxlox:expr;
 
 import <memory>;
@@ -8,7 +9,6 @@ import <vector>;
 import <variant>;
 import <compare>;
 
-import <gsl/gsl>;
 
 import :except;
 import :token;

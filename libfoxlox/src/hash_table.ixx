@@ -1,4 +1,7 @@
+module;
+#include <gsl/gsl>
 export module foxlox:hash_table;
+
 import <string>;
 import <string_view>;
 import <functional>;

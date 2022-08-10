@@ -1,3 +1,5 @@
+module;
+#include <gsl/gsl>
 export module foxlox:cppinterop;
 
 import <cstdint>;
@@ -7,8 +9,6 @@ import <string_view>;
 import <utility>;
 import <variant>;
 import <concepts>;
-
-import <gsl/gsl>;
 
 import :value;
 import :object;

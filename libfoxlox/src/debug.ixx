@@ -1,3 +1,5 @@
+module;
+#include <gsl/gsl>
 export module foxlox:debug;
 
 import <string_view>;

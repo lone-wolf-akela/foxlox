@@ -45,7 +45,7 @@ namespace foxlox
         return std::forward<Self>(self).m_data;
     }*/
 
-
+     
     // TODO: deduce this
     template<typename T>
     auto data() noexcept

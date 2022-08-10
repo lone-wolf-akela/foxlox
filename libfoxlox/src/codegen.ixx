@@ -1,6 +1,7 @@
 module;
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/drop.hpp>
+#include <gsl/gsl>
 export module foxlox:codegen;
 
 import <map>;

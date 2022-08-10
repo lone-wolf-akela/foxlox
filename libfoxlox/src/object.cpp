@@ -14,7 +14,8 @@ namespace foxlox
   }
   std::string_view String::get_view() const noexcept
   {
-    return std::string_view(data(), size());
+    //TODO: deduce this
+    return std::string_view(data<String>(), size());
   }
   GSL_SUPPRESS(type.6)
     Tuple::Tuple(size_t l) noexcept :
@@ -23,13 +24,15 @@ namespace foxlox
   }
   std::span<const Value> Tuple::get_span() const noexcept
   {
+    //TODO: deduce this
     GSL_SUPPRESS(bounds.3)
-      return std::span{ data(), size() };
+      return std::span{ data<Tuple>(), size() };
   }
   std::span<Value> Tuple::get_span() noexcept
   {
+    //TODO: deduce this
     GSL_SUPPRESS(bounds.3)
-      return std::span{ data(), size() };
+      return std::span{ data<Tuple>(), size() };
   }
   Class* Instance::get_class() const noexcept { return klass; }
   Value Instance::get_property(gsl::not_null<String*> name)

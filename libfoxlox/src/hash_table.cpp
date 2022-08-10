@@ -12,10 +12,11 @@ namespace foxlox
   }
   bool str_equal(gsl::not_null<String*> l, std::string_view r1, std::string_view r2) noexcept
   {
+    //TODO: deduce this
     GSL_SUPPRESS(stl.1) GSL_SUPPRESS(bounds.1)
       return l->size() == (r1.size() + r2.size()) &&
-      std::equal(r1.begin(), r1.end(), l->data()) &&
-      std::equal(r2.begin(), r2.end(), l->data() + r1.size());
+      std::equal(r1.begin(), r1.end(), l->data<String>()) &&
+      std::equal(r2.begin(), r2.end(), l->data<String>() + r1.size());
   }
   gsl::not_null<String*> StringPool::add_string(std::string_view str)
   {
@@ -36,8 +37,9 @@ namespace foxlox
         else if (entries[idx].str == nullptr)
         {
           const gsl::not_null<String*> p = String::alloc(allocator, str.size());
+          //TODO: deduce this
           GSL_SUPPRESS(stl.1)
-            std::copy(str.begin(), str.end(), p->data());
+            std::copy(str.begin(), str.end(), p->data<String>());
 
           if (first_tombstone == nullptr) { count++; }
           StringPoolEntry* entry_to_insert = first_tombstone ? first_tombstone : &entries[idx];
@@ -72,7 +74,8 @@ namespace foxlox
         else if (entries[idx].str == nullptr)
         {
           gsl::not_null<String*> p = String::alloc(allocator, lhs.size() + rhs.size());
-          const auto it = std::copy(lhs.begin(), lhs.end(), p->data());
+          //TODO: deduce this
+          const auto it = std::copy(lhs.begin(), lhs.end(), p->data<String>());
           std::copy(rhs.begin(), rhs.end(), it);
 
           if (first_tombstone == nullptr) { count++; }

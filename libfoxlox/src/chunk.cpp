@@ -1,4 +1,7 @@
+module;
+#include <gsl/gsl>
 module foxlox:chunk;
+
 import :chunk;
 
 namespace foxlox

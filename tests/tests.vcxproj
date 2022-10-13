@@ -42,6 +42,7 @@
     <VcpkgHostTriplet>
     </VcpkgHostTriplet>
     <VcpkgUseStatic>true</VcpkgUseStatic>
+    <VcpkgConfiguration>Debug</VcpkgConfiguration>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-FullTrace|x64'" Label="Vcpkg">
     <VcpkgTriplet />
@@ -120,7 +121,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>gtest_maind.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gtest_main.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-FullTrace|x64'">
@@ -161,8 +162,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
-      <DisableSpecificWarnings>
-      </DisableSpecificWarnings>
+      <DisableSpecificWarnings>4702</DisableSpecificWarnings>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>

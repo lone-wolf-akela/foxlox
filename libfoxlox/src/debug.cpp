@@ -1,7 +1,7 @@
 module;
-#include <gsl/gsl>
 module foxlox:debug;
 
+import <gsl/gsl>;
 import <magic_enum.hpp>;
 
 import :except;

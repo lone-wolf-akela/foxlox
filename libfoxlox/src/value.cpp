@@ -1,9 +1,10 @@
 module;
-#include <gsl/gsl>
 module foxlox:value;
 
 import <format>;
+
 import <magic_enum.hpp>;
+import <gsl/gsl>;
 
 import :chunk;
 import :object;

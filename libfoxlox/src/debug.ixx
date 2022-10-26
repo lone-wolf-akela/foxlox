@@ -1,10 +1,11 @@
 module;
-#include <gsl/gsl>
 export module foxlox:debug;
 
 import <string_view>;
 import <iostream>;
 import <format>;
+
+import <gsl/gsl>;
 
 import :chunk;
 

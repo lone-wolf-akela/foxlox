@@ -1,8 +1,9 @@
 module;
-#include <gsl/gsl>
 module foxlox:hash_table;
 
 import <iostream>;
+
+import <gsl/gsl>;
 
 import :object;
 

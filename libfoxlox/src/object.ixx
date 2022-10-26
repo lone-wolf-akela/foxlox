@@ -1,5 +1,4 @@
 module;
-#include <gsl/gsl>
 export module foxlox:object;
 
 import <cstddef>;
@@ -8,6 +7,8 @@ import <version>;
 import <algorithm>;
 import <utility>;
 import <type_traits>;
+
+import <gsl/gsl>;
 
 import :value;
 import :hash_table;

@@ -1,5 +1,4 @@
 module;
-#include <gsl/gsl>
 export module foxlox:value;
 
 import <array>;
@@ -13,6 +12,8 @@ import <span>;
 import <concepts>;
 import <type_traits>;
 import <utility>;
+
+import <gsl/gsl>;
 
 
 namespace foxlox

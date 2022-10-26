@@ -1,5 +1,4 @@
 module;
-#include <gsl/gsl>
 export module foxlox:hash_table;
 
 import <string>;
@@ -9,6 +8,8 @@ import <vector>;
 import <type_traits>;
 import <concepts>;
 import <optional>;
+
+import <gsl/gsl>;
 
 import :value;
 import :except;

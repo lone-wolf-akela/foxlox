@@ -1,5 +1,4 @@
 module;
-#include <gsl/gsl>
 export module foxlox:chunk;
 
 import <cstdint>;
@@ -14,6 +13,8 @@ import <string_view>;
 import <algorithm>;
 import <limits>;
 import <bit>;
+
+import <gsl/gsl>;
 
 import "opcode.h";
 import :compiletime_value;

@@ -1,11 +1,12 @@
 module;
-#include <fmt/args.h>
-#include <fmt/format.h>
 export module foxlox:runtimelibs.io;
 
 import <iostream>;
 import <ranges>;
 import <span>;
+
+import <fmt/args.h>;
+import <fmt/format.h>;
 
 
 import :runtimelib;

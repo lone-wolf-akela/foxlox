@@ -1,7 +1,6 @@
 module;
 #include <range/v3/view/transform.hpp>
 #include <range/v3/range/conversion.hpp>
-#include <gsl/gsl>
 export module foxlox:parser;
 
 import <vector>;
@@ -10,6 +9,8 @@ import <string_view>;
 import <format>;
 import <concepts>;
 import <optional>;
+
+import <gsl/gsl>;
 
 import :token;
 import :value;

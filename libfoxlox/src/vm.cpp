@@ -3,7 +3,6 @@ module;
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/join.hpp>
 #include <boost/dll/runtime_symbol_info.hpp>
-#include <gsl/gsl>
 module foxlox:vm;
 import :vm;
 
@@ -17,6 +16,7 @@ import <algorithm>;
 import <format>;
 
 import <magic_enum.hpp>;
+import <gsl/gsl>;
 
 import "opcode.h";
 import :config;

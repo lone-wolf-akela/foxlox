@@ -1,6 +1,8 @@
 module;
-#include <gsl/gsl>
 module foxlox:object;
+
+import <gsl/gsl>;
+
 import :object;
 
 namespace foxlox

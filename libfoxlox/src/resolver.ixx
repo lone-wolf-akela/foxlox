@@ -1,6 +1,4 @@
 module;
-#include <range/v3/view/enumerate.hpp>
-#include <range/v3/view/drop.hpp>
 export module foxlox:resolver;
 
 import <map>;
@@ -175,10 +173,10 @@ namespace foxlox
   }
   void Resolver::declare_var_list(stmt::VarDeclareListBase* stmt, gsl::index skip_first_n)
   {
-    for (auto [index, var] : stmt->vars | ranges::views::enumerate | ranges::views::drop(skip_first_n))
+    for (gsl::index i = skip_first_n; i < ssize(stmt->vars); ++i)
     {
-      declare_a_var(stmt, gsl::narrow_cast<gsl::index>(index));
-      define(var.name);
+      declare_a_var(stmt, i);
+      define(stmt->vars.at(i).name);
     }
   }
   void Resolver::declare_from_class(stmt::Class* stmt)

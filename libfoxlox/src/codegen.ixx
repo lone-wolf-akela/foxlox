@@ -1,6 +1,4 @@
 module;
-#include <range/v3/view/enumerate.hpp>
-#include <range/v3/view/drop.hpp>
 export module foxlox:codegen;
 
 import <map>;
@@ -307,7 +305,7 @@ namespace foxlox
     const uint16_t tuple_size = gsl::narrow_cast<uint16_t>(expr->assignlist.size());
     emit(OP::UNPACK, tuple_size);
     push_stack(tuple_size);
-    for (auto& e : expr->assignlist | std::ranges::views::reverse)
+    for (auto& e : expr->assignlist | std::views::reverse)
     {
       compile(e.get());
       emit(OP::POP);
@@ -659,8 +657,9 @@ namespace foxlox
 
       const auto stack_size_before = current_stack_size;
 
-      for (auto [i, var] : stmt->vars | ranges::views::enumerate | ranges::views::drop(1))
+      for (gsl::index i = 1; i < ssize(stmt->vars); i++)
       {
+        auto var = stmt->vars.at(i);
         push_stack();
         if (var.store_type == stmt::VarStoreType::Stack)
         {
@@ -706,8 +705,9 @@ namespace foxlox
 
       // note: if one of the func args is a static value
       // we should do a store when the function is called
-      for (auto [i, var] : stmt->vars | ranges::views::enumerate | ranges::views::drop(1)) // drop the func name
+      for (gsl::index i = 1; i < ssize(stmt->vars); i++) // drop the func name
       {
+        auto var = stmt->vars.at(i);
         if (var.store_type == stmt::VarStoreType::Static)
         {
           const uint16_t idx = value_idxs.at(VarDeclareFromList{ stmt, gsl::narrow_cast<int>(i) }).idx;
@@ -875,8 +875,10 @@ namespace foxlox
     emit(OP::IMPORT, gsl::narrow_cast<uint16_t>(stmt->libpath.size()));
     const auto lib_stack_idx = current_stack_size;
     push_stack();
-    for (const auto& [i, var] : stmt->vars | ranges::views::enumerate)
+
+    for(gsl::index i = 0; i < ssize(stmt->vars); i++)
     {
+      auto var = stmt->vars.at(i);
       emit(OP::LOAD_STACK, idx_cast(lib_stack_idx));
       push_stack();
       const uint16_t str_index = chunk.add_string(var.name.lexeme);

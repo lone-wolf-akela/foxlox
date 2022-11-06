@@ -1,6 +1,4 @@
 module;
-#include <range/v3/view/transform.hpp>
-#include <range/v3/range/conversion.hpp>
 export module foxlox:parser;
 
 import <vector>;
@@ -420,20 +418,20 @@ namespace foxlox
   std::unique_ptr<expr::Expr> Parser::assignment_tuple(Token equals, std::unique_ptr<expr::Expr>&& left, std::unique_ptr<expr::Expr>&& right)
   {
     auto tuple = static_cast<expr::Tuple*>(left.get()); 
-    auto assign_list = tuple->exprs
-      | ranges::views::transform([=, this](auto&& e) {
-      if (dynamic_cast<expr::Tuple*>(e.get()) != nullptr)
+    std::vector<std::unique_ptr<expr::Expr>> assign_list;
+    for (auto&& e : tuple->exprs)
+    {
+      if (dynamic_cast<expr::Tuple*>(e.get()))
       {
         // recursion tuple unpack
-        return assignment_tuple(equals, std::move(e), std::make_unique<expr::NoOP>());
+        assign_list.push_back(assignment_tuple(equals, std::move(e), std::make_unique<expr::NoOP>()));
       }
       else
       {
-        return assignment_simple(equals, std::move(e), std::make_unique<expr::NoOP>());
+        assign_list.push_back(assignment_simple(equals, std::move(e), std::make_unique<expr::NoOP>()));
       }
-        })
-      | ranges::to<std::vector<std::unique_ptr<expr::Expr>>>;
-     return std::make_unique<expr::TupleUnpack>(std::move(right), std::move(assign_list));
+    }
+    return std::make_unique<expr::TupleUnpack>(std::move(right), std::move(assign_list));
   }
   std::unique_ptr<expr::Expr> Parser::assignment_simple(Token equals, std::unique_ptr<expr::Expr>&& left, std::unique_ptr<expr::Expr>&& right)
   {

@@ -1,5 +1,4 @@
 module;
-#include <range/v3/range/conversion.hpp>
 export module foxlox:compiler;
 
 import <tuple>;
@@ -61,8 +60,10 @@ namespace
     std::ostringstream strm;
     strm.write(BINARY_HEADER.data(), BINARY_HEADER.size());
     chunk.dump(strm);
-
-    return std::make_tuple(CompilerResult::OK, strm.view() | ranges::to<std::vector<char>>);
+    
+    std::vector<char> result(strm.view().size());
+    std::ranges::copy(strm.view(), begin(result));
+    return std::make_tuple(CompilerResult::OK, result);
   }
 }
 

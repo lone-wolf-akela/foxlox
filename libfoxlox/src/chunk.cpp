@@ -1,6 +1,7 @@
 module;
 module foxlox:chunk;
 
+import <cassert>;
 import <gsl/gsl>;
 
 import :chunk;

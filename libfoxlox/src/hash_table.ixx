@@ -1,6 +1,8 @@
 module;
 export module foxlox:hash_table;
 
+import <cassert>;
+
 import <string>;
 import <string_view>;
 import <functional>;
